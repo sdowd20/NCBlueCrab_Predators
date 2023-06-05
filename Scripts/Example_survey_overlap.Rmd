@@ -1,0 +1,997 @@
+---
+title: "overlap_exploration"
+author: "Sarah Roberts"
+date: "1/4/2022"
+output: html_document
+---
+##packages 
+```{r}
+library(tidyverse)
+library(lubridate)
+library(gjam)
+library(mgcv) #gams
+library(reshape2)
+library(ggpubr)
+library(ggthemes)
+library(wesanderson)
+library(modEvA) #auc 
+library(pROC)
+library(cowplot)
+library(rgdal)
+
+
+library(tidyverse)
+library(sf)
+library(sp)
+library(spatialEco)
+library(lubridate)
+library(modEvA)
+library(mgcv)
+library(gjam)
+library(wesanderson)
+library(ggthemes)
+library(fuzzyjoin)
+library(cluster)    # clustering algorithms
+library(factoextra) # clustering algorithms & visualization
+library(scales)
+library(rnaturalearth)
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+theme_Publication <- function(base_size=12, base_family="Arial") {
+
+      (theme_foundation(base_size=base_size, base_family=base_family)
+       + theme(plot.title = element_text(face = "bold",
+                                         size = rel(1.2), hjust = 0.5),
+               text = element_text(),
+               panel.background = element_rect(colour = NA),
+               plot.background = element_rect(colour = NA),
+               panel.border = element_rect(colour = NA),
+               axis.title = element_text(face = "bold",size = rel(1)),
+               axis.title.y = element_text(angle=90,vjust =2),
+               axis.title.x = element_text(vjust = -0.2),
+               axis.text = element_text(), 
+               axis.line = element_line(colour="black"),
+               axis.ticks = element_line(),
+               panel.grid.major = element_line(colour="#f0f0f0"),
+               panel.grid.minor = element_blank(),
+               legend.key = element_rect(colour = NA),
+               legend.position = "bottom",
+               legend.direction = "horizontal",
+               legend.key.size= unit(0.5, "cm"),
+               legend.margin = unit(0, "cm"),
+               legend.title = element_text(face="italic"),
+               plot.margin=unit(c(10,5,5,5),"mm"),
+               strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+               strip.text = element_text(face="bold")
+          ))
+      
+}
+
+```
+
+
+#create one big dataset 
+```{r}
+seus_me <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/data_download_Jan_2022.csv")
+seus_me[] <- lapply(seus_me, gsub, pattern='=', replacement='') #= was in front of a lot of characters
+load("NMFS data/NEFSC_BTS_2021_all_seasons.RData")
+neus_me <- survey$survdat
+Reef <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Reef_Fish_Survey_Jan_2022.csv")
+Reef[] <- lapply(Reef, gsub, pattern='=', replacement='') #= was in front of a lot of characters
+
+Reef <- Reef %>% 
+  mutate(date = as.Date(DATE, "%m-%d-%Y"), 
+         month = month(date), 
+         year = year(date),
+         year = as.numeric(year),
+         lat = as.numeric(LATITUDESTART), 
+         lon = as.numeric(LONGITUDESTART), 
+         spp = SPECIESCOMMONNAME, 
+         haulid = COLLECTIONNUMBER)%>% 
+  drop_na(lat,lon)
+
+seus_me <- seus_me %>% 
+  mutate(date = as.Date(DATE, "%m-%d-%Y"), 
+         month = month(date), 
+         year = year(date),
+         year = as.numeric(year),
+         lat = as.numeric(LATITUDESTART), 
+         lon = as.numeric(LONGITUDESTART), 
+         spp = SPECIESCOMMONNAME, 
+         haulid = COLLECTIONNUMBER)%>% 
+  drop_na(lat,lon)
+
+neus_me <- neus_me %>% 
+  mutate(date = as.Date(EST_TOWDATE, "%m-%d-%Y"), 
+         month = month(date), 
+         year = year(date),
+         year = as.numeric(year),
+         lat = as.numeric(LAT), 
+         lon = as.numeric(LON), 
+         spp = COMNAME, 
+         haulid = ID)%>% 
+  drop_na(lat,lon)
+```
+
+#sharks 
+```{r}
+seus_me %>% filter(SPECIESSCIENTIFICNAME == "SPHYRNA LEWINI") %>% group_by(SPECIESSCIENTIFICNAME) %>% summarize(n = sum(as.numeric(NUMBERTOTAL)))
+
+seus_me %>% filter(SPECIESSCIENTIFICNAME == "SPHYRNA LEWINI") %>% group_by(SPECIESSCIENTIFICNAME) %>% summarize(n = sum(as.numeric(NUMBERTOTAL)))
+
+seus_me %>% filter(SPECIESCOMMONNAME == "BONNETHEAD") %>% group_by(SPECIESSCIENTIFICNAME) %>% summarize(n = sum(as.numeric(NUMBERTOTAL)))
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(seus_me, seus_me$SPECIESCOMMONNAME == "BONNETHEAD" & as.numeric(seus_me$NUMBERTOTAL > 0)), aes(x = as.numeric(LONGITUDESTART), y = as.numeric(LATITUDESTART), colour = NUMBERTOTAL)) + 
+    coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(seus_me, seus_me$SPECIESCOMMONNAME == "BONNETHEAD" & as.numeric(seus_me$NUMBERTOTAL > 0)), aes(x = as.numeric(LONGITUDESTART), y = as.numeric(LATITUDESTART), colour = NUMBERTOTAL)) + 
+    coord_sf(xlim=c(-82, -76), ylim=c(32,35), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+```
+
+
+##create a grid and combine 
+
+create a grid of .5 by .5 degree cells and extract all three datasets from grid cell by month. 
+
+```{r}
+neus_overlap_lat <- neus_me %>% dplyr::filter(lat <= 38) #this is to make it smaller and just look at cape hatteras region)
+neus_overlap_lat <- neus_me 
+seus_overlap_lat <- seus_me 
+reef_overlap_lat <- Reef 
+
+neus_overlap_lat$month <- month(as.POSIXlt(neus_overlap_lat$date))
+
+neus_overlap_lat <- neus_overlap_lat %>% select(haulid, year, month, lat, lon, date, spp, BIOMASS, BOTTEMP, SURFTEMP, BOTSALIN, SURFSALIN)
+
+seus_overlap_lat <- seus_overlap_lat %>% select(haulid, year, month, lat, lon, date, spp, SPECIESTOTALWEIGHT, DURATION, TEMPBOTTOM, TEMPSURFACE, SALINITYBOTTOM, SALINITYSURFACE)
+
+reef_overlap_lat <- reef_overlap_lat %>% select(haulid, year, month, lat, lon, date, spp, SPECIESTOTALWEIGHT, DURATION, TEMPBOTTOM, TEMPSURFACE, SALINITYBOTTOM, SALINITYSURFACE)
+
+neus_overlap_lat$survey <- "NEFSC"
+neus_overlap_lat$weight <- neus_overlap_lat$BIOMASS
+seus_overlap_lat$survey <- "SEUS_TRAWL"
+seus_overlap_lat$weight <- (as.numeric(seus_overlap_lat$SPECIESTOTALWEIGHT)/as.numeric(seus_overlap_lat$DURATION))*30 #need to check and make sure this is the same as biomass in the neus data (kg/tow?)
+reef_overlap_lat$survey <- "SEUS_REEF"
+reef_overlap_lat$weight <- (as.numeric(reef_overlap_lat$SPECIESTOTALWEIGHT)/as.numeric(reef_overlap_lat$DURATION))*30
+neus_overlap_lat<- neus_overlap_lat %>% rename(TEMPBOTTOM = BOTTEMP, TEMPSURFACE = SURFTEMP, SALINITYBOTTOM = BOTSALIN, SALINITYSURFACE = SURFSALIN)
+
+neus_overlap_lat <- neus_overlap_lat %>% select(haulid, year, month, lat, lon, date, spp, weight, survey, TEMPBOTTOM, TEMPSURFACE, SALINITYBOTTOM, SALINITYSURFACE)
+
+seus_overlap_lat <- seus_overlap_lat %>% select(haulid, year, month, lat, lon, date, spp, weight, survey, TEMPBOTTOM, TEMPSURFACE, SALINITYBOTTOM, SALINITYSURFACE)
+
+reef_overlap_lat <- reef_overlap_lat %>% select(haulid, year, month, lat, lon, date, spp, weight, survey, TEMPBOTTOM, TEMPSURFACE, SALINITYBOTTOM, SALINITYSURFACE)
+
+total <- rbind(neus_overlap_lat, seus_overlap_lat, reef_overlap_lat)
+
+total <- total %>% drop_na(weight)
+total$weight <- as.numeric(total$weight)
+total$TEMPBOTTOM <- as.numeric(total$TEMPBOTTOM)
+total$ym_date <- format(total$date, "%Y-%m")
+
+total_long <- total %>% drop_na(lat, lon, spp) %>% group_by(haulid, year, month, ym_date, survey, lat, lon, spp) %>% summarise(weight = mean(weight))
+```
+
+
+
+
+do some simple plotting
+
+```{r}
+
+grouped <- total %>% group_by(haulid, year, month, date, survey, lat, lon) %>% summarise(weight = mean(weight))
+
+ggplot(grouped, aes(x=date, y=weight, colour = survey)) +
+  geom_line() + 
+  xlab("")
+
+
+grouped2 <- total %>% group_by(haulid, ym_date, survey, lat, lon) %>% summarise(weight = mean(weight))
+
+ggplot(grouped2, aes(x=ym_date, y=weight, colour = survey)) +
+  geom_line() + 
+  xlab("")
+
+ggplot() + geom_histogram(data = grouped2, stat="count", aes(x=ym_date, fill = survey))
+
+ggplot() + geom_histogram(data = grouped2, stat="count", aes(x=ym_date)) + facet_wrap(~survey)
+
+ggplot() + geom_histogram(data = total, stat = "count", aes(x=as.character(month))) + facet_wrap(~survey)
+```
+temperature at which surveys occur 
+```{r}
+ggplot() + geom_histogram(data = total, aes(x=TEMPBOTTOM), bins = 100) + facet_wrap(~survey)
+```
+
+
+```{r}
+
+total_long <- total_long %>% drop_na(lat, lon, spp) %>% ungroup()
+
+# make an object the size and shape of the output you want
+globe_bb <- matrix(c(-82,  26,
+                      -82,  36,
+                      -72, 36,
+                     -72, 26,
+                     -82,  26), byrow = TRUE, ncol = 2) %>%
+  list() %>% 
+  st_polygon() %>% 
+  st_sfc(., crs = 4326)
+
+stratum <- readOGR("~/Documents/ClimateOceanPlanning/Datasets/NEFSC_Bottom_Trawl/shapefiles/BTS_Strata.shp")
+plot(stratum)
+
+#checkit
+
+
+# generate grid of 20 x 20 tiles (200 in total, each .5 x .5 degrees)
+globe_grid_18x18 <- st_make_grid(globe_bb, n = c(20, 20), 
+                                 crs = 4326, what = 'polygons') %>%
+  st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
+
+#checkit
+ggplot(data = world) + geom_sf() +geom_sf(data = globe_grid_18x18, fill = NA) + geom_point(data = total_long, aes(x = lon, y = lat, colour = survey), size = .2) + 
+    coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+
+
+#now sample grid ID for fish table 
+fish_spat <- as.data.frame(total_long)
+fish_spat$rowID <- 1:nrow(fish_spat)
+
+coordinates(fish_spat) <- ~ lon + lat
+fish_spat <- st_as_sf(fish_spat)
+fish_spat <- st_set_crs(fish_spat, 4326)
+grid <- globe_grid_18x18
+
+
+fish_extract <- point.in.poly(fish_spat, grid)
+fish_extract_2 <- as.data.frame(fish_extract)
+
+#group to get rid of duplicates (there are times when a point is overlapping two grid cells)
+
+fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat
+
+fish_extract_2_2$gridID <- fish_extract_2_2$ID
+
+#group by year, month and gridID 
+
+# fish_extract_2_2$TEMPSURFACE <- as.numeric(fish_extract_2_2$TEMPSURFACE)
+# fish_extract_2_2$SALINITYBOTTOM <- as.numeric(fish_extract_2_2$SALINITYBOTTOM)
+# fish_extract_2_2$SALINITYSURFACE <- as.numeric(fish_extract_2_2$SALINITYSURFACE)
+
+#grid, month 
+fish_extract_2_2$season <- ifelse(fish_extract_2_2$month==4 | fish_extract_2_2$month==5 | fish_extract_2_2$month==6, "SPRING", ifelse(fish_extract_2_2$month==9 |fish_extract_2_2$month==10 | fish_extract_2_2$month==11 | fish_extract_2_2$month==12, "FALL", ifelse(fish_extract_2_2$month==7 |fish_extract_2_2$month==8, "SUMMER", "WINTER")))
+
+fish_extract_2_2 <- fish_extract_2_2 %>% filter(weight > -1)
+
+fish_extract_2_mon <- fish_extract_2_2 %>% dplyr::select(-season)
+
+fish_extract_2_seas <- fish_extract_2_2 %>% dplyr::select(-month) 
+
+
+#checkit
+ggplot(data = world) + geom_sf() + 
+    coord_sf(xlim=c(-85, -65), ylim=c(25,45), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+```
+
+#centroid shifts? 
+
+```{r}
+fish_month <- fish_extract_2_mon %>% group_by(spp, coords.x1, coords.x2, year, month, ym_date) %>% summarise(weight = mean(weight))  
+fish_month <- as.data.frame(fish_month) %>% drop_na(spp) #group surveys together
+
+
+NC_fish <- fish_month %>% rename(lat = coords.x2,
+         lon = coords.x1)  %>% dplyr::filter(lat > 32)
+
+NC_fish %>% ggplot() + geom_point(aes(x = lon, y = lat), colour = "red", size = 2) + geom_sf(data = world) + 
+    coord_sf(xlim=c(-84, -74), ylim=c(20,38), expand = TRUE)
+
+cent_fish_nc <- NC_fish %>% 
+  group_by(year, month, spp) %>% 
+  summarise(lat = questionr::wtd.mean(lat, weight, na.rm = T), lon = questionr::wtd.mean(lon, weight, na.rm = T))
+
+cent_fish_nc %>% dplyr::filter(spp == "BLACK SEA BASS") %>% ggplot() + geom_point(aes(x = lon, y = lat, colour= year), size = 1) + geom_sf(data = world) + 
+    coord_sf(xlim=c(-84, -74), ylim=c(32,38), expand = TRUE) + facet_wrap(~month)
+
+library(ggpmisc)
+cent_fish_nc <- cent_fish_nc %>%
+  mutate(date = make_date(year, month, 1))
+
+#distance from southernmost point 
+#80, 33
+library(geosphere)
+fish2 <- cent_fish_nc %>% dplyr::select(lon, lat)
+fish2 <- subset(fish2, fish2$lon != "NaN")
+
+
+southern1 <- fish2
+southern1$lon <- -80
+southern1$lat <- 33
+
+coordinates(fish2) <- ~ lon + lat
+coordinates(southern1) <- ~ lon + lat
+dist <- distGeo(fish2, southern1)
+        
+
+cent_fish_nc <- subset(cent_fish_nc, cent_fish_nc$lon != "NaN")
+cent_fish_nc$dist <- dist/1000
+
+#make a pretty plot. 
+p1 <- cent_fish_nc %>% ggplot() + geom_point(aes(x = lon, y = lat), colour = "red", size = 2) + geom_sf(data = world) + 
+    coord_sf(xlim=c(-84, -74), ylim=c(32,38), expand = TRUE)+ theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~year, nrow = 4) + theme(panel.background = element_rect(fill = "white", colour = "black")) + theme_Publication() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + geom_point(aes(x = -80, y = 32.5), shape = 23, size = 3, fill = "blue")
+
+p2 <- ggplot(data = cent_fish_nc, aes(x = date, y = dist)) + geom_point(aes(colour = as.factor(month)), size = 2) + geom_smooth(method = "glm") + facet_wrap(~specs, nrow = 6) + theme_Publication() + scale_color_hue(labels = c("Marhc", "April")) + labs(colour = element_blank(), y = "distance from southernmost point (km)")
+
+```
+
+
+
+
+try figuring out if there are times when fish of the same species were caught at the same time (month, gridID and year) in each of the surveys 
+```{r}
+
+#grid, month
+fish1 <- fish_extract_2_mon %>% dplyr::select(-rowID, -ID, -coords.x1, -coords.x2) %>% group_by(year, month, spp, survey, gridID) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+sum(fish3$SEUS_REEF)
+
+#grid, season
+
+fish1 <- fish_extract_2_seas %>% dplyr::select(-rowID, -ID, -coords.x1, -coords.x2) %>% group_by(year, season, spp, survey, gridID) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+
+test <- fish2 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_SEUS = sum(SEUS_TRAWL))
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+sum(fish3$SEUS_REEF)
+
+
+
+#there are none, lets see if this happens at all in the area (not by gridID)
+fish1 <- total_long %>% filter(weight > 0) %>% ungroup() %>% group_by(year, month, spp, survey) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+test <- fish2 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_SEUS = sum(SEUS_TRAWL))
+
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+sum(fish3$SEUS_REEF)
+test2 <- fish3 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_REEF = sum(SEUS_REEF))
+
+#what if you have it in the same season? 
+total_long$season <- ifelse(total_long$month==4 | total_long$month==5 | total_long$month==6, "SPRING", ifelse(total_long$month==9 |total_long$month==10 | total_long$month==11 | total_long$month==12, "FALL", ifelse(total_long$month==7 |total_long$month==8, "SUMMER", "WINTER")))
+
+
+fish1 <- total_long %>% filter(weight > 0)%>% ungroup() %>% dplyr::select(-month) %>% group_by(year, season, spp, survey) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+length(unique(fish3$spp))
+
+sum(fish3$SEUS_REEF)
+
+
+
+#SMALL BOX Month 
+fish1 <- total_long %>% filter(weight > 0 & lat < 36 & lat > 34) %>% ungroup() %>% group_by(year, month, spp, survey) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+test <- fish2 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_SEUS = sum(SEUS_TRAWL))
+
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+sum(fish3$SEUS_REEF)
+test2 <- fish3 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_REEF = sum(SEUS_REEF))
+length(unique(fish3$spp))
+
+#SMALL BOX eason
+fish1 <- total_long %>% filter(weight > 0 & lat < 36 & lat > 34) %>% ungroup() %>% group_by(year, season, spp, survey) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+test <- fish2 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_SEUS = sum(SEUS_TRAWL))
+
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+sum(fish3$SEUS_REEF)
+test2 <- fish3 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_REEF = sum(SEUS_REEF))
+length(unique(fish3$spp))
+
+
+```
+
+
+#plot some species 
+atlantic croaker to start 
+```{r}
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "ATLANTIC CROAKER" & weight > 0), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey) +
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+p <- ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, weight > 0 & survey == "NEFSC" | survey == "SEUS_TRAWL"), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey + year, nrow = 6) +
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+p
+ggsave(filename = "all_specs_by_year.jpg", plot=p, width = 25, height=25, units=c("cm"))
+
+
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "ATLANTIC CROAKER" & weight > 0 & survey == "NEFSC"), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey + year, nrow = 6) +
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+#it looks like NEUS only went really south at the beginning years, before SEUS started
+
+
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "ATLANTIC CROAKER" & weight > 0& year > 1987), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey) +
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "ATLANTIC CROAKER" & weight > 0& year > 1987 ), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey) +
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+#lets zoom in on that one overlapping area 
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "ATLANTIC CROAKER" & weight > 0& year > 1987 & survey == "NEFSC" | survey == "SEUS_TRAWL" ), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey) +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+#what if its n ot just croaker? 
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, weight > 0 & year > 1987), aes(x = lon, y = lat)) +
+  scale_size_area() + facet_wrap(~survey) +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey)) + geom_point(aes(x = -75.57, y = 35.26), shape = 17, size = 5)+
+  scale_size_area() +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+
+
+
+#black sea bass 
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "BLACK SEA BASS"  & weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey, size = weight)) + geom_point(aes(x = -75.57, y = 35.26), shape = 17, size = 5) +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+#pigfish
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "PIGFISH"  & weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey, size = weight)) + geom_point(aes(x = -75.57, y = 35.26), shape = 17, size = 5) +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+#croaker
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "ATLANTIC CROAKER"  & weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey, size = weight)) + geom_point(aes(x = -75.57, y = 35.26), shape = 17, size = 5) +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+#triggerfish
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp == "GRAY TRIGGERFISH"  & weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey, size = weight)) + geom_point(aes(x = -75.57, y = 35.26), shape = 17, size = 5) +
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+
+#species based on overlapping 
+
+#there are none, lets see if this happens at all in the area (not by gridID)
+fish1 <- total_long %>% filter(weight > 0 & lat < 36 & lat > 34) %>% ungroup() %>% group_by(year, month, spp, survey) %>%  summarise(unique_fish = n_distinct(weight)) %>% pivot_wider(names_from = survey, values_from = unique_fish)
+
+fish2 <- fish1 %>% drop_na(NEFSC, SEUS_TRAWL)
+length(unique(fish2$spp))
+sum(fish2$NEFSC)
+sum(fish2$SEUS_TRAWL)
+test <- fish2 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_SEUS = sum(SEUS_TRAWL))
+
+
+fish3 <- fish1 %>% drop_na(NEFSC, SEUS_REEF)
+sum(fish3$NEFSC)
+sum(fish3$SEUS_REEF)
+test2 <- fish3 %>% group_by(spp) %>% summarise(count_NEFSC = sum(NEFSC), count_REEF = sum(SEUS_REEF))
+length(unique(fish3$spp))
+
+touse <- test %>% filter(count_NEFSC > 10 & count_SEUS > 10)
+
+specs <- c(touse$spp, test2$spp)
+
+
+
+cts <- fish1 %>% ungroup() %>% filter(spp %in% specs & year > 1987) %>% group_by(spp) %>% summarise(NEFSC = sum(NEFSC, na.rm = TRUE), SEUS_REEF = sum(SEUS_REEF, na.rm = TRUE), SEUS_TRAWL = sum(SEUS_TRAWL, na.rm = TRUE)) %>% pivot_longer(NEFSC:SEUS_TRAWL, names_to = "survey", values_to = "trawlcount")
+
+p <- ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp %in% specs & weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey), size = .5) + facet_wrap(~spp) + 
+  geom_text(data = cts, aes(x = -77.25, y = 35.75, label=trawlcount, colour = survey), size = 4, fontface='bold', 
+            position=position_dodge(width = 1.5), show.legend = FALSE) + 
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme_Publication() +
+  theme(axis.text.x = element_text(angle = 90))+ guides(color = guide_legend(override.aes = list(size=5)))
+
+ggsave(filename = "all_specs.jpg", plot=p, width = 30, height=30, units=c("cm"))
+
+
+
+```
+
+###plot selection 
+croaker, black sea bass, gray triggerfish, red porgy, tomate
+```{r}
+specs <- c("ATLANTIC CROAKER", "BLACK SEA BASS", "GRAY TRIGGERFISH", "RED PORGY", "BUTTERFISH")
+cts <- fish1 %>% ungroup() %>% filter(spp %in% specs & year > 1987) %>% group_by(spp) %>% summarise(NEFSC = sum(NEFSC, na.rm = TRUE), SEUS_REEF = sum(SEUS_REEF, na.rm = TRUE), SEUS_TRAWL = sum(SEUS_TRAWL, na.rm = TRUE)) %>% pivot_longer(NEFSC:SEUS_TRAWL, names_to = "survey", values_to = "trawlcount")
+
+
+p <- ggplot() + geom_sf(data = world) + geom_point(data = subset(total_long, spp %in% specs & weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey), size = 1) + facet_wrap(~spp, nrow = 1) + 
+  geom_text(data = cts, aes(x = -77.25, y = 35.75, label=trawlcount, colour = survey), size = 4, fontface='bold', 
+            position=position_dodge(width = 1.5), show.legend = FALSE) + 
+    coord_sf(xlim=c(-78, -75), ylim=c(34,36), expand = TRUE) + theme_Publication()+
+  theme(axis.text.x = element_text(angle = 90))+ guides(color = guide_legend(override.aes = list(size=5)))
+
+ggsave(filename = "selected_specs.jpg", plot=p, width = 35, height=15, units=c("cm"))
+
+cts$spp <- factor(cts$spp,levels = c("ATLANTIC CROAKER", "BLACK SEA BASS", "GRAY TRIGGERFISH", "RED PORGY", "BUTTERFISH"))
+
+to_use <- subset(total_long, spp %in% specs)
+to_use$spp <- factor(to_use$spp, levels = c("ATLANTIC CROAKER", "BLACK SEA BASS", "GRAY TRIGGERFISH", "RED PORGY", "BUTTERFISH"))
+
+p <- ggplot() + geom_sf(data = world) + geom_point(data = subset(to_use, weight > 0 & year > 1987), aes(x = lon, y = lat, colour = survey), size = .3) + facet_wrap(~spp, nrow = 1) + 
+  geom_text(data = cts, aes(x = -70, y = 32.75, label=trawlcount, colour = survey), size = 4, fontface='bold', 
+            position=position_dodge(width = 10.5), show.legend = FALSE) + 
+   coord_sf(xlim=c(-85, -65), ylim=c(25,45), expand = TRUE) + theme_Publication()+
+  theme(axis.text.x = element_text(angle = 90))+ guides(color = guide_legend(override.aes = list(size=5)))
+
+ggsave(filename = "selected_specs2.jpg", plot=p, width = 35, height=15, units=c("cm"))
+
+
+p
+```
+
+
+
+#Fuzzy Logic - skip me (long run time)
+figue out if there are surveys within 60 julian days of eachother 
+
+0. start with long datasets of each 
+1. add in julian day (which is days since 1970)
+2. k means cluster
+  - based on lat, long, julian day 
+
+```{r}
+neus_long <- neus_overlap_lat #this is to make it smaller (we know the seamap data doesn't go above 36)
+seus_long <- seus_overlap_lat 
+reef_long <- reef_overlap_lat
+
+total_long <- rbind(neus_long, seus_long, reef_long)
+
+
+total_long$julian <- julian(total_long$date) #number of days since 1970
+
+tocluster1 <- total_long %>% dplyr::select(lat, lon, julian) %>% distinct() #will join back based on this 
+
+tocluster <- scale(tocluster1)
+
+distance <- get_dist(tocluster)
+fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+
+k2 <- kmeans(tocluster, centers = 2, nstart = 25)
+k3 <- kmeans(tocluster, centers = 3, nstart = 25)
+k4 <- kmeans(tocluster, centers = 4, nstart = 25)
+k5 <- kmeans(tocluster, centers = 35, nstart = 25)
+
+# plots to compare
+p1 <- fviz_cluster(k2, geom = "point", data = tocluster) + ggtitle("k = 2")
+p2 <- fviz_cluster(k3, geom = "point",  data = tocluster) + ggtitle("k = 3")
+p3 <- fviz_cluster(k4, geom = "point",  data = tocluster) + ggtitle("k = 4")
+p4 <- fviz_cluster(k5, geom = "point",  data = tocluster) + ggtitle("k = 5")
+
+library(gridExtra)
+grid.arrange(p1, p2, p3, p4, nrow = 2)
+
+#determine the correct number of clusters: 
+
+set.seed(123)
+
+# function to compute total within-cluster sum of square 
+wss <- function(k) {
+  kmeans(tocluster, k, nstart = 10 )$tot.withinss
+}
+
+# Compute and plot wss for k = 1 to k = 1000
+k.values <- 1:1000
+
+# extract wss for 2-1000 clusters
+wss_values <- map_dbl(k.values, wss)
+
+plot(k.values, wss_values,
+       type="b", pch = 19, frame = FALSE, 
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares")
+
+
+
+#fuzzy logic - warning this takes a while 
+neus_seus <- neus_long %>% difference_left_join(y=seus_long, by=c("julian"), max_dist=60)
+
+```
+
+
+#________________
+#OLD
+```{r}
+# Compile NEUS ===========================================================
+print("Compile NEUS")
+
+load("neus_Survdat.RData")
+load("neus_SVSPP.RData")
+
+load("NMFS data/NEFSC_BTS_2021_all_seasons.RData")
+neus_me <- survey$survdat
+
+neus_survdat <- survdat %>% 
+  # select specific columns
+  select(CRUISE6, STATION, STRATUM, SVSPP, CATCHSEX, SVVESSEL, YEAR, SEASON, EST_TOWDATE, LAT, LON, DEPTH, SURFTEMP, SURFSALIN, BOTTEMP, BOTSALIN, ABUNDANCE, BIOMASS) %>% 
+  # remove duplicates
+  distinct() %>% 
+  mutate(SVVESSEL = as.character(SVVESSEL), 
+         SEASON = as.character(SEASON))
+
+# sum different sexes of same spp together
+#okay so now we know that the biomass column was given to them as the calibrated cpue
+neus_survdat <- neus_survdat %>% 
+  group_by(YEAR, SEASON, EST_TOWDATE, LAT, LON, DEPTH, CRUISE6, STATION, STRATUM, SVSPP) %>% 
+  summarise(wtcpue = sum(BIOMASS), abd = sum(ABUNDANCE), SURFTEMP = mean(SURFTEMP), SURFSALIN = mean(SURFSALIN), BOTTEMP = mean(BOTTEMP), BOTSALIN = mean(BOTSALIN)) 
+
+
+# repeat for spp file 
+neus_spp <- spp %>%
+  # remove some columns from spp data
+  select(-ITISSPP, -COMNAME, -AUTHOR) %>% 
+  mutate(SCINAME = as.character(SCINAME))
+
+files <- as.list(dir(pattern = "neus_strata", path = "data_raw", full.names = T))
+
+neus_strata <- read_csv("neus_strata.csv", col_types = cols(stratum = col_double(), stratum_area = col_double())) %>% rename(STRATUM = stratum,
+         STRATUM_AREA = stratum_area) %>% 
+  select(STRATUM, STRATUM_AREA) %>% 
+  distinct()
+
+neus <- left_join(neus_survdat, neus_spp, by = "SVSPP") %>%
+  left_join(neus_strata, by = "STRATUM")
+
+# are there any strata in the data that are not in the strata file?
+# stopifnot(nrow(filter(neus, is.na(STRATUM_AREA))) == 0)
+
+neus <- neus %>%
+  mutate(
+    # Create a unique haulid
+    haulid = paste(formatC(CRUISE6, width=6, flag=0), formatC(STATION, width=3, flag=0), formatC(STRATUM, width=4, flag=0), sep='-'),  
+    # Calculate stratum area where needed (use convex hull approach)
+    # convert square nautical miles to square kilometers
+    stratumarea = STRATUM_AREA * 3.429904) %>% 
+  rename(year = YEAR,
+         date = EST_TOWDATE,
+         spp = SCINAME,
+         lat = LAT, 
+         lon = LON, 
+         depth = DEPTH,
+         stratum = STRATUM) %>%
+  filter(
+    # remove unidentified spp and non-species
+    spp != "" | !is.na(spp), 
+    !grepl("EGG", spp), 
+    !grepl("UNIDENTIFIED", spp)) %>%
+  group_by(haulid, stratum, stratumarea, year, date, lat, lon, depth, spp, SEASON) %>% 
+  summarise(wtcpue = sumna(wtcpue), abd = sumna(abd), SURFTEMP = mean(SURFTEMP), SURFSALIN = mean(SURFSALIN), BOTTEMP = mean(BOTTEMP), BOTSALIN = mean(BOTSALIN)) %>% 
+  select(haulid, year, date, lat, lon, stratum, stratumarea, depth, spp, wtcpue, abd, SEASON, SURFTEMP, SURFSALIN, BOTTEMP, BOTSALIN) %>% 
+  ungroup()
+write.csv(neus, "neus_done_by_sarah_2.csv")
+```
+
+
+
+
+
+Data is compiled using ocean_adapt from Ocean_adapt_Jan_2022 download (see datasets folder )
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+note - there is data for 2019, but haven't adjusted malin pinsky's oceanadapt code to include that data. 
+```{r}
+seus_me <- read_csv("seus_long.csv")
+neus_me <- read.csv("neus_done_by_sarah_2.csv")
+```
+
+
+get out just overlapping lat longs and year from both datasets 
+
+```{r}
+neus_overlap_lat <- neus_me %>% dplyr::filter(lat >= min(seus_me$lat) & lat <= max(seus_me$lat) &  year >= min(seus_me$year) & year <= max(seus_me$year))
+
+seus_overlap_lat <- seus_me %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & year >= min(neus_me$year) & year <= max(neus_me$year))
+```
+
+
+how many trawls are in the overlapping data? 
+```{r}
+length(unique(neus_me$haulid))
+length(unique(neus_overlap_lat$haulid))
+
+length(unique(seus_overlap_lat$haulid))
+length(unique(seus_me$haulid))
+```
+add lon
+```{r}
+neus_overlap <- neus_me %>% dplyr::filter(lat >= min(seus_me$lat) & lat <= max(seus_me$lat) & lon >= min(seus_me$lon) & lon <= max(seus_me$lon) & year >= min(seus_me$year) & year <= max(seus_me$year))
+
+seus_overlap <- seus_me %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & lon >= min(neus_me$lon) & lon <= max(neus_me$lon) &year >= min(neus_me$year) & year <= max(neus_me$year))
+```
+
+
+how many trawls are in the overlapping data? 
+```{r}
+length(unique(neus_me$haulid))
+length(unique(neus_overlap$haulid))
+
+length(unique(seus_overlap$haulid))
+length(unique(seus_me$haulid))
+```
+
+overlapping species in lat, year overlap 
+```{r}
+#lat and year 
+neus_overlap_specs <- neus_overlap_lat %>% dplyr::filter(spp %in% seus_overlap_lat$spp)
+
+seus_overlap_specs <- seus_overlap_lat %>% dplyr::filter(spp %in% neus_overlap_lat$spp)
+
+length(unique(neus_overlap_specs$spp))
+length(unique(seus_overlap_specs$spp))
+
+#lat, lon and year 
+neus_overlap_specs <- neus_overlap %>% dplyr::filter(spp %in% seus_overlap$spp)
+
+seus_overlap_specs <- seus_overlap %>% dplyr::filter(spp %in% neus_overlap$spp)
+
+length(unique(neus_overlap_specs$spp))
+length(unique(seus_overlap_specs$spp))
+
+library(lubridate)
+neus_me$month <- month(as.POSIXlt(neus_me$date))
+
+neus_seust_overlap <- neus_overlap_specs
+```
+
+
+
+#reef data 
+```{r}
+Reef <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Reef_Fish_Survey_Jan_2022.csv")
+Reef[] <- lapply(Reef, gsub, pattern='=', replacement='') #= was in front of a lot of characters
+
+Reef <- Reef %>% 
+  mutate(date = as.Date(DATE, "%m-%d-%Y"), 
+         month = month(date), 
+         year = year(date),
+         year = as.numeric(year),
+         lat = as.numeric(LATITUDESTART), 
+         lon = as.numeric(LONGITUDESTART), 
+         spp = SPECIESSCIENTIFICNAME, 
+         haulid = COLLECTIONNUMBER)%>% 
+  drop_na(lat,lon)
+
+ggplot() + geom_histogram(data = Reef, aes(x=date, fill = as.factor(month)), binwidth = 30) +
+       scale_x_date(labels = date_format("%Y-%b"), breaks = "6 months") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+ scale_fill_brewer(palette = "Set1")
+
+ggplot(data = world) + geom_sf() + geom_point(data = Reef, aes(x = lon, y = lat, colour = as.factor(month)), size = .2) + 
+    coord_sf(xlim=c(-85, -75), ylim=c(27,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))+ scale_colour_brewer(palette = "Set1")+ guides(colour = guide_legend(override.aes = list(size=5)))
+
+```
+
+
+get out just overlapping lat longs and year from both datasets 
+
+```{r}
+neus_overlap_lat <- neus_me %>% dplyr::filter(lat >= min(Reef$lat) & lat <= max(Reef$lat) &  year >= min(Reef$year) & year <= max(Reef$year))
+
+Reef_overlap_lat <- Reef %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & year >= min(neus_me$year) & year <= max(neus_me$year))
+```
+
+
+how many trawls are in the overlapping data? 
+```{r}
+length(unique(neus_me$haulid))
+length(unique(neus_overlap_lat$haulid))
+
+length(unique(Reef_overlap_lat$haulid))
+length(unique(Reef$haulid))
+```
+add lon
+```{r}
+neus_overlap <- neus_me %>% dplyr::filter(lat >= min(Reef$lat) & lat <= max(Reef$lat) & lon >= min(Reef$lon) & lon <= max(Reef$lon) & year >= min(Reef$year) & year <= max(Reef$year))
+
+Reef_overlap <- Reef %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & lon >= min(neus_me$lon) & lon <= max(neus_me$lon) &year >= min(neus_me$year) & year <= max(neus_me$year))
+```
+
+
+how many trawls are in the overlapping data? 
+```{r}
+length(unique(neus_me$haulid))
+length(unique(neus_overlap$haulid))
+
+length(unique(Reef_overlap$haulid))
+length(unique(Reef$haulid))
+```
+
+overlapping species in lat, year overlap 
+```{r}
+#lat and year 
+neus_overlap_specs <- neus_overlap_lat %>% dplyr::filter(spp %in% Reef_overlap_lat$spp)
+
+Reef_overlap_specs <- Reef_overlap_lat %>% dplyr::filter(spp %in% neus_overlap_lat$spp)
+
+length(unique(neus_overlap_specs$spp))
+length(unique(Reef_overlap_specs$spp))
+
+#lat, lon and year 
+neus_overlap_specs <- neus_overlap %>% dplyr::filter(spp %in% Reef_overlap$spp)
+
+Reef_overlap_specs <- Reef_overlap %>% dplyr::filter(spp %in% neus_overlap$spp)
+
+length(unique(neus_overlap_specs$spp))
+length(unique(Reef_overlap_specs$spp))
+
+neus_seusR_overlap <- neus_overlap_specs
+
+
+```
+
+reef event info 
+```{r}
+Reef_event <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Reef_Fish_event_Jan_2022.csv")
+```
+
+
+
+#temporal piece 
+Figure out if the overlapping data has similar time frames
+```{r}
+library(scales) 
+neus_seusR_overlap
+Reef_overlap_specs
+
+neus_seust_overlap
+seus_overlap_specs
+
+
+ggplot() + geom_histogram(data = neus_seusR_overlap, aes(x=date), binwidth = 30) +
+       scale_x_date(labels = date_format("%Y-%b"))
+
+```
+
+
+
+#longline data 
+```{r}
+longline <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Longline_Fish_Survey_Jan_2022.csv")
+longline[] <- lapply(longline, gsub, pattern='=', replacement='') #= was in front of a lot of characters
+
+longline <- longline %>% 
+  mutate(date = as.Date(DATE, "%m-%d-%Y"), 
+         month = month(date), 
+         year = year(date),
+         year = as.numeric(year),
+         lat = as.numeric(LATITUDESTART), 
+         lon = as.numeric(LONGITUDESTART), 
+         spp = SPECIESCOMMONNAME, 
+         haulid = COLLECTIONNUMBER, 
+         duration = as.numeric(DURATION), 
+         weight = as.numeric(SPECIESTOTALWEIGHT),
+         NUMBERTOTAL = as.numeric(NUMBERTOTAL),
+         bt = as.numeric(TEMPBOTTOM), 
+         sst = as.numeric(TEMPSURFACE), 
+         bsal = as.numeric(SALINITYBOTTOM), 
+         ssal = as.numeric(SALINITYSURFACE), 
+         haulid = EVENTNAME, 
+         effort = as.numeric(EFFORT))%>% 
+  drop_na(lat,lon, weight, spp)
+
+#checkit
+library(rnaturalearth)
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+ggplot(data = world) + geom_sf() + geom_point(data =  longline, aes(x = lon, y = lat)) + 
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+ggplot(data = world) + geom_sf() + geom_point(data =  subset(longline, longline$SPECIESCOMMONNAME == "BONNETHEAD"), aes(x = lon, y = lat)) + 
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+```
+
+```{r}
+#make wider 
+longline <- longline %>% filter(spp != "")
+# sum different sexes of same spp together
+#okay so now we know that the biomass column was given to them as the calibrated cpue
+longline <- longline %>% 
+  group_by(year, lat, lon, date, month, EVENTNAME, bt, sst, bsal, ssal, duration, spp, effort) %>% 
+  summarise(weight = sum(weight)) 
+
+longline$wtcpue <- longline$weight / longline$effort
+
+longline$spp <- gsub(pattern = " ", replacement = "", longline$spp)
+
+longline_wide <- pivot_wider(longline, names_from = spp, values_from = wtcpue)
+ #with more than 20% NA
+
+
+#convert NA to 0 
+longline_wide[, 14:ncol(longline_wide)][is.na(longline_wide[, 14:ncol(longline_wide)])] <- 0
+
+
+#group by haulid 
+
+longline_wide <- longline_wide %>%
+  group_by(year, lat, lon, date, month, EVENTNAME, bt, sst, bsal, ssal, duration, effort) %>% 
+  summarise_if(is.numeric, mean, na.rm = TRUE)
+
+longline_wide <- longline_wide %>% dplyr::select(-weight)
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(longline_wide, ATLANTICSHARPNOSESHARK>0), aes(x = lon, y = lat, colour = ATLANTICSHARPNOSESHARK)) + 
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+
+colSums(longline_wide != 0)
+```
+
+
+#video data 
+```{r}
+video <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SERFS_Video/video.dataset.2011.2021.subset.csv")
+
+#make it long 
+video_long <- video %>% pivot_longer(cols = Alopias.sp_: Thunnus.sp_, names_to = "spp", values_to = "abd")
+tallied <- video_long %>% filter(abd > 0) %>% group_by(spp) %>% tally()
+
+ggplot(data = world) + geom_sf() + geom_point(data = video, aes(x = Start_Longitude, y = Start_Latitude)) + 
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+```
+
+
+Carcharhinus.plumbeus = sandbarshark, 133 positive abundances 
+Ginglymostoma.cirratum = nurse shark, 176 positive abundances 
+Galeocerdo.cuvier = tiger shar, 74 positive abundances
+Rhizoprionodon.terraenovae = sharpnose shark, 427 positive abundances 
+
+```{r}
+ham_summer <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/DISMAP/scalloped_hammerhead_survey-points-data.csv")
+colnames(ham_summer) <- c("HaulID", "Stratum", "LAT", "LON", "Depth", "Year", "wtcpue")
+ham_summer <- ham_summer[-c(1, 2, 3), ] 
+ham_summer <- ham_summer %>% mutate(LAT = as.numeric(LAT), LON = as.numeric(LON), wtcpue = as.numeric(wtcpue))
+pos_summer <- ham_summer %>% filter(wtcpue > 0)
+ham_spring <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/DISMAP/scalloped_hammerhead_spring_survey-points-data.csv")
+colnames(ham_spring) <- c("HaulID", "Stratum", "LAT", "LON", "Depth", "Year", "wtcpue")
+ham_spring <- ham_spring[-c(1, 2, 3), ] 
+pos_spring <- ham_spring %>% filter(wtcpue > 0)
+
+
+ggplot(data = world) + geom_sf() + geom_point(data = ham_summer, aes(x = LON, y = LAT)) + 
+    coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+```
+
