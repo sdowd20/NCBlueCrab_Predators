@@ -37,3 +37,22 @@ write.csv(p915_biol2, "Data/P915/Finalized/p915_biol2new")
 trawl_edt$Date <- as.Date(as.character(trawl_edt$Date), format= '%Y%m%d')
 trawl_edt$Year <- format(as.POSIXct(trawl_edt$Date,format= '%Y%m%d'), format= '%Y', tz= "GMT")
 trawl_edt$Month <- format(as.POSIXct(trawl_edt$Date,format= '%Y%m%d'), format= '%m', tz= "GMT")
+
+#P120: Look at Lela's CPUE file 
+df=read.delim("P120_1019.txt",sep="$",header=TRUE,dec=".")
+head(df)
+
+df2=read.delim("P120_7279.txt",sep="$",header=TRUE,dec=".")
+head(df2)
+
+df3=read.delim("P120_8089.txt",sep="$",header=TRUE,dec=".")
+head(df3)
+
+df4=read.delim("P120_9099.txt",sep="$",header=TRUE,dec=".")
+head(df4)
+
+df5=read.delim("P120_0009.txt",sep="$",header=TRUE,dec=".")
+head(df5)
+
+fulld=rbind(df,df2,df3,df4,df5)
+head(fulld)
