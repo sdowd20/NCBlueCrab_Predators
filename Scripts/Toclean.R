@@ -1,5 +1,4 @@
 Toclean.R
-
 #Standard flow: remove special characters and replace with NA, make sure there is a month, day, year and date column, str_to_title, no all caps for species, bind with common name dataset
 #Load packages
 library(readxl)
@@ -16,16 +15,23 @@ merged <- do.call(rbind, all)
 colnames(merged) <- str_to_title(colnames(merged))
 merged$Species <- tolower(merged$Species)
 
-##Creating new biological data file 
+##New biological data files 
 p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
 p915_biol2 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new2.xlsx")
-p915_bioln <- rbind(p915_biol1, p915_biol2)
-colnames(p915_bioln) <- str_to_title(colnames(p915_bioln))
-p915_bioln$Location <- str_to_title(p915_bioln$Location)
-p915_bioln_apply <- as.data.frame(sapply(p915_bioln[,c(18,19, 31:33)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
-p915_bioln_apply[p915_bioln_apply== "ERROR"] <- NA
-p915_bioln[ , colnames(p915_bioln) %in% colnames(p915_bioln_apply)] <- p915_bioln_apply #replace updated columns in original dataset
-write.csv("Data/P915/Finalized/p915_biolnew")
+
+colnames(p915_biol1) <- str_to_title(colnames(p915_biol1))
+p915_biol1$Location <- str_to_title(p915_biol1$Location)
+p915_biol1_apply <- as.data.frame(sapply(p915_biol1[,c(18,19, 31:33)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
+p915_biol1_apply[p915_biol1_apply== "ERROR"] <- NA
+p915_biol1[ , colnames(p915_biol1) %in% colnames(p915_biol1_apply)] <- p915_biol1_apply #replace updated columns in original dataset
+write.csv(p915_biol1, "Data/P915/Finalized/p915_biol1new")
+
+colnames(p915_biol2) <- str_to_title(colnames(p915_biol2))
+p915_biol2$Location <- str_to_title(p915_biol2$Location)
+p915_biol2_apply <- as.data.frame(sapply(p915_biol2[,c(18,19, 31:33)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
+p915_biol2_apply[p915_biol2_apply== "ERROR"] <- NA
+p915_biol2[ , colnames(p915_biol2) %in% colnames(p915_biol2_apply)] <- p915_biol2_apply #replace updated columns in original dataset
+write.csv(p915_biol2, "Data/P915/Finalized/p915_biol2new")
 
 #Date, year and month columns 
 trawl_edt$Date <- as.Date(as.character(trawl_edt$Date), format= '%Y%m%d')

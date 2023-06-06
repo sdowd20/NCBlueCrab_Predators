@@ -29,27 +29,30 @@ invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p915_CPUEold <- read.csv("Data/P915/Finalized/p915clean.csv")
-p915_biolnew <- read.csv("Data/P915/Finalized/p915_biolnew.csv")
-
-
-
-
+p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biolnew1.csv")
+p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biolnew2.csv")
+p915_bioln <- rbind(p915_biol1, p915_biol2)
 
 #Presence of NAs
-
+summary(is.na(p915_CPUEold)) #NAs present in Latitude, Longitude, Sedsize, Btmcomp, Winddir, Windspd
+summary(is.na(p915_bioln)) #NAs present in Station, Quad, Time, Duration, G1_parm1, G1_parm2, environmental variables, Colnum, biological variables
 
 #Spatial orientation
+ggplot(data = world) + geom_sf() + geom_point(data = p915_CPUEold, aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
 
-
+ggplot(data = world) + geom_sf() + geom_point(data = p915_bioln, aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #Biological
 
 #Sampling effort 
+p915_CPUEold$Date <- as.Date(paste(p915_CPUEold$Month, p915_CPUEold$Day, p915_CPUEold$Year, sep= "-"), "%m-%d-%Y")
+p915_CPUEold$Ym_date <- format(p915_CPUEold$Date, "%Y-%m")
+ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme 
+ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Area)
 
-
-
-total$Ym_date <- format(total$Date, "%Y-%m")
-total$Season <- ifelse(total$Month==4 | total$Month==5 | total$Month==6, "Spring", ifelse(total$Month==9 |total$Month==10 | total$Month==11 | total$Month==12, "Fall", ifelse(total$Month==7 |total$Month==8, "Summer", "Winter")))
-
+p915_CPUEold %>% group_by(Date, Latitude, Longitude) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme
 ```
 
+EDA revealed sampling consistency throughout the years (except 2020) for all areas except MHC. Sampling in MHC (Back and Core Sounds) began in 2018. After EDA, I have decided there is a need to remove NAs for latitude and longtitude, species, and colnum. One thing that I don't understand is why there are more coordinates for the biological dataset over the CPUE dataset. 
