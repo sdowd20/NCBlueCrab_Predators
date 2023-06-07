@@ -21,6 +21,7 @@ However, the Control \# is representative of an individual sampling event with a
 As of now (05/06/23), the sample IDs for the river systems (only Neuse and Pamlico) have an error. Cara Kowalchyk is planning to send me the updated CPUE data by the end of June. Right now, I can left_join by sample ID for the old CPUE and new biological dataset excluding the Neuse and Pamlico River systems.
 
 ### EDA
+
 ```{r}
 ##Load packages, functions, datasets
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
@@ -44,6 +45,7 @@ p915_bioln <- rbind(p915_biol1, p915_biol2)
 ```
 
 ##### General
+
 ```{r}
 #Presence of NAs
 summary(is.na(p915_CPUEold)) #NAs present in Latitude, Longitude, Sedsize, Btmcomp, Winddir, Windspd
@@ -64,6 +66,9 @@ ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + s
 ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Area)
 
 p915_CPUEold %>% group_by(Date, Latitude, Longitude) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme
+
+ggplot() + geom_sf(data = world) + geom_point(data = p915_CPUE0ld, aes(x = Longitude, y = Latitude)) + scale_size_area() + facet_wrap(Year, nrow = 6) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+ggsave("/users/sallydowd/desktop/P915.sampl.yearsjpg", width=25, height= 25, units= c("cm")) #look at by year
 ```
 
 EDA revealed sampling consistency throughout the years (except 2020) for all areas except MHC. Sampling in MHC (Back and Core Sounds) began in 2018. One thing that I don't understand is why there are more coordinates for the biological dataset over the CPUE dataset. As all areas (except MHC) didn't overlap until 2008, it is recommended to divide by region when analyzing metrics.
@@ -102,6 +107,7 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(depth, depth$Species
 ```
 
 ##### CPUE
+
 ```{r}
 p915_CPUEold <- p915_CPUEold %>% filter(Year < 2020)
 p915_CPUEold$Season <- ifelse(p915_CPUEold$Month==4 | p915_CPUEold$Month==5 | p915_CPUEold$Month==6, "Spring", ifelse(p915_CPUEold$Month==9 |p915_CPUEold$Month==10 | p915_CPUEold$Month==11 | p915_CPUEold$Month==12, "Fall", ifelse(p915_CPUEold$Month==7 |p915_CPUEold$Month==8, "Summer", "Winter")))
@@ -201,3 +207,5 @@ CPUE_graph(p915_CPUEfoc_yrda, "blue catfish", "Average CPUE") + facet_wrap(~Quad
 
 #Expanded weight frequency for all focal species by area: remove NEUSE and PAMLI 
 ```
+
+#### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code 
