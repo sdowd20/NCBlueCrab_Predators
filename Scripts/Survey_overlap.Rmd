@@ -181,12 +181,7 @@ p915_overlap_gridIDs <- total_edt %>% select(gridID, Survey, Season) %>% filter(
 p120_overlap_gridIDs <- total_edt %>% select(gridID, Survey, Season) %>% filter(Survey %in% "P120") %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Season)
 p195_overlap_gridIDs <- total_edt %>% select(gridID, Survey, Season) %>% filter(Survey %in% "P195") %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Season)
 
-match_df(p195_overlap_gridIDs %>% filter(Season %in% "Winter") %>% select(gridID), p120_overlap_gridIDs %>% filter(Season %in% "Winter") %>% select(gridID))
-match_df(p915_overlap_gridIDs %>% filter(Season %in% "Summer") %>% select(gridID), p120_overlap_gridIDs %>% filter(Season %in% "Summer") %>% select(gridID))
-
-
-
-
+match_df(p195_overlap_gridIDs %>% filter(Season %in% "Winter") %>% select(gridID), p120_overlap_gridIDs %>% filter(Season %in% "Winter") %>% select(gridID)) #tested with season and results were very similar 
 
 #Grid, Month: Are there times when fish of the same species were caught at the same time (month, gridID and year) in each of the surveys? 
 fish_grid_m <- total_edt_month %>% group_by(Year, Month, Species, Survey, gridID) %>% summarise(unique_fish = n_distinct(Colnum)) %>% pivot_wider(names_from = Survey, values_from = unique_fish) #n_distinct: counts unique combinations, how many times a fish was sampled in a grid cell 
@@ -226,6 +221,36 @@ p120_p915_lat_lon <- p120_overlap_edt %>% filter(Latitude >= min(p915_overlap_ed
 p915_p195_lat_lon <- p915_overlap_edt %>% filter(Latitude >= min(p195_overlap_edt$Latitude) & Latitude <= max(p195_overlap_edt$Latitude) & Year >= min(p195_overlap_edt$Year) & Year <= max(p195_overlap_edt$Year))
 
 p195_p120_lat_lon <- p195_overlap_edt %>% filter(Latitude >= min(p120_overlap_edt$Latitude) & Latitude <= max(p120_overlap_edt$Latitude) & Year >= min(p120_overlap_edt$Year) & Year <= max(p120_overlap_edt$Year))
+
+#For each species and each dataset, loop through to see the overlapping gridIDs with the other datasets
+
+P915_total <- total_edt %>% filter(Survey %in% "P915")
+P120_total <- total_edt %>% filter(Survey %in% "P120")
+P195_total <- total_edt %>% filter(Survey %in% "P195")
+
+spp_names <- unique(df_new$Species)
+P915_total_spp <- list()
+P915_total_gridID <- list()
+P120_total_spp <- list()
+P120_total_gridID <- list()
+match_df <- list()
+
+for(i in spp_names) {
+P915_total_spp[[i]] <- P915_total %>% filter(Species %in% i)
+P915_total_gridID[[i]] <- P915_total_spp[[i]] %>% dplyr::select(gridID, Season, Species) %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE)
+P120_total_spp[[i]] <- P120_total %>% filter(Species %in% i)
+P120_total_gridID[[i]] <- P120_total_spp[[i]] %>% dplyr::select(gridID, Season, Species) %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE)
+match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_total_gridID[[i]]) 
+}
+
+SST_data <- as.data.frame(do.call(rbind, match_df))
+SST_data %>% group_by(Species, Season) %>% dplyr::mutate(count= n()) %>% distinct(count, .keep_all= TRUE)
+
+#double check this! create match_df for 
+match_df(P915_total_gridID[[4]], P120_total_gridID[[4]])
+match_df(P915_total_gridID[[7]], P120_total_gridID[[7]])
+
+
 ```
 
 
