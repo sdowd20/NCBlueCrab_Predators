@@ -39,8 +39,8 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p915_CPUEold <- read.csv("Data/P915/Finalized/p915clean.csv")
-p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new")
-p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biol2new")
+p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new.csv")
+p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biol2new.csv")
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 
 #Edit CPUE dataset, can put this in dataset cleaning file 
@@ -196,29 +196,28 @@ CPUE_graph(p915_CPUEfoc_yrda, "blue catfish", "Average CPUE") + facet_wrap(~Quad
 
 ```{r}
 head(p915_bioln)
+sci_spp <- as.data.frame(unique(p915_bioln$Species))
+names(sci_spp)[names(sci_spp) == "unique(p915_bioln$Species)"] <- "Sci_nm"
+speicescommon <- as.data.frame(c("southern flounder", "red drum", "northern kingfish", "blue crab", "atlantic croaker", "black drum", "atlantic sharpnose", "bonnethead hammerhead", "sheepshead", "brown shrimp", "southern kingfish", "white shrimp", "eastern oyster", "sandbar shark", "oyster toadfish", "bull shark", "blue catfish", "NA", "blacktip shark", "scalloped hammerhead"))
+colnames(speicescommon)[1] = "Speciescommoname"
+speicescommon %>% mutate(X= 1:20) %>% left_join(sci_spp %>% mutate(X= 1:20), by = "X")
 
-p915_bioln_wt <- p915_bioln %>% group_by(Species, Latitude, Longitude, Year, Month, Ym_date) %>% summarise(weight= mean(Colwgt))
+unique(p915_bioln$Species)
+p915_bioln_wt <- p915_bioln %>% group_by(Species, Latitude, Longitude, Year, Month, Ym_date) %>% summarise(Weight= mean(Colwgt))
 
-fish_month <- fish_extract_2_mon %>% group_by(spp, coords.x1, coords.x2, year, month, ym_date) %>% summarise(weight = mean(weight))  
-fish_month <- as.data.frame(fish_month) %>% drop_na(spp) #group surveys together
+cent_fish_nc <- p915_bioln_wt %>% group_by(Year, Month, Species) %>% 
+summarise(lat = questionr::wtd.mean(Latitude, Weight, na.rm = T), lon = questionr::wtd.mean(Longitude, Weight, na.rm = T)) #wtd.mean: compute the weighted mean and variance of a vector
 
+cent_fish_nc %>% dplyr::filter(Species == "C. sapidus") %>% ggplot() + geom_sf(data = world) + geom_point(aes(x = lon, y = lat, colour= Year), size = 1) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + facet_wrap(~Month)
 
-NC_fish <- fish_month %>% rename(lat = coords.x2,
-         lon = coords.x1)  %>% dplyr::filter(lat > 32)
+unique(p915_bioln$Species)
+cent_fish_nc %>% dplyr::filter(Species == "I. furcatus") %>% ggplot() + geom_sf(data = world) + geom_point(aes(x = lon, y = lat, colour= Year), size = 1) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + facet_wrap(~Month)
 
-NC_fish %>% ggplot() + geom_point(aes(x = lon, y = lat), colour = "red", size = 2) + geom_sf(data = world) + 
-    coord_sf(xlim=c(-84, -74), ylim=c(20,38), expand = TRUE)
-
-cent_fish_nc <- NC_fish %>% 
-  group_by(year, month, spp) %>% 
-  summarise(lat = questionr::wtd.mean(lat, weight, na.rm = T), lon = questionr::wtd.mean(lon, weight, na.rm = T))
-
-cent_fish_nc %>% dplyr::filter(spp == "BLACK SEA BASS") %>% ggplot() + geom_point(aes(x = lon, y = lat, colour= year), size = 1) + geom_sf(data = world) + 
-    coord_sf(xlim=c(-84, -74), ylim=c(32,38), expand = TRUE) + facet_wrap(~month)
+cent_fish_nc %>% dplyr::filter(Species == "S. tiburo") %>% ggplot() + geom_sf(data = world) + geom_point(aes(x = lon, y = lat, colour= Year), size = 1) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + facet_wrap(~Month)
 
 library(ggpmisc)
 cent_fish_nc <- cent_fish_nc %>%
-  mutate(date = make_date(year, month, 1))
+  mutate(date = make_date(Year, Month, 1))
 
 #distance from southernmost point 
 #80, 33

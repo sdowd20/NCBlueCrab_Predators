@@ -39,6 +39,12 @@ p915_biol2$Ym_date <- format(p915_biol2$Date, "%Y-%m")
 
 write.csv(p915_biol2, "Data/P915/Finalized/p915_biol2new.csv")
 
+P120_speciesnms <- read_csv("Data/P120/P120_speciesnms.csv")
+colnames(P120_speciesnms) <- str_to_title(colnames(P120_speciesnms))
+P120_speciesnms$Speciescommonname <- str_to_lower(P120_speciesnms$Speciescommonname)
+P120_speciesnms$Speciesscientificname <- str_to_lower(P120_speciesnms$Speciesscientificname)
+
+
 #Date, year and month columns 
 trawl_edt$Date <- as.Date(as.character(trawl_edt$Date), format= '%Y%m%d')
 trawl_edt$Year <- format(as.POSIXct(trawl_edt$Date,format= '%Y%m%d'), format= '%Y', tz= "GMT")
