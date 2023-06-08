@@ -39,9 +39,15 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p915_CPUEold <- read.csv("Data/P915/Finalized/p915clean.csv")
-p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biolnew1.csv")
-p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biolnew2.csv")
-p915_bioln <- rbind(p915_biol1, p915_biol2)
+p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new")
+p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biol2new")
+p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
+
+#Edit CPUE dataset, can put this in dataset cleaning file 
+p915_CPUEold <- p915_CPUEold %>% filter(Year < 2020)
+p915_CPUEold$Season <- ifelse(p915_CPUEold$Month==4 | p915_CPUEold$Month==5 | p915_CPUEold$Month==6, "Spring", ifelse(p915_CPUEold$Month==9 |p915_CPUEold$Month==10 | p915_CPUEold$Month==11 | p915_CPUEold$Month==12, "Fall", ifelse(p915_CPUEold$Month==7 |p915_CPUEold$Month==8, "Summer", "Winter")))
+p915_CPUEold$Date <- as.Date(paste(p915_CPUEold$Month, p915_CPUEold$Day, p915_CPUEold$Year, sep= "-"), "%m-%d-%Y")
+p915_CPUEold$Ym_date <- format(p915_CPUEold$Date, "%Y-%m")
 ```
 
 ##### General
@@ -60,14 +66,12 @@ unique(p915_CPUEold$Area)
 unique(p915_bioln$Area)
 
 #Sampling effort 
-p915_CPUEold$Date <- as.Date(paste(p915_CPUEold$Month, p915_CPUEold$Day, p915_CPUEold$Year, sep= "-"), "%m-%d-%Y")
-p915_CPUEold$Ym_date <- format(p915_CPUEold$Date, "%Y-%m")
 ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme 
 ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Area)
 
 p915_CPUEold %>% group_by(Date, Latitude, Longitude) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme
 
-ggplot() + geom_sf(data = world) + geom_point(data = p915_CPUE0ld, aes(x = Longitude, y = Latitude)) + scale_size_area() + facet_wrap(Year, nrow = 6) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+ggplot() + geom_sf(data = world) + geom_point(data = p915_CPUEOld, aes(x = Longitude, y = Latitude)) + scale_size_area() + facet_wrap(Year, nrow = 6) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
 ggsave("/users/sallydowd/desktop/P915.sampl.yearsjpg", width=25, height= 25, units= c("cm")) #look at by year
 ```
 
@@ -75,11 +79,12 @@ EDA revealed sampling consistency throughout the years (except 2020) for all are
 
 After EDA, I have decided there is a need to remove NAs for latitude and longtitude, species, and colnum for both datasets. In addition, as we are only focusing on Pamlico Sound, areas in southern region can be removed (NEWR, miss, CAPEF).
 
-Initially: excluded Neuse River and Pamlico river due to error
+Initially: excluded Neuse River and Pamlico river due to error for binding purposes. 
 
-#####Spp. location: START HERE
+#####Species: s&t
 
 ```{r}
+#Spatial 
 #Coordinates sampled at 
 p915_CPUEold %>% group_by(Species) %>% summarize(n= sum(as.numeric(Colnum)))
 coords_captured("bonnethead hammerhead")
@@ -93,25 +98,15 @@ coords_captured("striped bass")
 #Depth distribution for species
 p915_CPUEold_depth <- p915_CPUEold %>% group_by(Species, Year, Area, Quad) %>% mutate(sum= sum(Colnum)) %>% distinct(sum, .keep_all = TRUE) 
 
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold_depth, p915_CPUEold_depth$Species %in% "blue catfish" & as.numeric(p915_CPUEold_depth$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = sum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~Quad)
 
-ggplot(data = world) + geom_sf() + geom_point(data = subset(depth, depth$Species %in% "blue catfish" & as.numeric(depth$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = sum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~Quad)
-
-ggplot(data = world) + geom_sf() + geom_point(data = subset(depth, depth$Species %in% "red drum" & as.numeric(depth$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = sum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~Quad)
-
-#Center of biomass for all focal species by area and depth 
-
-ggplot(data = world) + geom_sf() + geom_point(data = subset(depth, depth$Species %in% "black drum" & as.numeric(depth$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = sum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~Quad)
-
-ggplot(data = world) + geom_sf() + geom_point(data = subset(depth, depth$Species %in% "striped bass" & as.numeric(depth$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = sum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~Quad)
-
+#Temporal: for P915 you know it's not a function of sampling since they sample year around
+ggplot() + geom_histogram(data = subset(p915_CPUEold, p915_CPUEold$Colnum > 0), stat="count", aes(x=Season)) + standard_theme + facet_wrap(~Species)
 ```
 
 ##### CPUE
 
 ```{r}
-p915_CPUEold <- p915_CPUEold %>% filter(Year < 2020)
-p915_CPUEold$Season <- ifelse(p915_CPUEold$Month==4 | p915_CPUEold$Month==5 | p915_CPUEold$Month==6, "Spring", ifelse(p915_CPUEold$Month==9 |p915_CPUEold$Month==10 | p915_CPUEold$Month==11 | p915_CPUEold$Month==12, "Fall", ifelse(p915_CPUEold$Month==7 |p915_CPUEold$Month==8, "Summer", "Winter")))
-
 #CPUE for all focal species by area by year 
 p915_CPUEfoc <- p915_CPUEold %>% drop_na(Latitude, Longitude, Species, Colnum) %>% select(Year, Month, Day, Area, Quad, Depth, Species, Colnum, Latitude, Longitude, Date, Season) %>% filter(!Species %in% c("blue crab", "eastern oyster", "brown shrimp", "oyster toadfish", "white shrimp"))
 p915_CPUEfoc <- p915_CPUEfoc %>% mutate("Soak_time" = ifelse(Area == 'CAPEF' & Month  %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Area == 'NEWR' & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))) #add in standard soak time, max is 12 hours, soak time 4 hours for CAPEF and NEWR b/w April and September
@@ -134,7 +129,6 @@ CPUE_graph(p915_CPUEfoc_yr, "southern flounder", "Average CPUE")
 CPUE_graph(p915_CPUEfoc_yr, "southern kingfish", "Average CPUE") 
 CPUE_graph(p915_CPUEfoc_yr, "striped bass", "Average CPUE") 
 CPUE_graph(p915_CPUEfoc_yr, "blue catfish", "Average CPUE") 
-
 
 #By year, area: some trends 
 p915_CPUEfoc_yra <- p915_CPUEfoc %>% group_by(Species, Year, Area) %>% summarise(CPUE_avg = mean(CPUE)) %>% distinct(CPUE_avg, .keep_all= TRUE)
@@ -198,6 +192,71 @@ CPUE_graph(p915_CPUEfoc_yrda, "striped bass", "Average CPUE") + facet_wrap(~Quad
 CPUE_graph(p915_CPUEfoc_yrda, "blue catfish", "Average CPUE") + facet_wrap(~Quad + Area, scales= "free")
 ```
 
+##### Centroid shifts? 
+
+```{r}
+head(p915_bioln)
+
+p915_bioln_wt <- p915_bioln %>% group_by(Species, Latitude, Longitude, Year, Month, Ym_date) %>% summarise(weight= mean(Colwgt))
+
+fish_month <- fish_extract_2_mon %>% group_by(spp, coords.x1, coords.x2, year, month, ym_date) %>% summarise(weight = mean(weight))  
+fish_month <- as.data.frame(fish_month) %>% drop_na(spp) #group surveys together
+
+
+NC_fish <- fish_month %>% rename(lat = coords.x2,
+         lon = coords.x1)  %>% dplyr::filter(lat > 32)
+
+NC_fish %>% ggplot() + geom_point(aes(x = lon, y = lat), colour = "red", size = 2) + geom_sf(data = world) + 
+    coord_sf(xlim=c(-84, -74), ylim=c(20,38), expand = TRUE)
+
+cent_fish_nc <- NC_fish %>% 
+  group_by(year, month, spp) %>% 
+  summarise(lat = questionr::wtd.mean(lat, weight, na.rm = T), lon = questionr::wtd.mean(lon, weight, na.rm = T))
+
+cent_fish_nc %>% dplyr::filter(spp == "BLACK SEA BASS") %>% ggplot() + geom_point(aes(x = lon, y = lat, colour= year), size = 1) + geom_sf(data = world) + 
+    coord_sf(xlim=c(-84, -74), ylim=c(32,38), expand = TRUE) + facet_wrap(~month)
+
+library(ggpmisc)
+cent_fish_nc <- cent_fish_nc %>%
+  mutate(date = make_date(year, month, 1))
+
+#distance from southernmost point 
+#80, 33
+library(geosphere)
+fish2 <- cent_fish_nc %>% dplyr::select(lon, lat)
+fish2 <- subset(fish2, fish2$lon != "NaN")
+
+
+southern1 <- fish2
+southern1$lon <- -80
+southern1$lat <- 33
+
+coordinates(fish2) <- ~ lon + lat
+coordinates(southern1) <- ~ lon + lat
+dist <- distGeo(fish2, southern1)
+        
+
+cent_fish_nc <- subset(cent_fish_nc, cent_fish_nc$lon != "NaN")
+cent_fish_nc$dist <- dist/1000
+
+#make a pretty plot. 
+p1 <- cent_fish_nc %>% ggplot() + geom_point(aes(x = lon, y = lat), colour = "red", size = 2) + geom_sf(data = world) + 
+    coord_sf(xlim=c(-84, -74), ylim=c(32,38), expand = TRUE)+ theme(panel.background = element_rect(fill = "white", colour = "black")) + facet_wrap(~year, nrow = 4) + theme(panel.background = element_rect(fill = "white", colour = "black")) + theme_Publication() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + geom_point(aes(x = -80, y = 32.5), shape = 23, size = 3, fill = "blue")
+
+p2 <- ggplot(data = cent_fish_nc, aes(x = date, y = dist)) + geom_point(aes(colour = as.factor(month)), size = 2) + geom_smooth(method = "glm") + facet_wrap(~specs, nrow = 6) + theme_Publication() + scale_color_hue(labels = c("Marhc", "April")) + labs(colour = element_blank(), y = "distance from southernmost point (km)")
+
+```
+
+
+
+
+
+
+
+
+
+
+
 ```{r}
 
 
@@ -206,6 +265,10 @@ CPUE_graph(p915_CPUEfoc_yrda, "blue catfish", "Average CPUE") + facet_wrap(~Quad
 
 
 #Expanded weight frequency for all focal species by area: remove NEUSE and PAMLI 
+
+#centroid shifts by size class 
 ```
+
+
 
 #### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code

@@ -17,21 +17,27 @@ merged$Species <- tolower(merged$Species)
 
 ##New biological data files 
 p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
-p915_biol2 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new2.xlsx")
-
 colnames(p915_biol1) <- str_to_title(colnames(p915_biol1))
 p915_biol1$Location <- str_to_title(p915_biol1$Location)
+p915_biol1 <- p915_biol1 %>% select(-Year) %>% mutate(Year= lubridate::year(Date))
 p915_biol1_apply <- as.data.frame(sapply(p915_biol1[,c(18,19, 31:33)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
 p915_biol1_apply[p915_biol1_apply== "ERROR"] <- NA
 p915_biol1[ , colnames(p915_biol1) %in% colnames(p915_biol1_apply)] <- p915_biol1_apply #replace updated columns in original dataset
-write.csv(p915_biol1, "Data/P915/Finalized/p915_biol1new")
+p915_biol1$Season <- ifelse(p915_biol1$Month==4 | p915_biol1$Month==5 | p915_biol1$Month==6, "Spring", ifelse(p915_biol1$Month==9 |p915_biol1$Month==10 | p915_biol1$Month==11 | p915_biol1$Month==12, "Fall", ifelse(p915_biol1$Month==7 |p915_biol1$Month==8, "Summer", "Winter")))
+p915_biol1$Ym_date <- format(p915_biol1$Date, "%Y-%m")
+write.csv(p915_biol1, "Data/P915/Finalized/p915_biol1new.csv")
 
+p915_biol2 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new2.xlsx")
 colnames(p915_biol2) <- str_to_title(colnames(p915_biol2))
 p915_biol2$Location <- str_to_title(p915_biol2$Location)
+p915_biol2 <- p915_biol2 %>% select(-Year) %>% mutate(Year= lubridate::year(Date))
 p915_biol2_apply <- as.data.frame(sapply(p915_biol2[,c(18,19, 31:33)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
 p915_biol2_apply[p915_biol2_apply== "ERROR"] <- NA
 p915_biol2[ , colnames(p915_biol2) %in% colnames(p915_biol2_apply)] <- p915_biol2_apply #replace updated columns in original dataset
-write.csv(p915_biol2, "Data/P915/Finalized/p915_biol2new")
+p915_biol2$Season <- ifelse(p915_biol2$Month==4 | p915_biol2$Month==5 | p915_biol2$Month==6, "Spring", ifelse(p915_biol2$Month==9 |p915_biol2$Month==10 | p915_biol2$Month==11 | p915_biol2$Month==12, "Fall", ifelse(p915_biol2$Month==7 |p915_biol2$Month==8, "Summer", "Winter")))
+p915_biol2$Ym_date <- format(p915_biol2$Date, "%Y-%m")
+
+write.csv(p915_biol2, "Data/P915/Finalized/p915_biol2new.csv")
 
 #Date, year and month columns 
 trawl_edt$Date <- as.Date(as.character(trawl_edt$Date), format= '%Y%m%d')
@@ -56,3 +62,8 @@ head(df5)
 
 fulld=rbind(df,df2,df3,df4,df5)
 head(fulld)
+
+#Add this to all datasets! 
+
+#p915_CPUEold <- p915_CPUEold %>% filter(Year < 2020), not this yet 
+
