@@ -169,6 +169,7 @@ total_edt %>% filter(Survey %in% "P120", Colnum > 0) %>% summarize(count_distinc
 total_edt %>% filter(Survey %in% "P195", Colnum > 0) %>% summarize(count_distinct= n_distinct(gridID)) #number of unique 
 
 ##Overlapping grid IDs
+###In general:
 p915_overlap_gridID <- total_edt %>% select(gridID, Survey) %>% filter(Survey %in% "P915") %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID)
 p120_overlap_gridID <- total_edt %>% select(gridID, Survey) %>% filter(Survey %in% "P120") %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID)
 p195_overlap_gridID <- total_edt %>% select(gridID, Survey) %>% filter(Survey %in% "P195") %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID)
@@ -177,6 +178,7 @@ match_df(p915_overlap_gridID, p120_overlap_gridID, on = NULL)
 match_df(p915_overlap_gridID, p195_overlap_gridID, on = NULL)
 match_df(p195_overlap_gridID, p120_overlap_gridID, on = NULL) #results consistent when look at season 
 
+###By season:
 p915_overlap_gridIDs <- total_edt %>% select(gridID, Survey, Season) %>% filter(Survey %in% "P915") %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Season)
 p120_overlap_gridIDs <- total_edt %>% select(gridID, Survey, Season) %>% filter(Survey %in% "P120") %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Season)
 p195_overlap_gridIDs <- total_edt %>% select(gridID, Survey, Season) %>% filter(Survey %in% "P195") %>% group_by(Season) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Season)
@@ -222,13 +224,12 @@ p915_p195_lat_lon <- p915_overlap_edt %>% filter(Latitude >= min(p195_overlap_ed
 
 p195_p120_lat_lon <- p195_overlap_edt %>% filter(Latitude >= min(p120_overlap_edt$Latitude) & Latitude <= max(p120_overlap_edt$Latitude) & Year >= min(p120_overlap_edt$Year) & Year <= max(p120_overlap_edt$Year))
 
-#For each species and each dataset, loop through to see the overlapping gridIDs with the other datasets
-
+#For each species and each dataset, loop through to see the overlapping gridIDs with the other datasets for each season, make this into a function! 
 P915_total <- total_edt %>% filter(Survey %in% "P915")
 P120_total <- total_edt %>% filter(Survey %in% "P120")
 P195_total <- total_edt %>% filter(Survey %in% "P195")
 
-spp_names <- unique(df_new$Species)
+spp_names <- unique(P195_total$Species)
 P915_total_spp <- list()
 P915_total_gridID <- list()
 P120_total_spp <- list()
@@ -243,14 +244,33 @@ P120_total_gridID[[i]] <- P120_total_spp[[i]] %>% dplyr::select(gridID, Season, 
 match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_total_gridID[[i]]) 
 }
 
-SST_data <- as.data.frame(do.call(rbind, match_df))
-SST_data %>% group_by(Species, Season) %>% dplyr::mutate(count= n()) %>% distinct(count, .keep_all= TRUE)
+match_data <- as.data.frame(do.call(rbind, match_df))
+match_data <- match_data %>% group_by(Species, Season) %>% dplyr::mutate(count= n()) %>% distinct(count, .keep_all= TRUE)
+match_data %>% summarise(mean= mean(count), sd= sd(count))
+summary(match_data$count)
 
-#double check this! create match_df for 
-match_df(P915_total_gridID[[4]], P120_total_gridID[[4]])
-match_df(P915_total_gridID[[7]], P120_total_gridID[[7]])
+#For each species and each dataset, loop through to see the overlapping gridIDs with the other datasets for each season and year 
 
+spp_names <- unique(P195_total$Species)
+P915_total_spp <- list()
+P915_total_gridID <- list()
+P120_total_spp <- list()
+P120_total_gridID <- list()
+match_df <- list()
 
+for(i in spp_names) {
+P915_total_spp[[i]] <- P915_total %>% filter(Species %in% i)
+P915_total_gridID[[i]] <- P915_total_spp[[i]] %>% dplyr::select(gridID, Season, Species, Year) %>% group_by(Season, Year, Species) %>% distinct(gridID, .keep_all= TRUE)
+P120_total_spp[[i]] <- P120_total %>% filter(Species %in% i)
+P120_total_gridID[[i]] <- P120_total_spp[[i]] %>% dplyr::select(gridID, Season, Species, Year) %>% group_by(Season, Year, Species) %>% distinct(gridID, .keep_all= TRUE)
+match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_total_gridID[[i]]) 
+}
+
+match_data2 <- as.data.frame(do.call(rbind, match_df))
+match_data2 <- match_data2 %>% group_by(Species, Season, Year) %>% dplyr::mutate(count= n()) %>% distinct(count, .keep_all= TRUE)
+match_data2 %>% summarise(mean= mean(count), sd= sd(count))
+summary(match_data2$count)
+unique(match_data2$Year)
 ```
 
 

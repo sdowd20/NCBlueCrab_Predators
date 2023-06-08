@@ -208,4 +208,4 @@ CPUE_graph(p915_CPUEfoc_yrda, "blue catfish", "Average CPUE") + facet_wrap(~Quad
 #Expanded weight frequency for all focal species by area: remove NEUSE and PAMLI 
 ```
 
-#### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code 
+#### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code
