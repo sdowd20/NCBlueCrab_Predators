@@ -5,9 +5,10 @@ date: "06/05/23"
 output: html_document
 ---
 
-This code was adopted and modified from Sarah Roberts (sroberts@nyelab.org) who created it in 01/2022. 
+This code was adopted and modified from Sarah Roberts ([sroberts\@nyelab.org](mailto:sroberts@nyelab.org){.email}) who created it in 01/2022.
 
 #### Load packages, functions and datasets
+
 ```{r}
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
 
@@ -16,22 +17,11 @@ invisible(lapply(packages, library, character.only= TRUE))
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
+
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120 <- read.csv("Data/P120/Finalized/p120_clean_2021.csv") #make species name go to lower
-p120_speciesn <- read.csv("Data/P120/P120_speciesnms.csv") 
-p915 <- read.csv("Data/P915/Finalized/p915clean.csv")
+p915 <- read.csv("Data/P915/Finalized/p915clean_new.csv")
 p195 <- read.csv("Data/P195/Finalized/p195clean.csv")
-colnames(p120) <- str_to_title(colnames(p120))
-colnames(p195) <- str_to_title(colnames(p195))
-p915$Date <- as.Date(paste(p915$Month, p915$Day, p915$Year, sep= "-"), "%m-%d-%Y")
-
-colnames(p120)
-colnames(p120_speciesn)
-
-p120_speciesn <- p120_speciesn %>% rename("Species" = "SciName") %>% select(Species, SPECIESCOMMONNAME)
-p120_edt <- p120 %>% left_join(p120_speciesn, by= "Species")
-colnames(p120_edt) <- str_to_title(colnames(p120_edt))
-p120_edt[[39]] <- tolower(p120_edt[[39]])
 ```
 
 #### Where focal species are caught
@@ -67,7 +57,8 @@ coords_captured_p120("RED DRUM")
 coords_captured_p120("BLACK DRUM")
 ```
 
-#### Bind together all datasets & explore  
+#### Bind together all datasets & explore
+
 ```{r}
 #Bind together 
 p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Species, Colnum, Latitude, Longitude) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
@@ -77,6 +68,7 @@ p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface,
 colnames(p915_overlap)
 colnames(p120_overlap)
 colnames(p195_overlap)
+
 
 total <- rbind(p915_overlap, p120_overlap, p195_overlap)
 total$Ym_date <- format(total$Date, "%Y-%m")
@@ -96,6 +88,7 @@ total_lat_lon <- rbind(p915_lat_lon, p120_lat_lon, p195_lat_lon)
 ```
 
 #### Form a grid individually over datasets
+
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
 # make an object the size and shape of the output you want
@@ -129,6 +122,7 @@ total_edt <- total %>% left_join(fish_extract_2_2, by= "lat_lon")
 ```
 
 #### Edit gridded dataset
+
 ```{r}
 #Check data: 74 data points have NA for grid cells, NA points as out of study area 
 summary(is.na(total_edt))
@@ -145,6 +139,7 @@ write.csv(total_edt, "/Users/sallydowd/Desktop/pamlicodatasets/total_edt.csv")
 #### Overlap
 
 ##### Dataframe: spatial and temporal
+
 ```{r}
 total_edt <- read.csv("/Users/sallydowd/Desktop/pamlicodatasets/total_edt.csv", header= T)
 total_edt <- total_edt %>% select(-X)
@@ -193,6 +188,7 @@ fish_grid_s <- total_edt_seas %>% group_by(Year, Season, Species, Survey, gridID
 ```
 
 ##### Basic spp visualzation
+
 ```{r}
 #Species-specific 
 ss_survey_vis <- function(species){
@@ -273,9 +269,8 @@ summary(match_data2$count)
 unique(match_data2$Year)
 ```
 
+how many trawls are in the overlapping data?
 
-
-how many trawls are in the overlapping data? 
 ```{r}
 length(unique(neus_me$haulid))
 length(unique(neus_overlap_lat$haulid))
@@ -283,15 +278,17 @@ length(unique(neus_overlap_lat$haulid))
 length(unique(seus_overlap_lat$haulid))
 length(unique(seus_me$haulid))
 ```
+
 add lon
+
 ```{r}
 neus_overlap <- neus_me %>% dplyr::filter(lat >= min(seus_me$lat) & lat <= max(seus_me$lat) & lon >= min(seus_me$lon) & lon <= max(seus_me$lon) & year >= min(seus_me$year) & year <= max(seus_me$year))
 
 seus_overlap <- seus_me %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & lon >= min(neus_me$lon) & lon <= max(neus_me$lon) &year >= min(neus_me$year) & year <= max(neus_me$year))
 ```
 
+how many trawls are in the overlapping data?
 
-how many trawls are in the overlapping data? 
 ```{r}
 length(unique(neus_me$haulid))
 length(unique(neus_overlap$haulid))
@@ -300,7 +297,8 @@ length(unique(seus_overlap$haulid))
 length(unique(seus_me$haulid))
 ```
 
-overlapping species in lat, year overlap 
+overlapping species in lat, year overlap
+
 ```{r}
 #lat and year 
 neus_overlap_specs <- neus_overlap_lat %>% dplyr::filter(spp %in% seus_overlap_lat$spp)
@@ -324,9 +322,8 @@ neus_me$month <- month(as.POSIXlt(neus_me$date))
 neus_seust_overlap <- neus_overlap_specs
 ```
 
+#reef data
 
-
-#reef data 
 ```{r}
 Reef <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Reef_Fish_Survey_Jan_2022.csv")
 Reef[] <- lapply(Reef, gsub, pattern='=', replacement='') #= was in front of a lot of characters
@@ -350,8 +347,7 @@ ggplot(data = world) + geom_sf() + geom_point(data = Reef, aes(x = lon, y = lat,
 
 ```
 
-
-get out just overlapping lat longs and year from both datasets 
+get out just overlapping lat longs and year from both datasets
 
 ```{r}
 neus_overlap_lat <- neus_me %>% dplyr::filter(lat >= min(Reef$lat) & lat <= max(Reef$lat) &  year >= min(Reef$year) & year <= max(Reef$year))
@@ -359,8 +355,8 @@ neus_overlap_lat <- neus_me %>% dplyr::filter(lat >= min(Reef$lat) & lat <= max(
 Reef_overlap_lat <- Reef %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & year >= min(neus_me$year) & year <= max(neus_me$year))
 ```
 
+how many trawls are in the overlapping data?
 
-how many trawls are in the overlapping data? 
 ```{r}
 length(unique(neus_me$haulid))
 length(unique(neus_overlap_lat$haulid))
@@ -368,15 +364,17 @@ length(unique(neus_overlap_lat$haulid))
 length(unique(Reef_overlap_lat$haulid))
 length(unique(Reef$haulid))
 ```
+
 add lon
+
 ```{r}
 neus_overlap <- neus_me %>% dplyr::filter(lat >= min(Reef$lat) & lat <= max(Reef$lat) & lon >= min(Reef$lon) & lon <= max(Reef$lon) & year >= min(Reef$year) & year <= max(Reef$year))
 
 Reef_overlap <- Reef %>% dplyr::filter(lat >= min(neus_me$lat) & lat <= max(neus_me$lat) & lon >= min(neus_me$lon) & lon <= max(neus_me$lon) &year >= min(neus_me$year) & year <= max(neus_me$year))
 ```
 
+how many trawls are in the overlapping data?
 
-how many trawls are in the overlapping data? 
 ```{r}
 length(unique(neus_me$haulid))
 length(unique(neus_overlap$haulid))
@@ -385,7 +383,8 @@ length(unique(Reef_overlap$haulid))
 length(unique(Reef$haulid))
 ```
 
-overlapping species in lat, year overlap 
+overlapping species in lat, year overlap
+
 ```{r}
 #lat and year 
 neus_overlap_specs <- neus_overlap_lat %>% dplyr::filter(spp %in% Reef_overlap_lat$spp)
@@ -408,15 +407,14 @@ neus_seusR_overlap <- neus_overlap_specs
 
 ```
 
-reef event info 
+reef event info
+
 ```{r}
 Reef_event <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Reef_Fish_event_Jan_2022.csv")
 ```
 
+#temporal piece Figure out if the overlapping data has similar time frames
 
-
-#temporal piece 
-Figure out if the overlapping data has similar time frames
 ```{r}
 library(scales) 
 neus_seusR_overlap
@@ -431,9 +429,8 @@ ggplot() + geom_histogram(data = neus_seusR_overlap, aes(x=date), binwidth = 30)
 
 ```
 
+#longline data
 
-
-#longline data 
 ```{r}
 longline <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SEAMAP/Longline_Fish_Survey_Jan_2022.csv")
 longline[] <- lapply(longline, gsub, pattern='=', replacement='') #= was in front of a lot of characters
@@ -505,8 +502,8 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(longline_wide, ATLAN
 colSums(longline_wide != 0)
 ```
 
+#video data
 
-#video data 
 ```{r}
 video <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/SERFS_Video/video.dataset.2011.2021.subset.csv")
 
@@ -518,11 +515,7 @@ ggplot(data = world) + geom_sf() + geom_point(data = video, aes(x = Start_Longit
     coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
 ```
 
-
-Carcharhinus.plumbeus = sandbarshark, 133 positive abundances 
-Ginglymostoma.cirratum = nurse shark, 176 positive abundances 
-Galeocerdo.cuvier = tiger shar, 74 positive abundances
-Rhizoprionodon.terraenovae = sharpnose shark, 427 positive abundances 
+Carcharhinus.plumbeus = sandbarshark, 133 positive abundances Ginglymostoma.cirratum = nurse shark, 176 positive abundances Galeocerdo.cuvier = tiger shar, 74 positive abundances Rhizoprionodon.terraenovae = sharpnose shark, 427 positive abundances
 
 ```{r}
 ham_summer <- read.csv("~/Documents/ClimateOceanPlanning/Datasets/DISMAP/scalloped_hammerhead_survey-points-data.csv")
@@ -540,4 +533,4 @@ ggplot(data = world) + geom_sf() + geom_point(data = ham_summer, aes(x = LON, y 
     coord_sf(xlim=c(-85, -75), ylim=c(28,36), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
 ```
 
-#### Other analyses: Centroid shifts, Fuzzy logic (see Example_survey_overlap.Rmd) 
+#### Other analyses: Centroid shifts, Fuzzy logic (see Example_survey_overlap.Rmd)
