@@ -3,6 +3,8 @@ Toclean.R
 #Load packages
 library(readxl)
 library(stringr)
+library(readr)
+library(dplyr)
 
 #Species names
 P120_speciesnms <- read_csv("Data/P120/P120_speciesnms.csv")
@@ -21,6 +23,7 @@ sppcommonnmsc[13,2] <- "eastern oyster"
 sppcommonnmsc[14,2] <- "sandbar shark"
 sppcommonnmsc[17,2] <- "blue catfish"
 sppcommonnmsc[20,2] <- "scallop hammerhead"
+sppcommonnmsc[3,2] <- "striped bass" #northern kingfish doesn't exist in dataset, has same abbreviated name 
 sppcommonnmsc <- sppcommonnmsc %>% filter(!Speciescommonname %in% "sand devil") #take out angel shark right now b/c don't have CPUE
 write.csv(sppcommonnmsc, "Data/sppcommonnmsc.csv")
 
@@ -42,7 +45,7 @@ merged$Species <- tolower(merged$Species)
 p915 <- read.csv("Data/P915/Raw/p915clean.csv")
 p915 <- p915 %>% dplyr::rename("Speciescommonname"= "Species")
 p915$Date <- as.Date(paste(p915$Month, p915$Day, p915$Year, sep= "-"), "%m-%d-%Y")
-p915_spp <- p915 %>% left_join(spp_list, by= "Speciescommonname") #Same amount of NAs as P915 normally for Speciescommonname
+p915_spp <- p915 %>% left_join(spp_list, by= "Speciescommonname") #No NAs for species name, same row #
 write.csv(p915_spp, "Data/P915/Finalized/p915clean_new.csv")
 
 ##New biological data files 
@@ -72,9 +75,11 @@ p915_biol2$Season <- ifelse(p915_biol2$Month==4 | p915_biol2$Month==5 | p915_bio
 p915_biol2$Date <- as.Date(p915_biol2$Date, "%Y-%m-%d")
 p915_biol2$Ym_date <- format(p915_biol2$Date, "%Y-%m")
 
+unique(p915_biol2$Species)
+unique(p915$Speciescommonname)
 ###Adding species commonnames
 p915_biol1 <- p915_biol1 %>% dplyr::rename("Sciname"= "Species")
-p915_biol2 <- p915_biol2  %>% dplyr::rename("Sciname"= "Species")
+p915_biol2 <- p915_biol2 %>% dplyr::rename("Sciname"= "Species")
 p915_biol1_new <- p915_biol1 %>% left_join(spp_list, by= "Sciname")
 p915_biol2_new <- p915_biol2 %>% left_join(spp_list, by= "Sciname") #no NAs for Sciname for 1st and 2nd df, a couple of NAs for Speciescommonname in 1st and 2nd b/c of angel shark
 
@@ -98,8 +103,9 @@ p195[[12]] <- tolower(p195[[12]])
 p195[[13]] <- tolower(p195[[13]])
 p195$Speciescommonname[p195$Speciescommonname %in% "northern brown shrimp"] <- "brown shrimp" #check which ones didn't match spp_list in P120 to change
 P120_speciesnms_ssn <- P120_speciesnms %>% select(Speciesscientificname, Sciname)
-p195_edt <-p195 %>% left_join(P120_speciesnms_ssn, by= "Speciesscientificname") #some NAs for Sciname which is normal, I feel fine ish about it
-
+P120_speciesnms_ssn[316, 1] <- "morone saxatilis" 
+P120_speciesnms_ssn[316, 2] <- "M. saxatilis" #add in striped bass b/c wasn't in P120 
+p195_edt <-p195 %>% left_join(P120_speciesnms_ssn, by= "Speciesscientificname") #All NAs now for Sciname are for species common names not in dataset (we don't need)
 write.csv(p195_edt, "Data/P195/Finalized/p195_clean_new.csv")
 
 "brown shrimp"
@@ -112,7 +118,6 @@ p915 <- p915 %>% dplyr::rename("Speciescommonname"= "Species")
 p915$Date <- as.Date(paste(p915$Month, p915$Day, p915$Year, sep= "-"), "%m-%d-%Y")
 p915_spp <- p915 %>% left_join(spp_list, by= "Speciescommonname") #Same amount of NAs as P915 normally for Speciescommonname
 write.csv(p915_spp, "Data/P915/Finalized/p915clean_new.csv")
-
 
 p120_speciesn <- p120_speciesn %>% rename("Species" = "SciName") %>% select(Species, SPECIESCOMMONNAME)
 p120_edt <- p120 %>% left_join(p120_speciesn, by= "Species")
