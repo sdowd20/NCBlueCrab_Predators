@@ -264,10 +264,29 @@ p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise
 
 #### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code
 
-#### Random forest model for species total number
+#### GLM for species total number 
 
 ```{r}
-P915_bluecatfish <- p915_CPUEfoc %>% filter(Speciescommonname %in% "blue catfish")
+summary(p915_CPUEfoc)
+p915_CPUEfoc$Stemp <- as.numeric(p915_CPUEfoc$Stemp)
+p915_CPUEfoc$Bsal <- as.numeric(p915_CPUEfoc$Bsal)
+p915_CPUEfoc$Ssal <- as.numeric(p915_CPUEfoc$Ssal)
+
+P915_bluecatfish <- p915_CPUEfoc %>% filter(Speciescommonname %in% "blue catfish") %>% dplyr::select(Month, Year, Depth, Colnum, Latitude, Longitude, Stemp, Bsal, Ssal)
+moon_pois <- glm(Colnum ~ Month + Year + Depth + Latitude + Longitude + Stemp + Bsal + Ssal, data = P915_bluecatfish, family="poisson")
+summary(moon_pois)
+report(moon_pois)
+
+P915_bluecatfish <- p915_CPUEfoc %>% filter(Speciescommonname %in% "bonnethead hammerhead") %>% dplyr::select(Month, Year, Depth, Colnum, Latitude, Longitude, Stemp, Bsal, Ssal)
+moon_pois <- glm(Colnum ~ Month + Year + Depth + Latitude + Longitude + Stemp + Ssal, data = P915_bluecatfish, family="poisson")
+summary(moon_pois)
+report(moon_pois)
+
+unique(p915_CPUEfoc$Speciescommonname)
+
+??report()
+library(report)
+
 P915_bluecatfish$Ssal <- as.numeric(P915_bluecatfish$Ssal)
 P915_bluecatfish$Bsal <- as.numeric(P915_bluecatfish$Bsal)
 P915_bluecatfish$Stemp <- as.numeric(P915_bluecatfish$Stemp)
@@ -285,4 +304,3 @@ rpart.plot(tree_bh)
 
 pull_tflow_bh(vanilla_fit_bh)$fit
 ```
-

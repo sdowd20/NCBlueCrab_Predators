@@ -5,8 +5,10 @@ library(readxl)
 library(stringr)
 library(readr)
 library(dplyr)
+library(lubridate)
 
 #Species names
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 P120_speciesnms <- read_csv("Data/P120/P120_speciesnms.csv")
 colnames(P120_speciesnms) <- str_to_title(colnames(P120_speciesnms))
 P120_speciesnms$Speciescommonname <- str_to_lower(P120_speciesnms$Speciescommonname)
@@ -108,10 +110,6 @@ P120_speciesnms_ssn[316, 2] <- "M. saxatilis" #add in striped bass b/c wasn't in
 p195_edt <-p195 %>% left_join(P120_speciesnms_ssn, by= "Speciesscientificname") #All NAs now for Sciname are for species common names not in dataset (we don't need)
 write.csv(p195_edt, "Data/P195/Finalized/p195_clean_new.csv")
 
-"brown shrimp"
-t<-p195 %>% filter(Sciname %in% spp_list$Sciname)
-
-spp_list
 ##Edit old CPUE file to include species scientific name
 p915 <- read.csv("Data/P915/Raw/p915clean.csv")
 p915 <- p915 %>% dplyr::rename("Speciescommonname"= "Species")
@@ -119,17 +117,15 @@ p915$Date <- as.Date(paste(p915$Month, p915$Day, p915$Year, sep= "-"), "%m-%d-%Y
 p915_spp <- p915 %>% left_join(spp_list, by= "Speciescommonname") #Same amount of NAs as P915 normally for Speciescommonname
 write.csv(p915_spp, "Data/P915/Finalized/p915clean_new.csv")
 
+#P120
+##Catch data (no biological)
 p120_speciesn <- p120_speciesn %>% rename("Species" = "SciName") %>% select(Species, SPECIESCOMMONNAME)
 p120_edt <- p120 %>% left_join(p120_speciesn, by= "Species")
 colnames(p120_edt) <- str_to_title(colnames(p120_edt))
 p120_edt[[39]] <- tolower(p120_edt[[39]])
 
-#Date, year and month columns 
-trawl_edt$Date <- as.Date(as.character(trawl_edt$Date), format= '%Y%m%d')
-trawl_edt$Year <- format(as.POSIXct(trawl_edt$Date,format= '%Y%m%d'), format= '%Y', tz= "GMT")
-trawl_edt$Month <- format(as.POSIXct(trawl_edt$Date,format= '%Y%m%d'), format= '%m', tz= "GMT")
-
-#P120: Look at Lela's CPUE file 
+##Biological data: old, through 2019 
+setwd("~/Desktop")
 df=read.delim("P120_1019.txt",sep="$",header=TRUE,dec=".")
 head(df)
 
@@ -148,7 +144,21 @@ head(df5)
 fulld=rbind(df,df2,df3,df4,df5)
 head(fulld)
 
-#Add this to all datasets! 
+fulld=fulld%>%filter(CORE==1|CORE==2)%>%as.data.frame() #core stations
+fulld=fulld%>%mutate(Date=make_date(Year,Month,Day))
+fulld$Control1=as.factor(fulld$Control1)
+colnames(fulld) <- str_to_title(colnames(fulld))
 
-#p915_CPUEold <- p915_CPUEold %>% filter(Year < 2020), not this yet 
+P120_speciesnms_edt <- P120_speciesnms %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= TRUE)
+P120_speciesnms_edt[23, 2] <- "Scomberomorus maculatus"
+unique(P120_speciesnms_edt$Sciname)
+fulld <- fulld %>% rename("Sciname"= "Species")
 
+fulld_edt <- fulld %>% left_join(P120_speciesnms_edt, by= "Sciname")
+
+
+fulld[25733,] #S. maculatus 
+
+unique(fulld$Sciname)
+
+fulld %>% filter(Sciname %in% "S. maculatus")
