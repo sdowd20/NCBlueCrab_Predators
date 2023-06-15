@@ -125,6 +125,7 @@ colnames(p120_edt) <- str_to_title(colnames(p120_edt))
 p120_edt[[39]] <- tolower(p120_edt[[39]])
 
 ##Biological data: old, through 2019 
+##Haven't finished this 
 setwd("~/Desktop")
 df=read.delim("P120_1019.txt",sep="$",header=TRUE,dec=".")
 head(df)
@@ -154,8 +155,9 @@ P120_speciesnms_edt[23, 2] <- "Scomberomorus maculatus"
 unique(P120_speciesnms_edt$Sciname)
 fulld <- fulld %>% rename("Sciname"= "Species")
 
+colnames(fulld)
 fulld_edt <- fulld %>% left_join(P120_speciesnms_edt, by= "Sciname")
-
+fulld %>% select(Mrri_code)
 
 fulld[25733,] #S. maculatus 
 
