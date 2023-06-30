@@ -10,7 +10,7 @@ This code was adopted and modified from Sarah Roberts ([sroberts\@nyelab.org](ma
 #### Load packages, functions and datasets
 
 ```{r}
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "gt")
 
 invisible(lapply(packages, library, character.only= TRUE))
 
@@ -141,7 +141,8 @@ write.csv(total_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridded
 total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridded.csv", header= T)
 total_edt <- total_edt %>% select(-X)
 select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp")
-total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp)
+total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "CAPEF") #remove southern areas 
+
 p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp)
 p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp)
 p195_overlap_edt <- p195_overlap %>% filter(Speciescommonname %in% select_spp)
@@ -275,34 +276,57 @@ match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dpl
 match_data2 %>% summarise(mean= mean(count), sd= sd(count))
 summary(match_data2$count)
 unique(match_data2$Year)
+```
 
+
+```{r}
 #For each Speciescommonname and blue crabs, loop through to see the overlapping gridIDs with the other datasets for each season and year 
+
+##Positive, positive
 spp_names <- unique(P915_total$Speciescommonname)
 P915_total_spp <- list()
 P915_total_gridID <- list()
 P120_total_gridID <- list()
 match_df <- list()
-
+library(plyr)
 for(i in spp_names) {
-P915_total_spp[[i]] <- P915_total %>% filter(Speciescommonname %in% i, Colnum > 0)
+P915_total_spp[[i]] <- P915_total %>% filter(Speciescommonname %in% i, Colnum > 0) %>% drop_na(Colnum)
 P915_total_gridID[[i]] <- P915_total_spp[[i]] %>% dplyr::select(gridID, Season, Speciescommonname, Year) %>% group_by(Season, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
-P120_bc <- P120_total %>% filter(Speciescommonname %in% "blue crab")
+P120_bc <- P120_total %>% filter(Speciescommonname %in% "blue crab", Colnum > 0) %>% drop_na(Colnum)
 P120_bc_gridID <- P120_bc %>% dplyr::select(gridID, Season, Speciescommonname, Year) %>% group_by(Season, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
 match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_bc_gridID, on = c("gridID", "Season", "Year")) 
 }
 
-match_df[[1]]
-match_df[[4]]
-
+detach(package:plyr)
+library(dplyr)
 match_data2 <- as.data.frame(do.call(rbind, match_df))
-match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dplyr::mutate(count= n()) %>% distinct(count, .keep_all= TRUE)
-match_data2 %>% summarise(mean= mean(count), sd= sd(count))
-summary(match_data2$count)
-unique(match_data2$Year)
+match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dplyr::mutate(count= n()) 
+P915_total_sum <- P915_total %>% filter(Colnum > 0) %>% dplyr::group_by(Speciescommonname, Year, Season, gridID) %>% summarise(sum_Colnum_pred = sum(Colnum)) 
+P120_bc_sum <- P120_total %>% filter(Colnum > 0, Speciescommonname %in% "blue crab") %>% dplyr::group_by(Year, Season, gridID) %>% summarise(sum_Colnum_bc = sum(Colnum)) 
+match_data2edt <- match_data2 %>% left_join(P915_total_sum, by= c("Speciescommonname", "Year", "Season", "gridID"))
+#count: number of observations overlapping for a predator species and blue crab for a season and year (includes all grid cells)
+#sum_Colnum: number of predators observed that overlap with blue crabs in specific grid cell for a season and year 
+match_data2edt <- match_data2edt %>% left_join(P120_bc_sum, by= c("Year", "Season", "gridID"))
 
+##Positive blue crab in P120, 0 predator in P915
+P915_total_zero <- P915_total %>% filter(Colnum == 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
+P915_total_zeroedt <- P915_total_zero %>% left_join(P120_bc_sum, by = c("Year", "Season", "gridID")) %>% drop_na(sum_Colnum_bc) #it's only gridIDs that overlap bc is the ones present in P915
 
-library(gghighlight)
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(total_edt, total_edt$Species %in% "blue catfish" & Colnum > 0), aes(x = Longitude, y = Latitude)) + gghighlight(gridID == 20) + scale_size_area() + facet_wrap(~Survey) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) 
+##Summary tables
+###Positive, positive 
+match_data2edt <- match_data2edt %>% filter(!Speciescommonname %in% "blue crab", !Speciescommonname %in% "brown shrimp", !Speciescommonname %in% "white shrimp") %>% rename(Species= Speciescommonname)
+match_data2edt %>% group_by(Species) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.png")
+match_data2edt %>% group_by(Species, Year) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.year.pdf")
+match_data2edt %>% group_by(Species, Year, Season) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.year.season.pdf")
 
+###Positive blue crab in P120, 0 predator in P915
+P915_total_zeroedt2 <- P915_total_zeroedt %>% filter(!Speciescommonname %in% "blue crab", !Speciescommonname %in% "brown shrimp", !Speciescommonname %in% "white shrimp") %>% rename(Species= Speciescommonname)
+P915_total_zeroedt2 %>% group_by(Species) %>% summarize(sum_spp = sum(Colnum), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/posneg.png")
+P915_total_zeroedt2 %>% group_by(Species, Year) %>% summarize(sum_spp = sum(Colnum), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/posneg.year.pdf")
+P915_total_zeroedt2 %>% group_by(Species, Year, Season) %>% summarize(sum_spp = sum(Colnum), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/posneg.season.pdf")
+
+##Positive predator, 0 blue crab: can't do this right now due to data 
+P915_total_pos <- P915_total %>% filter(Colnum > 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
+P915_total_posedt <- P915_total_pos %>% left_join()
 
 ```
