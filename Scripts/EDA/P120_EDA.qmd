@@ -1,0 +1,117 @@
+---
+title: "P120_EDA"
+format: html
+editor: visual
+---
+
+#### Overall data set description
+
+Sampling for the P120 Nursery Area Juvenile Survey began in 1971. Major gear changes and standardization occured in 1978 and 1989. Sampling has been consistent in May and June (mid two weeks) throughout the sampling period. July sampled was dropped in 1998 and then reinstituded in 2004 to produce a better index for spotted seatrout. In 2008, additional habitat fields were added. There are 104 core stations sampled each year (can't be discontinued) for juvenile abundance indices. Stations sampled in addition to the 104 are selected for various purposes. Some seagrass beds along OBX are sampled May through September. The tows are one minute in duration to span 75 yards. 
+
+Beginning in 2008 additional data parameters for Habitat were recorded: Distance to Shoreline, Shoreline/ Shoreline Structure Type, Percent Shoreline Hardened, Land Use, and Percent Cover. If distances from shore are greater than a 550 yd radius, then code as 9s. The habitat data was piloted in 2008 and additional changes were made for 2009. Bottom composition, qualitative sediment size, secchi depth, water level, water depth, water temperatures (surface and bottom), salinities (surface and bottom), and dissolved oxygen (surface and bottom) should be collected each time a station is sampled. Grass density is characterized. 
+
+All species are identified and counted. Economically important species are counted and a random subsample of 30-60 individauls of each size group are measured (mm). Blue crabs less then 20 mm are not sexed and crabs should be measured on their backs. Blue crabs are subsampled if there are more than 30 individuals that are less than 20 mm. Larger blue crabs, ones that that are greater or equal to 20 mm are sexed and all of these are measured. For other fish, if there are two different size groups and they are subsampled separately.
+
+Filter for core stations? look at where they are on map 
+Start habitat at 2009? 
+
+Based on the dataset description, I am going to filter P120 to start after 1989.
+
+### EDA
+
+```{r}
+##Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+##Load and edit data set
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+P120_biol <- read_csv("Data/P120/Finalized/p120_biol_new.csv")
+P120_bioledt <- P120_biol %>% filter(Year >= 1989)
+P120_bioledt$Season <- ifelse(P120_bioledt$Month==4 | P120_bioledt$Month==5 | P120_bioledt$Month==6, "Spring", ifelse(P120_bioledt$Month==9 |P120_bioledt$Month==10 | P120_bioledt$Month==11 | P120_bioledt$Month==12, "Fall", ifelse(P120_bioledt$Month==7 |P120_bioledt$Month==8, "Summer", "Winter")))
+P120_bioledt$Ym_date <- format(P120_bioledt$Date, "%Y-%m")
+
+coords_captured <- function(species){
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_CPUEold$Species %in% species & as.numeric(p915_CPUEold$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+}
+```
+
+#### General
+```{r}
+summary(is.na(P120_bioledt)) #NAs present in Grid, Quad, Time, environmental variables, Colnum, biological variables, Speciesscientificname
+summary(is.na(subset(P120_bioledt, Year > 2008))) #less NAs in environmental variables after 2008
+
+#Spatial orientation
+##All stations
+ggplot(data = world) + geom_sf() + geom_point(data = P120_bioledt, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+
+##Core stations
+ggplot(data = world) + geom_sf() + geom_point(data = P120_bioledt, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+
+###Cores are 0, 1, 2, and 3: 1 and 2 are the 104 core stations sampled every year 
+length(unique(P120_bioledt$Station)) #106 stations
+core <- P120_bioledt %>% filter(Core == 1| Core == 2)
+length(unique(core$Station)) #still 106 stations
+
+notcore <- P120_bioledt %>% filter(Core == 3)
+ggplot(data = world) + geom_sf() + geom_point(data = notcore, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+#core 0 looks the same as 1 or 2, core 3 has only 35 stations 
+
+nrow(subset(P120_bioledt, Core == 0))
+nrow(subset(P120_bioledt, Core == 1))
+nrow(subset(P120_bioledt, Core == 2))
+nrow(subset(P120_bioledt, Core == 3))
+
+#Sampling effort: general
+ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme #sampling picked up in 2008, I wonder why- just added more habitat fields here
+ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Core) #more sampling in core = 1 throughout the years 
+ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Year)) + standard_theme #more sampling in core = 1 throughout the years 
+
+P120_bioledt %>% group_by(Date, Lat_dd, Long_dd) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 2008, 2020)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") 
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 1989, 2007)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
+```
+
+There are a good amount of NAs in the dataset particularly with environmental variables. We might want to start analyzing the data in 2008 (or 2009?) when more of those habitat variables were included. 
+
+EDA revealed differences in sampling with consistency until 2010 and then a large increase in sampling in 2010 that didn't drop until 2020. That being said, the same stations were sampled throughout the years. I am unsure why. Core 0 seems to have the same stations as core 1 and 2 just fewer observations. Core 3 only has 35 stations. Core station 1 has been consistently sampled as well as 0. Core station 2 and 3 have had dips in sampling. 
+ 
+#### Species specific
+```{r}
+coords_captured <- function(species){
+ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, P120_bioledt$Speciescommonname %in% species & as.numeric(P120_bioledt$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+}
+
+ggplot(data = world) + geom_sf() + geom_point(data = P120_bioledt, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
+coords_captured("northern brown shrimp")
+coords_captured("bluefish")
+coords_captured("atlantic croaker")
+coords_captured("southern flounder")
+coords_captured("red drum")
+coords_captured("black drum")
+coords_captured("blue catfish")
+coords_captured("gizzard shad")
+coords_captured("american shad")
+coords_captured("cownose ray")
+coords_captured("blue crab")
+
+#Depth distribution for species
+t <- P120_bioledt %>% drop_na(Depth)
+min(t$Depth) #0.1 m 
+max(t$Depth) #9.9 m
+
+#Temporal: for P915 you know it's not a function of sampling since they sample year around
+interest_spp <- c("northern brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel")
+fine <- P120_bioledt %>% filter(Speciescommonname %in% interest_spp) #species of interest
+ggplot() + geom_histogram(data = subset(fine, fine$Colnum > 0), stat="count", aes(x=Season)) + standard_theme + facet_wrap(~Speciescommonname)
+
+#Number of observations for species of interest
+test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(sum_colnum= sum(Colnum)) #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, spot, and summer flounder have the most data 
+```

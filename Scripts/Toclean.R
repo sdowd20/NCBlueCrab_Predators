@@ -124,43 +124,32 @@ p120_edt <- p120 %>% left_join(p120_speciesn, by= "Species")
 colnames(p120_edt) <- str_to_title(colnames(p120_edt))
 p120_edt[[39]] <- tolower(p120_edt[[39]])
 
+
 ##Biological data: old, through 2019 
 ##Haven't finished this 
 setwd("~/Desktop")
 df=read.delim("P120_1019.txt",sep="$",header=TRUE,dec=".")
-head(df)
-
 df2=read.delim("P120_7279.txt",sep="$",header=TRUE,dec=".")
-head(df2)
-
 df3=read.delim("P120_8089.txt",sep="$",header=TRUE,dec=".")
-head(df3)
-
 df4=read.delim("P120_9099.txt",sep="$",header=TRUE,dec=".")
-head(df4)
-
 df5=read.delim("P120_0009.txt",sep="$",header=TRUE,dec=".")
-head(df5)
-
 fulld=rbind(df,df2,df3,df4,df5)
 head(fulld)
 
-fulld=fulld%>%filter(CORE==1|CORE==2)%>%as.data.frame() #core stations
-fulld=fulld%>%mutate(Date=make_date(Year,Month,Day))
-fulld$Control1=as.factor(fulld$Control1)
-colnames(fulld) <- str_to_title(colnames(fulld))
+updated_df <- read_csv("P120_1022_UPDATED.CSV")
+fulld2 <- rbind(fulld, updated_df)
+colnames(fulld2) <- str_to_title(colnames(fulld2))
+fulld2=fulld2%>%mutate(Date=make_date(Year,Month,Day))
+fulld2$Control1=as.factor(fulld2$Control1)
+SpeciesNotIncluded <- read_excel("SpeciesNotIncluded.xls")
+species_names <- read_csv("species_names.csv") #with the matching P120 species format and a bunch of species I added at the bottom
+species_namesedt <- species_names %>% select(SPECIESSCIENTIFICNAME, SPECIESCOMMONNAME, Species) %>% distinct(Species, .keep_all = TRUE) #remove matching rows, butterfly ray had two of same, 389--> 385 observations
+colnames(species_namesedt) <- str_to_title(colnames(species_namesedt))
+species_namesedt$Speciesscientificname <- str_to_lower(species_namesedt$Speciesscientificname)
+species_namesedt$Speciescommonname <- str_to_lower(species_namesedt$Speciescommonname)
+fulld2_edt <- fulld2 %>% left_join(species_namesedt, by = "Species") %>% rename("Sciname"= "Species") #NAs in common name from plants, jellys, non-sessile things and airbreathers (Lela edited these out)
+#fulld=fulld%>%filter(CORE==1|CORE==2)%>%as.data.frame() #core stations
 
-P120_speciesnms_edt <- P120_speciesnms %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= TRUE)
-P120_speciesnms_edt[23, 2] <- "Scomberomorus maculatus"
-unique(P120_speciesnms_edt$Sciname)
-fulld <- fulld %>% rename("Sciname"= "Species")
+write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 
-colnames(fulld)
-fulld_edt <- fulld %>% left_join(P120_speciesnms_edt, by= "Sciname")
-fulld %>% select(Mrri_code)
-
-fulld[25733,] #S. maculatus 
-
-unique(fulld$Sciname)
-
-fulld %>% filter(Sciname %in% "S. maculatus")
+write.csv(fulld2_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_biol_new.csv")
