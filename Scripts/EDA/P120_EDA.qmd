@@ -29,7 +29,9 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 ##Load and edit data set
 setwd("~/Desktop")
 P120_biol <- read_csv("p120_biol_new.csv")
-P120_bioledt <- P120_biol %>% filter(Year >= 1989)
+P120_biol$Year <- as.numeric(P120_biol$Year)
+library(dplyr)
+P120_bioledt <- P120_biol %>% arrange(-Year) %>% dplyr::filter(Year >= 1989)
 P120_bioledt$Season <- ifelse(P120_bioledt$Month==4 | P120_bioledt$Month==5 | P120_bioledt$Month==6, "Spring", ifelse(P120_bioledt$Month==9 |P120_bioledt$Month==10 | P120_bioledt$Month==11 | P120_bioledt$Month==12, "Fall", ifelse(P120_bioledt$Month==7 |P120_bioledt$Month==8, "Summer", "Winter")))
 P120_bioledt$Ym_date <- format(P120_bioledt$Date, "%Y-%m")
 
@@ -87,16 +89,9 @@ There are a good amount of NAs in the dataset particularly with environmental va
 
 EDA revealed differences in sampling with consistency until 2010 and then a large increase in sampling in 2010 that didn't drop until 2020. That being said, the same stations were sampled throughout the years. I am unsure why. 
 
-Both core 0 and core 3 seem to sample a subset of stations of core 1 and 2 (near river and OBX vs. near river). Core 0 sampling occurs July- November and core 3 sampling is in July. There are 429 samples for core 0, 1949 for core 1, 52 for core 2, and 193 for core 3. Core 3 only has 35 stations. Core station 1 and 0 have been consistently sampled. Core station 2 and 3 have had dips in sampling.
+Both core 0 and core 3 seem to sample a subset of stations of core 1 and 2 (near river and OBX vs. near river). Core 0 sampling occurs July- November and core 3 sampling is in July. There are 429 samples for core 0, 1949 for core 1, 52 for core 2, and 193 for core 3. Core 3 only has 35 stations. Core station 1 and 0 have been consistently sampled. Core station 2 and 3 have had dips in sampling.Synopsis on cores: The inclusion/exclusion of cores will depend on the question. Will need to reconsider as the analysis carries on. 
 
-Synopsis on cores: The inclusion/exclusion of cores will depend on the question. Will need to reconsider as the analysis carries on. 
-
-#points are near rivers, overlap with core 1 and 2 (3)
-#0: points near core 1 and 2, rivers and OBX
-
-
-#### Species specific
-
+#### Species specific: spatial and temporal
 ```{r}
 coords_captured <- function(species){
 ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, P120_bioledt$Speciescommonname %in% species & as.numeric(P120_bioledt$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
@@ -141,3 +136,17 @@ length(unique(P120_bioledt$Control1))
 length(unique(P120_bioledt$Location))
 length(unique(P120_bioledt$Station))
 ```
+
+#### CPUE
+```{r}
+p120_core <- P120_bioledt %>% filter(Core==1|Core==2)
+haul <- p120_core %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (8502 variables whereas Lela had 8099, ok)
+
+
+
+
+```
+
+
+
+
