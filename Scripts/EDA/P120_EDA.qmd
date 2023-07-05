@@ -6,14 +6,11 @@ editor: visual
 
 #### Overall data set description
 
-Sampling for the P120 Nursery Area Juvenile Survey began in 1971. Major gear changes and standardization occured in 1978 and 1989. Sampling has been consistent in May and June (mid two weeks) throughout the sampling period. July sampled was dropped in 1998 and then reinstituded in 2004 to produce a better index for spotted seatrout. In 2008, additional habitat fields were added. There are 104 core stations sampled each year (can't be discontinued) for juvenile abundance indices. Stations sampled in addition to the 104 are selected for various purposes. Some seagrass beds along OBX are sampled May through September. The tows are one minute in duration to span 75 yards. 
+Sampling for the P120 Nursery Area Juvenile Survey began in 1971. Major gear changes and standardization occured in 1978 and 1989. Sampling has been consistent in May and June (mid two weeks) throughout the sampling period. July sampled was dropped in 1998 and then reinstituded in 2004 to produce a better index for spotted seatrout. In 2008, additional habitat fields were added. There are 104 core stations sampled each year (can't be discontinued) for juvenile abundance indices. Stations sampled in addition to the 104 are selected for various purposes. Some seagrass beds along OBX are sampled May through September. The tows are one minute in duration to span 75 yards. The historical time varied (5 minutes for 20 foot net). From what I can tell, it is just one tow at each station. 
 
-Beginning in 2008 additional data parameters for Habitat were recorded: Distance to Shoreline, Shoreline/ Shoreline Structure Type, Percent Shoreline Hardened, Land Use, and Percent Cover. If distances from shore are greater than a 550 yd radius, then code as 9s. The habitat data was piloted in 2008 and additional changes were made for 2009. Bottom composition, qualitative sediment size, secchi depth, water level, water depth, water temperatures (surface and bottom), salinities (surface and bottom), and dissolved oxygen (surface and bottom) should be collected each time a station is sampled. Grass density is characterized. 
+Beginning in 2008 additional data parameters for Habitat were recorded: Distance to Shoreline, Shoreline/ Shoreline Structure Type, Percent Shoreline Hardened, Land Use, and Percent Cover. If distances from shore are greater than a 550 yd radius, then code as 9s. The habitat data was piloted in 2008 and additional changes were made for 2009. Bottom composition, qualitative sediment size, secchi depth, water level, water depth, water temperatures (surface and bottom), salinities (surface and bottom), and dissolved oxygen (surface and bottom) should be collected each time a station is sampled. Grass density is characterized.
 
-All species are identified and counted. Economically important species are counted and a random subsample of 30-60 individauls of each size group are measured (mm). Blue crabs less then 20 mm are not sexed and crabs should be measured on their backs. Blue crabs are subsampled if there are more than 30 individuals that are less than 20 mm. Larger blue crabs, ones that that are greater or equal to 20 mm are sexed and all of these are measured. For other fish, if there are two different size groups and they are subsampled separately.
-
-Filter for core stations? look at where they are on map 
-Start habitat at 2009? 
+All species are identified and counted. Economically important species are counted and a random subsample of 30-60 individuals of each size group are measured (mm). Blue crabs less then 20 mm are not sexed and crabs should be measured on their backs. Blue crabs are subsampled if there are more than 30 individuals that are less than 20 mm. Larger blue crabs, ones that that are greater or equal to 20 mm are sexed and all of these are measured. For other fish, if there are two different size groups and they are subsampled separately. If there are two different size groups, SpStatus will reflect this. SpStatus= 1 is for the larger size group and SpStatus= 2 is for the smaller size group (SpStatus= 0 means fish are measured as single unit). Each column is a separate species sample from a tow. To get every tow you can group by Date and Location and get an ID for the tow (id= row_number()) in order to have a row for every haul. When the Colnum is the same for a date, location, and species, there was subsampling of the species to obtain a length. 
 
 Based on the dataset description, I am going to filter P120 to start after 1989.
 
@@ -30,8 +27,8 @@ standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 ##Load and edit data set
-setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-P120_biol <- read_csv("Data/P120/Finalized/p120_biol_new.csv")
+setwd("~/Desktop")
+P120_biol <- read_csv("p120_biol_new.csv")
 P120_bioledt <- P120_biol %>% filter(Year >= 1989)
 P120_bioledt$Season <- ifelse(P120_bioledt$Month==4 | P120_bioledt$Month==5 | P120_bioledt$Month==6, "Spring", ifelse(P120_bioledt$Month==9 |P120_bioledt$Month==10 | P120_bioledt$Month==11 | P120_bioledt$Month==12, "Fall", ifelse(P120_bioledt$Month==7 |P120_bioledt$Month==8, "Summer", "Winter")))
 P120_bioledt$Ym_date <- format(P120_bioledt$Date, "%Y-%m")
@@ -42,6 +39,7 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 ```
 
 #### General
+
 ```{r}
 summary(is.na(P120_bioledt)) #NAs present in Grid, Quad, Time, environmental variables, Colnum, biological variables, Speciesscientificname
 summary(is.na(subset(P120_bioledt, Year > 2008))) #less NAs in environmental variables after 2008
@@ -57,15 +55,21 @@ ggplot(data = world) + geom_sf() + geom_point(data = P120_bioledt, aes(x = as.nu
 length(unique(P120_bioledt$Station)) #106 stations
 core <- P120_bioledt %>% filter(Core == 1| Core == 2)
 length(unique(core$Station)) #still 106 stations
-
 notcore <- P120_bioledt %>% filter(Core == 3)
-ggplot(data = world) + geom_sf() + geom_point(data = notcore, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==3), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
 #core 0 looks the same as 1 or 2, core 3 has only 35 stations 
 
-nrow(subset(P120_bioledt, Core == 0))
-nrow(subset(P120_bioledt, Core == 1))
-nrow(subset(P120_bioledt, Core == 2))
-nrow(subset(P120_bioledt, Core == 3))
+ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==0), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+
+nrow(P120_bioledt %>% filter(Core== 0) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #429 samples
+P120_bioledt %>% filter(Core== 0) %>% select(Month) %>% distinct(Month) #7, 8, 9, 10, 11
+nrow(P120_bioledt %>% filter(Core== 1) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #1949 samples
+P120_bioledt %>% filter(Core== 1) %>% select(Month) %>% distinct(Month) #5, 6 
+nrow(P120_bioledt %>% filter(Core== 2) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #52 samples
+P120_bioledt %>% filter(Core== 2) %>% select(Month) %>% distinct(Month) #5, 6 
+nrow(P120_bioledt %>% filter(Core== 3) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #193 samples
+P120_bioledt %>% filter(Core== 3) %>% select(Month) %>% distinct(Month) #7
 
 #Sampling effort: general
 ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme #sampling picked up in 2008, I wonder why- just added more habitat fields here
@@ -79,11 +83,20 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 
 ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 1989, 2007)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
 ```
 
-There are a good amount of NAs in the dataset particularly with environmental variables. We might want to start analyzing the data in 2008 (or 2009?) when more of those habitat variables were included. 
+There are a good amount of NAs in the dataset particularly with environmental variables. We might want to start analyzing the data in 2008 (or 2009?) when more of those habitat variables were included.
 
-EDA revealed differences in sampling with consistency until 2010 and then a large increase in sampling in 2010 that didn't drop until 2020. That being said, the same stations were sampled throughout the years. I am unsure why. Core 0 seems to have the same stations as core 1 and 2 just fewer observations. Core 3 only has 35 stations. Core station 1 has been consistently sampled as well as 0. Core station 2 and 3 have had dips in sampling. 
- 
+EDA revealed differences in sampling with consistency until 2010 and then a large increase in sampling in 2010 that didn't drop until 2020. That being said, the same stations were sampled throughout the years. I am unsure why. 
+
+Both core 0 and core 3 seem to sample a subset of stations of core 1 and 2 (near river and OBX vs. near river). Core 0 sampling occurs July- November and core 3 sampling is in July. There are 429 samples for core 0, 1949 for core 1, 52 for core 2, and 193 for core 3. Core 3 only has 35 stations. Core station 1 and 0 have been consistently sampled. Core station 2 and 3 have had dips in sampling.
+
+Synopsis on cores: The inclusion/exclusion of cores will depend on the question. Will need to reconsider as the analysis carries on. 
+
+#points are near rivers, overlap with core 1 and 2 (3)
+#0: points near core 1 and 2, rivers and OBX
+
+
 #### Species specific
+
 ```{r}
 coords_captured <- function(species){
 ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, P120_bioledt$Speciescommonname %in% species & as.numeric(P120_bioledt$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
@@ -114,4 +127,17 @@ ggplot() + geom_histogram(data = subset(fine, fine$Colnum > 0), stat="count", ae
 
 #Number of observations for species of interest
 test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(sum_colnum= sum(Colnum)) #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, spot, and summer flounder have the most data 
+```
+
+#### Exploring length
+```{r}
+colnames(P120_bioledt)
+
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length*0.0393701), max_l= max(Length*0.0393701), mean_l = mean(Length*0.0393701), sd_l= sd(Length*0.0393701))
+
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+
+length(unique(P120_bioledt$Control1))
+length(unique(P120_bioledt$Location))
+length(unique(P120_bioledt$Station))
 ```
