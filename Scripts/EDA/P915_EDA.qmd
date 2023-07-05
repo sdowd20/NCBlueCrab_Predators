@@ -40,7 +40,7 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 
 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-p915_CPUEold <- read.csv("Data/P915/Finalized/p915clean_new.csv")
+p915_CPUE <- read.csv("Data/P915/Finalized/p915_CPUE.csv")
 p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
 p915_biolnew1 <- p915_biolnew1 %>% select(-c(X, ...1))
 colnames(p915_biolnew1) <- str_to_title(colnames(p915_biolnew1))  
@@ -49,11 +49,7 @@ p915_biolnew2 <- p915_biolnew2 %>% select(-c(X.1, X))
 colnames(p915_biolnew2) <- str_to_title(colnames(p915_biolnew2))    
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 
-#Edit CPUE dataset, can put this in dataset cleaning file 
-p915_CPUEold <- p915_CPUEold %>% filter(Year < 2020)
-p915_CPUEold$Season <- ifelse(p915_CPUEold$Month==4 | p915_CPUEold$Month==5 | p915_CPUEold$Month==6, "Spring", ifelse(p915_CPUEold$Month==9 |p915_CPUEold$Month==10 | p915_CPUEold$Month==11 | p915_CPUEold$Month==12, "Fall", ifelse(p915_CPUEold$Month==7 |p915_CPUEold$Month==8, "Summer", "Winter")))
-p915_CPUEold$Date <- as.Date(paste(p915_CPUEold$Month, p915_CPUEold$Day, p915_CPUEold$Year, sep= "-"), "%m-%d-%Y")
-p915_CPUEold$Ym_date <- format(p915_CPUEold$Date, "%Y-%m")
+p915_CPUE <- p915_CPUE %>% filter(Year < 2020)
 ```
 
 ##### General
@@ -249,11 +245,22 @@ ggplot(data = centerofbiomass, aes(x = Year, y = CENTER_LON)) + geom_point() + g
 
 ```{r}
 #For each species look at length ranges of individuals 
-p915_bioln_sel <- p915_bioln %>% dplyr::select(Control1, Date, Month, Year, Ym_date, Location, Total.species.sobserved.in.set, Station, Quad, Repsize, Sciname, Speciescommonname, Colnum, Colwgt, Samnum, Samwgt, Subnum, Subwgt, Frequenc, Length, Weight, Maturity, Age, Sample, Latitude, Longitude)
+p915_bioln_sel <- p915_bioln %>% dplyr::select(Control1, Date, Month, Year, Ym_date, Location, Total.species.sobserved.in.set, Station, Quad, Repsize, Sciname, Speciescommonname, Colnum, Colwgt, Samnum, Samwgt, Subnum, Subwgt, Frequenc, Length, Weight, Maturity, Age, Sample, Latitude, Longitude) %>% filter(!Speciescommonname %in% c("blue crab", "eastern oyster", "brown shrimp", "oyster toadfish", "white shrimp", NA))
 
 summary(is.na(p915_bioln_sel)) #2 NAs in Colnum, 19 in Quad, 343 in Colwgt, 396 in Length, a lot in weight, maturity and age 
 
-p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(mean_l = mean(Length), min_l = min(Length), max_l= max(Length))
+p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(mean_l = mean(Length*0.0393701), min_l = min(Length*0.0393701), max_l= max(Length*0.0393701), sd_l= sd(Length*0.0393701))
+
+p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+
+length(unique(P120_bioledt$Control1))
+length(unique(P120_bioledt$Location))
+length(unique(P120_bioledt$Station))
+
+
+
+
+
 
 
 #Expanded length frequency for all focal species by area: remove NEUSE and PAMLI 

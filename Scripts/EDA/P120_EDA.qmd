@@ -6,11 +6,11 @@ editor: visual
 
 #### Overall data set description
 
-Sampling for the P120 Nursery Area Juvenile Survey began in 1971. Major gear changes and standardization occured in 1978 and 1989. Sampling has been consistent in May and June (mid two weeks) throughout the sampling period. July sampled was dropped in 1998 and then reinstituded in 2004 to produce a better index for spotted seatrout. In 2008, additional habitat fields were added. There are 104 core stations sampled each year (can't be discontinued) for juvenile abundance indices. Stations sampled in addition to the 104 are selected for various purposes. Some seagrass beds along OBX are sampled May through September. The tows are one minute in duration to span 75 yards. The historical time varied (5 minutes for 20 foot net). From what I can tell, it is just one tow at each station. 
+Sampling for the P120 Nursery Area Juvenile Survey began in 1971. Major gear changes and standardization occured in 1978 and 1989. Sampling has been consistent in May and June (mid two weeks) throughout the sampling period. July sampled was dropped in 1998 and then reinstituded in 2004 to produce a better index for spotted seatrout. In 2008, additional habitat fields were added. There are 104 core stations sampled each year (can't be discontinued) for juvenile abundance indices. Stations sampled in addition to the 104 are selected for various purposes. Some seagrass beds along OBX are sampled May through September. The tows are one minute in duration to span 75 yards. The historical time varied (5 minutes for 20 foot net). From what I can tell, it is just one tow at each station.
 
 Beginning in 2008 additional data parameters for Habitat were recorded: Distance to Shoreline, Shoreline/ Shoreline Structure Type, Percent Shoreline Hardened, Land Use, and Percent Cover. If distances from shore are greater than a 550 yd radius, then code as 9s. The habitat data was piloted in 2008 and additional changes were made for 2009. Bottom composition, qualitative sediment size, secchi depth, water level, water depth, water temperatures (surface and bottom), salinities (surface and bottom), and dissolved oxygen (surface and bottom) should be collected each time a station is sampled. Grass density is characterized.
 
-All species are identified and counted. Economically important species are counted and a random subsample of 30-60 individuals of each size group are measured (mm). Blue crabs less then 20 mm are not sexed and crabs should be measured on their backs. Blue crabs are subsampled if there are more than 30 individuals that are less than 20 mm. Larger blue crabs, ones that that are greater or equal to 20 mm are sexed and all of these are measured. For other fish, if there are two different size groups and they are subsampled separately. If there are two different size groups, SpStatus will reflect this. SpStatus= 1 is for the larger size group and SpStatus= 2 is for the smaller size group (SpStatus= 0 means fish are measured as single unit). Each column is a separate species sample from a tow. To get every tow you can group by Date and Location and get an ID for the tow (id= row_number()) in order to have a row for every haul. When the Colnum is the same for a date, location, and species, there was subsampling of the species to obtain a length. 
+All species are identified and counted. Economically important species are counted and a random subsample of 30-60 individuals of each size group are measured (mm). Blue crabs less then 20 mm are not sexed and crabs should be measured on their backs. Blue crabs are subsampled if there are more than 30 individuals that are less than 20 mm. Larger blue crabs, ones that that are greater or equal to 20 mm are sexed and all of these are measured. For other fish, if there are two different size groups and they are subsampled separately. If there are two different size groups, SpStatus will reflect this. SpStatus= 1 is for the larger size group and SpStatus= 2 is for the smaller size group (SpStatus= 0 means fish are measured as single unit). Each column is a separate species sample from a tow. To get every tow you can group by Date and Location and get an ID for the tow (id= row_number()) in order to have a row for every haul. When the Colnum is the same for a date, location, and species, there was subsampling of the species to obtain a length.
 
 Based on the dataset description, I am going to filter P120 to start after 1989.
 
@@ -87,11 +87,12 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 
 
 There are a good amount of NAs in the dataset particularly with environmental variables. We might want to start analyzing the data in 2008 (or 2009?) when more of those habitat variables were included.
 
-EDA revealed differences in sampling with consistency until 2010 and then a large increase in sampling in 2010 that didn't drop until 2020. That being said, the same stations were sampled throughout the years. I am unsure why. 
+EDA revealed differences in sampling with consistency until 2010 and then a large increase in sampling in 2010 that didn't drop until 2020. That being said, the same stations were sampled throughout the years. I am unsure why.
 
-Both core 0 and core 3 seem to sample a subset of stations of core 1 and 2 (near river and OBX vs. near river). Core 0 sampling occurs July- November and core 3 sampling is in July. There are 429 samples for core 0, 1949 for core 1, 52 for core 2, and 193 for core 3. Core 3 only has 35 stations. Core station 1 and 0 have been consistently sampled. Core station 2 and 3 have had dips in sampling.Synopsis on cores: The inclusion/exclusion of cores will depend on the question. Will need to reconsider as the analysis carries on. 
+Both core 0 and core 3 seem to sample a subset of stations of core 1 and 2 (near river and OBX vs. near river). Core 0 sampling occurs July- November and core 3 sampling is in July. There are 429 samples for core 0, 1949 for core 1, 52 for core 2, and 193 for core 3. Core 3 only has 35 stations. Core station 1 and 0 have been consistently sampled. Core station 2 and 3 have had dips in sampling.Synopsis on cores: The inclusion/exclusion of cores will depend on the question. Will need to reconsider as the analysis carries on.
 
 #### Species specific: spatial and temporal
+
 ```{r}
 coords_captured <- function(species){
 ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, P120_bioledt$Speciescommonname %in% species & as.numeric(P120_bioledt$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
@@ -125,6 +126,7 @@ test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(s
 ```
 
 #### Exploring length
+
 ```{r}
 colnames(P120_bioledt)
 
@@ -138,6 +140,7 @@ length(unique(P120_bioledt$Station))
 ```
 
 #### CPUE
+
 ```{r}
 p120_core <- P120_bioledt %>% filter(Core==1|Core==2)
 haul <- p120_core %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (8502 variables whereas Lela had 8099, ok)
@@ -146,7 +149,3 @@ haul <- p120_core %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% f
 
 
 ```
-
-
-
-
