@@ -28,6 +28,8 @@ sppcommonnmsc[20,2] <- "scallop hammerhead"
 sppcommonnmsc[3,2] <- "striped bass" #northern kingfish doesn't exist in dataset, has same abbreviated name 
 sppcommonnmsc <- sppcommonnmsc %>% filter(!Speciescommonname %in% "sand devil") #take out angel shark right now b/c don't have CPUE
 write.csv(sppcommonnmsc, "Data/sppcommonnmsc.csv")
+sppcommonnmsc[20,1] <- "S. dumeril"
+sppcommonnmsc[20,2] <- "angel shark"
 
 spp_list <- read.csv("Data/sppcommonnmsc.csv")
 spp_list <- as.data.frame(spp_list[,-1])
@@ -44,11 +46,35 @@ colnames(merged) <- str_to_title(colnames(merged))
 merged$Species <- tolower(merged$Species)
 
 ##Edit old CPUE file to include species scientific name
+
 p915 <- read.csv("Data/P915/Raw/p915clean.csv")
 p915 <- p915 %>% dplyr::rename("Speciescommonname"= "Species")
 p915$Date <- as.Date(paste(p915$Month, p915$Day, p915$Year, sep= "-"), "%m-%d-%Y")
 p915_spp <- p915 %>% left_join(spp_list, by= "Speciescommonname") #No NAs for species name, same row #
 write.csv(p915_spp, "Data/P915/Finalized/p915clean_new.csv")
+
+##Create new CPUE file 
+setwd("/Users/sallydowd/Desktop/CPUE")
+filenames <- list.files("/Users/sallydowd/Desktop/CPUE", pattern= '*.xlsx')  
+all <- lapply(filenames, readxl::read_excel)
+merged <- do.call(rbind, all)
+colnames(merged) <- str_to_title(colnames(merged))
+merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Spring", ifelse(merged$Month==9 |merged$Month==10 | merged$Month==11 | merged$Month==12, "Fall", ifelse(merged$Month==7 |merged$Month==8, "Summer", "Winter")))
+merged$Date <- as.Date(paste(merged$Month, merged$Day, merged$Year, sep= "-"), "%m-%d-%Y")
+merged$Ym_date <- format(merged$Date, "%Y-%m")
+merged_apply <- as.data.frame(sapply(merged[,c(18:19)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
+merged_apply[merged_apply== "ERROR"] <- NA
+merged[ , colnames(merged) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
+
+columns <- c(6, 10:17, 20:22, 25:26)
+for (col in columns) {
+  merged[[col]][is.na(merged[[col]]) | merged[[col]] == "."] <- NA
+} #some values only have a dot or maybe it is an NA that R generated, replace these with NA instead, I checked with Depth and Ssal and it worked! 
+
+P915_CPUE <- merged %>% dplyr::rename("Sciname"= "Species")
+P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
+write.csv(P915_CPUE, "Data/P915/Finalized/p915_CPUE.csv")
+
 
 ##New biological data files 
 ###General

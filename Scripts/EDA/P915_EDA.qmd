@@ -20,6 +20,7 @@ However, the Control \# is representative of an individual sampling event with a
 
 As of now (05/06/23), the sample IDs for the river systems (only Neuse and Pamlico) have an error. Cara Kowalchyk is planning to send me the updated CPUE data by the end of June. Right now, I can left_join by sample ID for the old CPUE and new biological dataset excluding the Neuse and Pamlico River systems.
 
+#### Biological dataset specifics 
 ### EDA
 
 ```{r}
@@ -264,7 +265,7 @@ p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise
 
 #### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code
 
-#### GLM for species total number 
+#### GLM for species total number
 
 ```{r}
 summary(p915_CPUEfoc)
@@ -304,3 +305,31 @@ rpart.plot(tree_bh)
 
 pull_tflow_bh(vanilla_fit_bh)$fit
 ```
+
+#### Exploring length
+
+```{r}
+colnames(p915_CPUEfoc)
+
+p915_CPUEfoc  %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length*0.0393701), max_l= max(Length*0.0393701), mean_l = mean(Length*0.0393701), sd_l= sd(Length*0.0393701))
+
+p915_CPUEfoc %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+
+length(unique(p915_CPUEfoc$Control1))
+length(unique(p915_CPUEfoc$Location))
+length(unique(p915_CPUEfoc$Station))
+
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
