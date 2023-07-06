@@ -66,6 +66,7 @@ merged_apply <- as.data.frame(sapply(merged[,c(18:19)], function(x) gsub('[^[:al
 merged_apply[merged_apply== "ERROR"] <- NA
 merged[ , colnames(merged) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
 
+ t <- merged %>% filter(Year == 1923)
 columns <- c(6, 10:17, 20:22, 25:26)
 for (col in columns) {
   merged[[col]][is.na(merged[[col]]) | merged[[col]] == "."] <- NA
@@ -176,6 +177,7 @@ species_namesedt$Speciescommonname <- str_to_lower(species_namesedt$Speciescommo
 fulld2_edt <- fulld2 %>% left_join(species_namesedt, by = "Species") %>% rename("Sciname"= "Species") #NAs in common name from plants, jellys, non-sessile things and airbreathers (Lela edited these out)
 #fulld=fulld%>%filter(CORE==1|CORE==2)%>%as.data.frame() #core stations
 
+fulld2_edt$Speciescommonname[fulld2_edt$Speciescommonname %in% "northern brown shrimp"] <- "brown shrimp"
 write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 
 setwd("~/Desktop")

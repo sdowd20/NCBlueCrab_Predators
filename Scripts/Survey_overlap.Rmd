@@ -18,9 +18,10 @@ standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
+setwd("~/Desktop")
+p120 <- read.csv("p120_biol_new.csv") #make species name go to lower
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-p120 <- read.csv("Data/P120/Finalized/p120_clean_2021new.csv") #make species name go to lower
-p915 <- read.csv("Data/P915/Finalized/p915clean_new.csv")
+p915 <- read.csv("Data/P915/Finalized/p915_CPUE.csv")
 p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv")
 ```
 
@@ -28,10 +29,10 @@ p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv")
 
 ```{r}
 #P915
-p915 %>% group_by(Species) %>% summarize(n= sum(as.numeric(Colnum)))
+p915 %>% group_by(Speciescommonname) %>% summarize(n= sum(as.numeric(Colnum)))
 
 coords_captured <- function(species){
-ggplot(data = world) + geom_sf() + geom_point(data = subset(p915, p915$Species %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
 }
 
 coords_captured("bonnethead hammerhead")
@@ -46,15 +47,18 @@ coords_captured("striped bass")
 p120_edt %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarize(n= sum(as.numeric(Colnum)))
 
 coords_captured_p120 <- function(species){
-ggplot(data = world) + geom_sf() + geom_point(data = subset(p120_edt, p120_edt$Speciescommonname %in% species), aes(x = as.numeric(Longdd), y = as.numeric(Latdd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p120_edt, p120_edt$Speciescommonname %in% species), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
 }
 
-coords_captured_p120("BLUE CRAB")
-coords_captured_p120("NORTHERN BROWN SHRIMP")
-coords_captured_p120("ATLANTIC CROAKER")
-coords_captured_p120("BLUEFISH")
-coords_captured_p120("RED DRUM")
-coords_captured_p120("BLACK DRUM")
+coords_captured_p120("northern brown shrimp")
+coords_captured_p120("bluefish")
+coords_captured_p120("atlantic croaker")
+coords_captured_p120("southern flounder")
+coords_captured_p120("red drum")
+coords_captured_p120("blue catfish")
+coords_captured_p120("gizzard shad")
+coords_captured_p120("american shad")
+coords_captured_p120("blue crab")
 ```
 
 #### Bind together all datasets & explore
@@ -62,7 +66,7 @@ coords_captured_p120("BLACK DRUM")
 ```{r}
 #Bind together 
 p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Surfacetemp, Surfacesal, Surfacedo, Speciescommonname, Colnum, Latdd, Longdd, Sciname) %>% rename("Area" = "Station", "Stemp" = "Surfacetemp", "Ssal"= "Surfacesal", "Sdo"= "Surfacedo", "Latitude"= "Latdd", "Longitude" = "Longdd") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
+p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Lat_dd, Long_dd, Sciname) %>% rename("Area" = "Station", "Latitude"= "Lat_dd", "Longitude" = "Long_dd") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
 p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname) %>% rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
 
 colnames(p915_overlap)
@@ -140,8 +144,12 @@ write.csv(total_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridded
 ```{r}
 total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridded.csv", header= T)
 total_edt <- total_edt %>% select(-X)
-select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp")
-total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "CAPEF") #remove southern areas 
+select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp", "gizzard shad", "american shad")
+
+total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008)
+  
+
+p120_edt <- p120 %>% filter(Year > 1988, Core == 1| Core== 2)
 
 p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp)
 p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp)
