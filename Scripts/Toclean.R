@@ -159,7 +159,7 @@ df2=read.delim("P120_7279.txt",sep="$",header=TRUE,dec=".")
 df3=read.delim("P120_8089.txt",sep="$",header=TRUE,dec=".")
 df4=read.delim("P120_9099.txt",sep="$",header=TRUE,dec=".")
 df5=read.delim("P120_0009.txt",sep="$",header=TRUE,dec=".")
-fulld=rbind(df,df2,df3,df4,df5)
+fulld=rbind(df2,df3,df4,df5, df)
 head(fulld)
 
 updated_df <- read_csv("P120_1022_UPDATED.CSV")
@@ -178,4 +178,5 @@ fulld2_edt <- fulld2 %>% left_join(species_namesedt, by = "Species") %>% rename(
 
 write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 
-write.csv(fulld2_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_biol_new.csv")
+setwd("~/Desktop")
+write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")

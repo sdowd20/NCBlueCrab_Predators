@@ -329,7 +329,8 @@ setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
 ```
 
-#### Combining datasets 
+#### Combining datasets
+
 ```{r}
 p915_bioln_sel <- p915_bioln %>% select(Date, Area, Quad, Depth, Sedsize:Waterlvl, Latitude, Longitude, Sciname, Colnum, Weight, Age, Sex, Maturity, Colwgt:Subwgt, Length, -Ph, -Waterlvl) 
 p915_CPUE_sel <- p915_CPUE %>% select(Date, Area, Quad, Depth, Sciname, Colnum, Latitude, Longitude, Ssal:Windspd)
@@ -379,6 +380,3 @@ t <- p915_bioln %>% filter(Area %in% "MHDC4")
 length(unique(t$Area))
 #the record \# represents the control ID and the species ID combined so joining by area and date might be the way to go.
 ```
-
-
-
