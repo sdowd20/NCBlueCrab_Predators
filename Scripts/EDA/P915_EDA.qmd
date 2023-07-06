@@ -48,7 +48,9 @@ p915_biolnew1 <- p915_biolnew1 %>% select(-c(X, ...1))
 colnames(p915_biolnew1) <- str_to_title(colnames(p915_biolnew1))  
 p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biol2new_clean.csv")
 p915_biolnew2 <- p915_biolnew2 %>% select(-c(X.1, X))
-colnames(p915_biolnew2) <- str_to_title(colnames(p915_biolnew2))    
+colnames(p915_biolnew2) <- str_to_title(colnames(p915_biolnew2))   
+p915_biolnew2 <- type.convert(p915_biolnew2, as.is = TRUE) #converts data to appropriate type, when false it converts character vectors to factors
+p915_bioln <- rbind(p915_biolnew1, p915_biolnew2) #number of rows is 146079 (75496 from biolnew1 + 70583 from biolnew2), before type.convert it cut off at year 2008 
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 
 p915_CPUE <- p915_CPUE %>% filter(between(Year, 2008, 2020))
