@@ -53,8 +53,13 @@ p915_biolnew2 <- type.convert(p915_biolnew2, as.is = TRUE) #converts data to app
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2) #number of rows is 146079 (75496 from biolnew1 + 70583 from biolnew2), before type.convert it cut off at year 2008 
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 
-p915_CPUE <- p915_CPUE %>% filter(between(Year, 2008, 2020))
+
+p915_CPUE <- p915_CPUE %>% filter(between(Year, 2001, 2020))
 p915_bioln <- p915_bioln %>% filter(between(Year, 2008, 2020)) %>% filter(!Area %in% "miss")
+
+
+length(unique(merged$Control1)) #Control1 in biological dataset as the tow
+
 ```
 
 ##### General
