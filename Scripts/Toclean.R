@@ -182,3 +182,38 @@ write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/F
 
 setwd("~/Desktop")
 write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
+
+
+
+#P195: 
+setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data")
+P195_biomass <- read_csv("Data/P195/Raw/P195.abubio.2023-07-07.csv")
+P195_event <- read_csv("Data/P195/Raw/P195.event.2023-07-07.csv")
+length(unique(P195_event$EVENTNAME)) 
+length(unique(P195_biomass$EVENTNAME)) #same numbers of events, tow #
+
+P195_bind <- P195_biomass %>% left_join(P195_event_edt) #added the 18 variables not present in biomass df about event 
+merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:27, 29:30, 31, 43)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
+P195_bind[ , colnames(P195_bind) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
+colnames(P195_bind) <- str_to_title(colnames(P195_bind))
+colnames(P195_bind)
+library(lubridate)
+P195_bind$Date <- as.Date(P195_bind$Date, "%m-%d-%Y")
+P195_bind$Ym_date <- format(P195_bind$Date, "%Y-%m")
+P195_bind$Year <- year(P195_bind$Date)
+P195_bind$Month <- month(P195_bind$Date)
+P195_bind$Day <- day(P195_bind$Date)
+
+#Adding in Sciname for species
+P195_bind$Speciescommonname <- str_to_lower(P195_bind$Speciescommonname)
+P195_bind$Speciesscientificname <- str_to_lower(P195_bind$Speciesscientificname)
+species_P195 <- read_csv("species.P195.csv")
+colnames(species_P195) <- str_to_title(colnames(species_P195))
+species_P195$Speciescommonname <- str_to_lower(species_P195$Speciescommonname)
+species_P195$Speciesscientificname <- str_to_lower(species_P195$Speciesscientificname)
+species_P195_edt <- as.data.frame(species_P195[, c(1,9)])
+
+P195_bind_edt <- P195_bind %>% left_join(species_P195_edt, by= "Speciesscientificname") %>% rename("Sciname"= "Species")
+P195_bind_edt$Speciescommonname[P195_bind_edt$Speciescommonname== "northern brown shrimp"] <- "brown shrimp"
+
+write.csv(P195_bind_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")

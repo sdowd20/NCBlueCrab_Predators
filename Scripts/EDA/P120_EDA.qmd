@@ -12,7 +12,7 @@ Beginning in 2008 additional data parameters for Habitat were recorded: Distance
 
 All species are identified and counted. Economically important species are counted and a random subsample of 30-60 individuals of each size group are measured (mm). Blue crabs less then 20 mm are not sexed and crabs should be measured on their backs. Blue crabs are subsampled if there are more than 30 individuals that are less than 20 mm. Larger blue crabs, ones that that are greater or equal to 20 mm are sexed and all of these are measured. For other fish, if there are two different size groups and they are subsampled separately. If there are two different size groups, SpStatus will reflect this. SpStatus= 1 is for the larger size group and SpStatus= 2 is for the smaller size group (SpStatus= 0 means fish are measured as single unit). Each column is a separate species sample from a tow. To get every tow you can group by Date and Location and get an ID for the tow (id= row_number()) in order to have a row for every haul. When the Colnum is the same for a date, location, and species, there was subsampling of the species to obtain a length.
 
-Based on the dataset description, I am going to filter P120 to start after 1989. Also, whenever you use the dataset, make sure to remove the leading 0 from location (from 2010 to 2019 dataset). 
+Based on the dataset description, I am going to filter P120 to start after 1989. Also, whenever you use the dataset, make sure to remove the leading 0 from location (from 2010 to 2019 dataset).
 
 ### EDA
 
@@ -256,21 +256,6 @@ setwd("/Users/sallydowd/Desktop")
 ggsave("pamlicodatasets/bc.CPUE.P120.png", width = 7, height = 4, unit = "in")
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```{r}
 #CPUE for all focal species by area by year 
 p915_CPUEfoc <- p915_CPUEold %>% drop_na(Latitude, Longitude, Speciescommonname, Colnum) %>% select(Year, Month, Day, Area, Quad, Depth, Speciescommonname, Colnum, Latitude, Longitude, Date, Season, Depth, Ssal, Bsal, Stemp, Sedsize, Btmcomp, Season, Ym_date) %>% filter(!Speciescommonname %in% c("blue crab", "eastern oyster", "brown shrimp", "oyster toadfish", "white shrimp"))
@@ -358,15 +343,3 @@ CPUE_graph(p915_CPUEfoc_yrda, "southern kingfish", "Average CPUE") + facet_wrap(
 CPUE_graph(p915_CPUEfoc_yrda, "striped bass", "Average CPUE") + facet_wrap(~Quad + Area, scales= "free")
 CPUE_graph(p915_CPUEfoc_yrda, "blue catfish", "Average CPUE") + facet_wrap(~Quad + Area, scales= "free")
 ```
-
-
-
-
-
-
-
-
-
-
-
-
