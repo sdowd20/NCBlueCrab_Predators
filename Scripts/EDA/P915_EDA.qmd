@@ -53,13 +53,8 @@ p915_biolnew2 <- type.convert(p915_biolnew2, as.is = TRUE) #converts data to app
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2) #number of rows is 146079 (75496 from biolnew1 + 70583 from biolnew2), before type.convert it cut off at year 2008 
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 
-
 p915_CPUE <- p915_CPUE %>% filter(between(Year, 2001, 2020))
-p915_bioln <- p915_bioln %>% filter(between(Year, 2008, 2020)) %>% filter(!Area %in% "miss")
-
-
-length(unique(merged$Control1)) #Control1 in biological dataset as the tow
-
+p915_bioln <- p915_bioln %>% filter(between(Year, 2001, 2020)) %>% filter(!Area %in% "miss")
 ```
 
 ##### General
@@ -339,19 +334,30 @@ p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
 #### Combining datasets
 
 ```{r}
+length(unique(merged$Control1)) #Control1 in biological dataset as the tow
+
 p915_bioln_sel <- p915_bioln %>% select(Date, Area, Quad, Depth, Sedsize:Waterlvl, Latitude, Longitude, Sciname, Colnum, Weight, Age, Sex, Maturity, Colwgt:Subwgt, Length, -Ph, -Waterlvl) 
 p915_CPUE_sel <- p915_CPUE %>% select(Date, Area, Quad, Depth, Sciname, Colnum, Latitude, Longitude, Ssal:Windspd)
 
-zero_catch <- p915_CPUE_sel %>% filter(Colnum == 0) %>% select(-Secchi)  %>%
+zero_catch <- p915_CPUE_sel %>% filter(Colnum == 0) %>% select(-Secchi) %>%
 add_column(Weight = NA, Age= NA, Sex= NA, Maturity= NA, Colwgt= NA, Samnum= NA, Samwgt= NA, Subnum= NA, Subwgt= NA, Length= NA)
 
 colnames(p915_bioln_sel)
 colnames(zero_catch)
 
-idk <- rbind(p915_bioln_sel, zero_catch)
+idk <- rbind(p915_bioln_sel, zero_catch) #email this to Cara 
+
+tryit <- read_excel("~/Desktop/CPUE/CPUE_blackdrum_updates.XLS.xlsx")
+
+p915clean_new <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915clean_new.csv")
 
 
+test <- idk %>% filter(Area %in% "DARE3", Date == "2001-10-10")
+test1 <- p915_bioln_sel %>% filter(Area %in% "DARE3", Date == "2001-10-10")
+test3 <- p915_CPUE %>% filter(Area %in% "DARE3", Date == "2001-10-10")
+test2 <- zero_catch %>% filter(Area %in% "DARE3", Date == "2001-10-10")
 
+  
 Weight
 Age
 Sex
@@ -375,11 +381,13 @@ colnames(p915_CPUE_sel)
 #Goal: dataset with length, colnum, weight for recorded individuals and record of when individuals were not recorded
 
 
+#The zeros are giving the weird results- dataset does not have repeating strata and quadrants with same species unless there is a zero, thought it was one row for each sample in CPUE dataset 
+#Happens with original P915 dataset too, maybe overtthinking it? 
 
 
 
 
-unique(p915_CPUE$Area)
+unique(p915_CPUE$Quad)
 unique(p915_bioln$Area)
 t2 <- p915_CPUE %>% select(Area) %>% distinct(Area) %>% arrange(Area)
 t <- p915_bioln %>% filter(Area %in% "MHDC4")
