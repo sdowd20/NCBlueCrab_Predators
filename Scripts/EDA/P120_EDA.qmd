@@ -148,35 +148,37 @@ speciescount <- P120_bioledt %>% group_by(Speciescommonname, Date, Location) %>%
 #Remove cownose ray, Atlantic thread herring, and black drum b/c n < 100
 select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")
 
-##Fix issue with location: same locations one just has a zero and other doesn't
-P120_bioledt$Location <- ifelse(substr(P120_bioledt$Location, 1, 1) == "0", substr(P120_bioledt$Location, 2, nchar(P120_bioledt$Location)), P120_bioledt$Location) #substr: check if first integer in Location column = 0, if it does than extract substring at second character (remove leading 0), need nchar to determine length of each element, did this because there were repeating locations in Control1 that appeared to be same location (528410300 vs. 0528410300)
+P120_bioledt$Location <- as.numeric(P120_bioledt$Location) #removes leading zeros, 101 locations is the same in old processed data (p120_clean_2021) 
+length(unique(P120_bioledt$Location))
 
 ##Form a haul dataset where every row is one haul 
 summary(is.na(P120_bioledt$Sciname)) #28 NAs for Sciname
 P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
-length(unique(P120_bioledt$Control1)) #full dataset has more unique control1 than haul, 9641 vs. 9330
-haul <- P120_bioledt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (9330 variables whereas Lela had 8099), for all species
+length(unique(P120_bioledt$Control1)) #full dataset has more unique control1 than haul, 9641 vs. 9330, doesn't have to do with just selecting cores 
+haul <- P120_bioledt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (9310 variables whereas Lela had 8099), for all species
 length(unique(haul$Control1))
-#Let's look at which values are different: there are ~20 not in main cores
+#Let's look at which values are different: there are ~20 not in main cores, 311 values that are different--> need to ask about this 
 diff_values <- setdiff(P120_bioledt$Control1, haul$Control1)
 
 ##Create dummy column for species of focus
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")) #this repeats these species common names for the entirety of the length of the haul df
 haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Lat_dd, Long_dd, Core, Species)
-haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all three species associated with each collection number, is 9x (# of species) larger so it worked
-haul=haul_df%>%select(-Species) #drop dummy species common name from hauldf
+haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 9x (# of species) larger so it worked
+haul=haul_df %>%select(-Species) #drop dummy species common name from hauldf
 
 #now can merge haul.all and haul to create a df with a row for species associated with each collection number
 haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
 
-sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Lat_dd,-Long_dd) %>% group_by(Speciescommonname,Control1)%>%mutate(id=row_number())%>%filter(id==1)%>%ungroup()%>%as.data.frame()
+sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Lat_dd,-Long_dd) %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame()
 
-sel_spp_1202= sel_spp_120%>%select(Control1,Date,Speciescommonname,Colnum)
+sel_spp_120edt = sel_spp_120 %>% select(Control1,Date,Speciescommonname,Colnum)
 
 haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
-haul_sel_spp =left_join(haul_final, sel_spp_1202)%>%as.data.frame()
+haul_sel_spp <- left_join(haul_final, sel_spp_120edt) %>% as.data.frame()
+haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0
 
+write.csv(haul_sel_spp, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
 ```
 
 ```{r}
