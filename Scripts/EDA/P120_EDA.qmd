@@ -142,51 +142,40 @@ length(unique(P120_bioledt$Station))
 #### CPUE
 
 ```{r}
-speciescount <- P120_bioledt %>% group_by(Speciescommonname, Date, Location) %>% drop_na(Colnum) %>% distinct(Colnum) %>% ungroup() %>% group_by(Speciescommonname) %>% summarise(sum_colnum= sum(Colnum)) %>% filter(Speciescommonname %in% c("northern brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "atlantic thread herring", "cownose ray", "blue crab"))
+#Combining datasets
+##Explore species counts 
+speciescount <- P120_bioledt %>% group_by(Speciescommonname, Date, Location) %>% drop_na(Colnum) %>% distinct(Colnum) %>% ungroup() %>% group_by(Speciescommonname) %>% summarise(sum_colnum= sum(Colnum)) %>% filter(Speciescommonname %in% c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "atlantic thread herring", "cownose ray", "blue crab"))
 #Remove cownose ray, Atlantic thread herring, and black drum b/c n < 100
-select_spp <- c("northern brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")
+select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")
 
-p120_core <- P120_bioledt %>% filter(Core==1|Core==2) 
-p120_core$Location <- ifelse(substr(p120_core$Location, 1, 1) == "0", substr(p120_core$Location, 2, nchar(p120_core$Location)), p120_core$Location) #substr: check if first integer in Location column = 0, if it does than extract substring at second character (remove leading 0), need nchar to determine length of each element, did this because there were repeating locations in Control1 that appeared to be same location (528410300 vs. 0528410300)
+##Fix issue with location: same locations one just has a zero and other doesn't
+P120_bioledt$Location <- ifelse(substr(P120_bioledt$Location, 1, 1) == "0", substr(P120_bioledt$Location, 2, nchar(P120_bioledt$Location)), P120_bioledt$Location) #substr: check if first integer in Location column = 0, if it does than extract substring at second character (remove leading 0), need nchar to determine length of each element, did this because there were repeating locations in Control1 that appeared to be same location (528410300 vs. 0528410300)
 
-haul <- p120_core %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (6797 variables whereas Lela had 8099)
+##Form a haul dataset where every row is one haul 
+summary(is.na(P120_bioledt$Sciname)) #28 NAs for Sciname
+P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
+length(unique(P120_bioledt$Control1)) #full dataset has more unique control1 than haul, 9641 vs. 9330
+haul <- P120_bioledt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (9330 variables whereas Lela had 8099), for all species
 length(unique(haul$Control1))
-nrow(haul)
-haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Lat_dd, Long_dd, Core)
+#Let's look at which values are different: there are ~20 not in main cores
+diff_values <- setdiff(P120_bioledt$Control1, haul$Control1)
 
-p120_coreedt <- p120_core %>% select(-Lat_dd, -Long_dd) %>% group_by(Control1, Speciescommonname) %>% mutate(id= row_number()) %>% filter(id== 1) %>% ungroup() %>% dplyr::select(Control1, Date, Speciescommonname, Colnum) %>% filter(Speciescommonname %in% select_spp)
+##Create dummy column for species of focus
+haul$Species=NA#create a dummy column first
+haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")) #this repeats these species common names for the entirety of the length of the haul df
+haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Lat_dd, Long_dd, Core, Species)
+haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all three species associated with each collection number, is 9x (# of species) larger so it worked
+haul=haul_df%>%select(-Species) #drop dummy species common name from hauldf
 
-#7062 vs. 6797 ControlID for p120_core vs. haul
-length(unique(p120_coreedt$Control1))
+#now can merge haul.all and haul to create a df with a row for species associated with each collection number
+haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
 
+sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Lat_dd,-Long_dd) %>% group_by(Speciescommonname,Control1)%>%mutate(id=row_number())%>%filter(id==1)%>%ungroup()%>%as.data.frame()
 
-if (!(select_spp %in% p120_coreedt$Speciescommonname & target_ID %in% df$ID)) {
-  # Add the target species with zero value
-  new_row <- data.frame(ID = target_ID, Species = target_species, Value = 0)
-  df <- rbind(df, new_row)
-}
+sel_spp_1202= sel_spp_120%>%select(Control1,Date,Speciescommonname,Colnum)
 
-
-unique_ids <- unique(p120_coreedt$Control1)
-for(id in unique_ids){
-if (!(select_spp %in% p120_coreedt$Speciescommonname[p120_coreedt$Control1 %in% id])){
- new_row <- data.frame(Control1 = id, Colnum = NA, Species = select_spp)
-    df <- rbind(p120_coreedt, new_row)
-  }
-}
-
-
-unique_ids <- unique(df$Control1_ID)
-for (id in unique_ids) {
-  for (species in target_species) {
-    if (!(species %in% df$Species[df$Control1_ID == id])) {
-      # Add a new row for the target species with zero value
-      new_row <- data.frame(Control1_ID = id, Fish_Tow = NA, Species = species)
-      df <- rbind(df, new_row)
-    }
-  }
-}
-
+haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
+haul_sel_spp =left_join(haul_final, sel_spp_1202)%>%as.data.frame()
 
 ```
 
@@ -215,6 +204,13 @@ haul_df <- haul %>% dplyr::select(control1, program, year, month, day, date, loc
 #didn't merge with haul.all b/c species are already associated with collection #
 
 hauldf_final <- haul_df %>% select(-colnum) #just want haul information
+
+
+haul.all=hauldf%>%tidyr::expand(Species,Control1)#this is three times larger so it should have worked
+head(haul.all)
+haul.all%>%filter(Species=="L. setiferus")#pink and white are in there, so I think it worked
+
+
 
 #Merge datasets 
 #just want one row with shrimp catches for each species (ColNum) for each station (Control1) without the lengths and grouped by species and station
