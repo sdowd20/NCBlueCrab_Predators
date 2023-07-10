@@ -7,8 +7,7 @@ output: html_document
 
 This code was adopted and modified from Sarah Roberts ([sroberts\@nyelab.org](mailto:sroberts@nyelab.org){.email}) who created it in 01/2022.
 
-#### Load packages, functions and datasets
-
+#### Load packages and datasets
 ```{r}
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "gt")
 
@@ -21,8 +20,37 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 setwd("~/Desktop")
 p120 <- read.csv("p120_biol_new.csv") #make species name go to lower
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p120_CPUE <- read.csv("Data/P120/Finalized/p120_CPUE.csv")
 p915 <- read.csv("Data/P915/Finalized/p915_CPUE.csv")
 p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv")
+
+p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
+p120_CPUE$Date <- as.Date(p120_CPUE$Date, "%Y-%m-%d")
+p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
+
+#Using P120_CPUE now: just started filtering for year for Plots section below and area 
+p915 <- p915 %>% filter(between(Year, 2008, 2020), !Area %in% "CAPEF", !Area %in% "NEWR", Season %in% "Spring"| Season %in% "Summer")
+
+p120_CPUE <- p120_CPUE %>% filter(between(Year, 2008, 2020), Long_dd > -77.0, Season %in% "Spring"| Season %in%"Summer")
+```
+
+#### Load functions for graphs 
+```{r}
+sp_over_pos_pos <- function(species){
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120_CPUE, p120_CPUE$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUE$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + guides(size= F) + facet_wrap(~Season)
+}
+
+sp_over_pos_zero <- function(species){
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120_CPUE, p120_CPUE$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUE$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum == 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + guides(size= F) + facet_wrap(~Season)
+}
+
+sp_over_zero_pos <- function(species){
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120_CPUE, p120_CPUE$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUE$Colnum == 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")+ guides(size= F) + facet_wrap(~Season)
+}
+
+sp_over_zero_zero <- function(species){
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120_CPUE, p120_CPUE$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUE$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum == 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")+ guides(size= F) + facet_wrap(~Season)
+}
 ```
 
 #### Where focal species are caught
@@ -149,7 +177,6 @@ select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "
 total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008)
   
 
-p120_edt <- p120 %>% filter(Year > 1988, Core == 1| Core== 2)
 
 p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp)
 p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp)
@@ -316,9 +343,14 @@ match_data2edt <- match_data2 %>% left_join(P915_total_sum, by= c("Speciescommon
 #sum_Colnum: number of predators observed that overlap with blue crabs in specific grid cell for a season and year 
 match_data2edt <- match_data2edt %>% left_join(P120_bc_sum, by= c("Year", "Season", "gridID"))
 
-##Positive blue crab in P120, 0 predator in P915
+##Positive blue crab in P120, zero predator in P915
 P915_total_zero <- P915_total %>% filter(Colnum == 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
 P915_total_zeroedt <- P915_total_zero %>% left_join(P120_bc_sum, by = c("Year", "Season", "gridID")) %>% drop_na(sum_Colnum_bc) #it's only gridIDs that overlap bc is the ones present in P915
+
+##Zero blue crab in P120, positive predator in P915
+P120_total_zero <- P120_total %>% filter(Colnum == 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
+
+##Zero blue crab in P120, zero predator in P915
 
 ##Summary tables
 ###Positive, positive 
@@ -336,5 +368,61 @@ P915_total_zeroedt2 %>% group_by(Species, Year, Season) %>% summarize(sum_spp = 
 ##Positive predator, 0 blue crab: can't do this right now due to data 
 P915_total_pos <- P915_total %>% filter(Colnum > 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
 P915_total_posedt <- P915_total_pos %>% left_join()
+```
+
+#### Plots: spatial and temporal overlap
+```{r}
+#Spatial overlap: including season 
+sp_over_pos_pos("blue catfish") + ggtitle("Postive, positive: blue catfish")
+sp_over_pos_zero("blue catfish") + ggtitle("Postive, zero: blue catfish")
+sp_over_zero_pos("blue catfish") + ggtitle("Zero, positive: blue catfish")
+sp_over_zero_zero("blue catfish") + ggtitle("Zero, zero: blue catfish")
+
+sp_over_pos_pos("blue catfish") + ggtitle("Postive, positive: blue catfish")
+sp_over_pos_zero("blue catfish") + ggtitle("Postive, zero: blue catfish")
+sp_over_zero_pos("blue catfish") + ggtitle("Zero, positive: blue catfish")
+sp_over_zero_zero("blue catfish") + ggtitle("Zero, zero: blue catfish")
+
+sp_over_pos_pos("bonnethead hammerhead") + ggtitle("Postive, positive: bonnethead")
+sp_over_pos_zero("bonnethead hammerhead") + ggtitle("Postive, zero: bonnethead")
+sp_over_zero_pos("bonnethead hammerhead") + ggtitle("Zero, positive: bonnethead")
+sp_over_zero_zero("bonnethead hammerhead") + ggtitle("Zero, zero: bonnethead")
+
+sp_over_pos_pos("black drum") + ggtitle("Postive, positive: black drum")
+sp_over_pos_zero("black drum") + ggtitle("Postive, zero: black drum")
+sp_over_zero_pos("black drum") + ggtitle("Zero, positive: black drum")
+sp_over_zero_zero("black drum") + ggtitle("Zero, zero: black drum")
+
+sp_over_pos_pos("red drum") + ggtitle("Postive, positive: red drum")
+sp_over_pos_zero("red drum") + ggtitle("Postive, zero: red drum")
+sp_over_zero_pos("red drum") + ggtitle("Zero, positive: red drum")
+sp_over_zero_zero("red drum") + ggtitle("Zero, zero: red drum")
+
+sp_over_pos_pos("oyster toadfish") + ggtitle("Postive, positive: oyster toadfish")
+sp_over_pos_zero("oyster toadfish") + ggtitle("Postive, zero: oyster toadfish")
+sp_over_zero_pos("oyster toadfish") + ggtitle("Zero, positive: oyster toadfish")
+sp_over_zero_zero("oyster toadfish") + ggtitle("Zero, zero: oyster toadfish")
+
+sp_over_pos_pos("striped bass") + ggtitle("Postive, positive: striped bass")
+sp_over_pos_zero("striped bass") + ggtitle("Postive, zero: striped bass")
+sp_over_zero_pos("striped bass") + ggtitle("Zero, positive: striped bass")
+sp_over_zero_zero("striped bass") + ggtitle("Zero, zero: striped bass") 
+
+#Temporal overlap
+
+#number of grid cells that overlap in a season and year 
+
+
+
+
+
+
+
 
 ```
+
+
+
+
+
+
