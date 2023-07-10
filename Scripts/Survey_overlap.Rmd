@@ -17,21 +17,12 @@ standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-setwd("~/Desktop")
-p120 <- read.csv("p120_biol_new.csv") #make species name go to lower
+#p120 <- read.csv("p120_biol_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-p120_CPUE <- read.csv("Data/P120/Finalized/p120_CPUE.csv")
+p120 <- read.csv("Data/P120/Finalized/p120_CPUE.csv")
 p915 <- read.csv("Data/P915/Finalized/p915_CPUE.csv")
-p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv")
-
-p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
-p120_CPUE$Date <- as.Date(p120_CPUE$Date, "%Y-%m-%d")
-p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
-
-#Using P120_CPUE now: just started filtering for year for Plots section below and area 
-p915 <- p915 %>% filter(between(Year, 2008, 2020), !Area %in% "CAPEF", !Area %in% "NEWR", Season %in% "Spring"| Season %in% "Summer")
-
-p120_CPUE <- p120_CPUE %>% filter(between(Year, 2008, 2020), Long_dd > -77.0, Season %in% "Spring"| Season %in%"Summer")
+p195 <- read.csv("Data/P195/Finalized/p195_abund.csv")
+#p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv") #changed to new p120 and p195 dataset on 07/10/23
 ```
 
 #### Load functions for graphs 
@@ -174,9 +165,10 @@ total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridde
 total_edt <- total_edt %>% select(-X)
 select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp", "gizzard shad", "american shad")
 
-total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008)
-  
+#total_edt_new <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer", Longitude > -77.0)
 
+  
+total_edt %>% filter(Survey %in% "P120")
 
 p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp)
 p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp)

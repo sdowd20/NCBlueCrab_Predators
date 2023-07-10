@@ -183,7 +183,7 @@ p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$M
 p120_CPUE$Date <- as.Date(p120_CPUE$Date, "%Y-%m-%d")
 p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 
-write.csv(haul_sel_spp, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
+write.csv(p120_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
 ```
 
 ```{r}
