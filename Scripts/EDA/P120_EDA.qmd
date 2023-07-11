@@ -183,6 +183,8 @@ p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$M
 p120_CPUE$Date <- as.Date(p120_CPUE$Date, "%Y-%m-%d")
 p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 
+names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
+p120_CPUE <- p120_CPUE %>% left_join(names_join)
 write.csv(p120_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
 ```
 

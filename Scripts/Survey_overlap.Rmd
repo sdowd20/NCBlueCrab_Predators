@@ -88,6 +88,7 @@ p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo
 p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Lat_dd, Long_dd, Sciname) %>% rename("Area" = "Station", "Latitude"= "Lat_dd", "Longitude" = "Long_dd") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
 p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname) %>% rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
 
+colnames(p120)
 colnames(p915_overlap)
 colnames(p120_overlap)
 colnames(p195_overlap)
