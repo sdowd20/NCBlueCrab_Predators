@@ -8,6 +8,7 @@ output: html_document
 This code was adopted and modified from Sarah Roberts ([sroberts\@nyelab.org](mailto:sroberts@nyelab.org){.email}) who created it in 01/2022.
 
 #### Load packages and datasets
+
 ```{r}
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "gt")
 
@@ -24,22 +25,47 @@ p915 <- read.csv("Data/P915/Finalized/p915_CPUE.csv")
 p195 <- read.csv("Data/P195/Finalized/p195_abund.csv")
 p195$Season <- ifelse(p195$Month==4 | p195$Month==5 | p195$Month==6, "Spring", ifelse(p195$Month==9 |p195$Month==10 | p195$Month==11 | p195$Month==12, "Fall", ifelse(p195$Month==7 |p195$Month==8, "Summer", "Winter")))
 #p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv") #changed to new p120 and p195 dataset on 07/10/23
+
+#Select columns from datasets
+p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
+p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Lat_dd, Long_dd, Sciname, Season) %>% dplyr::rename("Area" = "Station", "Latitude"= "Lat_dd", "Longitude" = "Long_dd") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
+p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname, Season) %>% dplyr::rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
+
+colnames(p915_overlap)
+colnames(p120_overlap)
+colnames(p195_overlap)
+
+#Load in world datasest and form grid
+world <- ne_countries(scale = "medium", returnclass = "sf")
+# make an object the size and shape of the output you want
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+
+globe_grid_20 <- st_make_grid(x= globe_bb, n = c(20,20), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
+
 ```
 
-#### Load functions for graphs 
+#### Load functions for graphs
+
 ```{r}
 sp_over_pos_pos <- function(species){
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + guides(size= F, scale= "none") + facet_wrap(~Season)
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p195, p195$Speciescommonname %in% "blue crab" & as.numeric(p195$Numbertotal > 0)), aes(x = as.numeric(Longitudestart), y = as.numeric(Latitudestart), size= Numbertotal), colour= "orange") + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "pink") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + guides(size= F, scale= "none") + facet_wrap(~Season)
 }
 
 sp_over_pos_zero <- function(species){
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum == 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + guides(size= F, scale= "none") + facet_wrap(~Season)
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p195, p195$Speciescommonname %in% "blue crab" & as.numeric(p195$Numbertotal > 0)), aes(x = as.numeric(Longitudestart), y = as.numeric(Latitudestart), size= Numbertotal), colour= "orange") + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "pink") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum == 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + guides(size= F, scale= "none") + facet_wrap(~Season)
 }
 
 sp_over_zero_pos <- function(species){
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum == 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")+ guides(size= F, scale= "none") + facet_wrap(~Season)
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p195, p195$Speciescommonname %in% "blue crab" & as.numeric(p195$Numbertotal == 0)), aes(x = as.numeric(Longitudestart), y = as.numeric(Latitudestart), size= Numbertotal), colour= "orange") + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum == 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")+ guides(size= F, scale= "none") + facet_wrap(~Season)
 }
 
+t <- p195 %>% filter(Speciescommonname %in% "blue crab") 
+
+unique(t$Numbertotal)
 sp_over_zero_zero <- function(species){
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(p120, p120$Speciescommonname %in% "blue crab" & as.numeric(p120$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), size= Colnum), colour= "red") + geom_point(data = subset(p915, p915$Speciescommonname %in% species & as.numeric(p915$Colnum == 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), size= Colnum), colour= "blue") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")+ guides(size= F, scale= "none") + facet_wrap(~Season)
 }
@@ -84,15 +110,7 @@ coords_captured_p120("blue crab")
 #### Bind together all datasets & explore
 
 ```{r}
-#Bind together 
-p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Lat_dd, Long_dd, Sciname, Season) %>% rename("Area" = "Station", "Latitude"= "Lat_dd", "Longitude" = "Long_dd") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname, Season) %>% rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-
-colnames(p915_overlap)
-colnames(p120_overlap)
-colnames(p195_overlap)
-
+#Bind together
 total <- rbind(p915_overlap, p120_overlap, p195_overlap)
 total$Date <- as.Date(total$Date, format= "%Y-%m-%d")
 total$Ym_date <- format(total$Date, "%Y-%m")
@@ -113,16 +131,6 @@ total_lat_lon <- rbind(p915_lat_lon, p120_lat_lon, p195_lat_lon)
 #### Form a grid individually over datasets
 
 ```{r}
-world <- ne_countries(scale = "medium", returnclass = "sf")
-# make an object the size and shape of the output you want
-globe_bb <- matrix(c(-78.900147,33.802938,
-                      -78.900147,36.672128,
-                      -75.263672,36.672128,
-                     -75.263672, 33.802938,
-                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-
-globe_grid_20 <- st_make_grid(x= globe_bb, n = c(20,20), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
-
 ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = total, aes(x = Longitude, y = Latitude, colour = Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE)
 
 fish_spat <- as.data.frame(total_lat_lon)
@@ -164,16 +172,14 @@ colnames(total_edt)
 ##### Dataframe: spatial and temporal
 
 ```{r}
-total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridded.csv", header= T)
-total_edt <- total_edt %>% select(-X)
+#Load and filter total dataset 
+total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridded.csv", header= T) #is survey_overlap added up
+total_edt <- total_edt[,-1]
 select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp", "gizzard shad", "american shad")
 
 total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer", Longitude > -77.0)
 
-unique(total_edt$Season)
-#total_edt_new <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer", Longitude > -77.0)
-
-p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer")
+p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp)
 p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp)
 p195_overlap_edt <- p195_overlap %>% filter(Speciescommonname %in% select_spp)
 
@@ -308,8 +314,9 @@ summary(match_data2$count)
 unique(match_data2$Year)
 ```
 
-
 ```{r}
+select_spp2 <- c("atlantic croaker", "black drum", "blue catfish", "bonnethead hammerhead", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass")
+
 #For each Speciescommonname and blue crabs, loop through to see the overlapping gridIDs with the other datasets for each season and year 
 
 ##Positive, positive
@@ -319,6 +326,7 @@ P915_total_gridID <- list()
 P120_total_gridID <- list()
 match_df <- list()
 library(plyr)
+library(dplyr)
 for(i in spp_names) {
 P915_total_spp[[i]] <- P915_total %>% filter(Speciescommonname %in% i, Colnum > 0) %>% drop_na(Colnum)
 P915_total_gridID[[i]] <- P915_total_spp[[i]] %>% dplyr::select(gridID, Season, Speciescommonname, Year) %>% group_by(Season, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
@@ -329,24 +337,36 @@ match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_bc_gridID, on = c("gridID
 
 detach(package:plyr)
 library(dplyr)
-match_data2 <- as.data.frame(do.call(rbind, match_df))
-match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dplyr::mutate(count= n()) %>% select(-gridID)
-P915_total_sum <- P915_total %>% filter(Colnum > 0) %>% dplyr::group_by(Speciescommonname, Year, Season, gridID) %>% summarise(sum_Colnum_pred = sum(Colnum)) 
-P120_bc_sum <- P120_total %>% filter(Colnum > 0, Speciescommonname %in% "blue crab") %>% dplyr::group_by(Year, Season, gridID) %>% summarise(sum_Colnum_bc = sum(Colnum)) 
-#match_data2edt <- match_data2 %>% left_join(P915_total_sum, by= c("Speciescommonname", "Year", "Season", "gridID")) #can't do this bc gridID goes away from summarizing the match
-#count: number of observations overlapping for a predator species and blue crab for a season and year (includes all grid cells)
-#sum_Colnum: number of predators observed that overlap with blue crabs in specific grid cell for a season and year 
-#match_data2edt <- match_data2edt %>% left_join(P120_bc_sum, by= c("Year", "Season", "gridID"))
+match_data2 <- as.data.frame(do.call(rbind, match_df)) 
+match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dplyr::mutate(count= n()) %>% select(-gridID) #count: number of observations overlapping for a predator species and blue crab for a season and year (includes all grid cells)
 
-##Positive blue crab in P120, zero predator in P915
-P915_total_zero <- P915_total %>% filter(Colnum == 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
-P915_total_zeroedt <- P915_total_zero %>% left_join(P120_bc_sum, by = c("Year", "Season", "gridID")) %>% drop_na(sum_Colnum_bc) #it's only gridIDs that overlap bc is the ones present in P915
+#pos, zero
+##p915 first 
+bc_pos <- P120_total %>% filter(Colnum > 0, Speciescommonname %in% "blue crab") %>% group_by(gridID, Season, Year) %>% mutate(bc_colnum= sum(Colnum)) %>% distinct(bc_colnum, .keep_all= F)
+p915_zero <- P915_total %>% filter(Colnum == 0, Speciescommonname %in% select_spp2) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID) %>% group_by(Season, Year, gridID, Speciescommonname) %>% distinct(Colnum) #only one row per species, gridID, season, and year b/c colnum= 0 
+p915_zeroedt <- p915_zero %>% left_join(bc_pos, by = c("Year", "Season", "gridID")) #it's only gridIDs that overlap bc is the ones present in P915, NA for bc_colnum means it wasn't caught there so remove
+pos_zero <- p915_zeroedt %>% drop_na(bc_colnum) 
 
-##Zero blue crab in P120, positive predator in P915
-P120_total_zero <- P120_total %>% filter(Colnum == 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
+##p120 first
+pos_zero2 <- bc_pos %>% left_join(p915_zero, by = c("Year", "Season", "gridID")) %>% drop_na(Speciescommonname)
 
-##Zero blue crab in P120, zero predator in P915
+#zero, pos
+##p915 first
+bc_zero <- P120_total %>% filter(Colnum == 0, Speciescommonname %in% "blue crab") %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID) %>% group_by(gridID, Season, Year) %>% distinct(Colnum, .keep_all= F)
+p915_pos <- P915_total %>% filter(Colnum > 0, Speciescommonname %in% select_spp2) %>% group_by(gridID, Season, Year, Speciescommonname) %>% mutate(pred_colnum = sum(Colnum)) %>% distinct(pred_colnum, .keep_all= F) #just need to get one row for a grid cell, season, year and species
+zero_pos <- p915_pos %>% left_join(bc_zero, by= c("Year", "Season", "gridID")) %>% drop_na(Colnum) #exclude when blue crabs weren't sampled
+##p120 first 
+zero_pos2 <- bc_zero %>% left_join(p915_pos, by= c("Year", "Season", "gridID")) %>% drop_na(Speciescommonname) #exclude when blue crabs weren't sampled
 
+library(arsenal)
+summary(comparedf(zero_pos, zero_pos2))
+#zero, zero
+zero_zero <- p915_zero %>% select(-Colnum) %>% left_join(bc_zero, by= c("Year", "Season", "gridID")) %>% drop_na(Colnum) %>% group_by(Speciescommonname, Season, Year) %>% mutate(count= n()) #NAs are a grid cell where blue crab wasn't sampled, drop this, count gets at # of grid cells overlapping 
+zero_zero2 <- bc_zero %>% select(-Colnum) %>% left_join(p915_zero, by= c("Year", "Season", "gridID")) %>% drop_na(Colnum) %>% group_by(Speciescommonname, Season, Year) %>% mutate(count= n())
+```
+
+##### Overlap tables: 
+```{r}
 ##Summary tables
 ###Positive, positive 
 match_data2edt <- match_data2edt %>% filter(!Speciescommonname %in% "blue crab", !Speciescommonname %in% "brown shrimp", !Speciescommonname %in% "white shrimp") %>% rename(Species= Speciescommonname)
@@ -359,13 +379,10 @@ P915_total_zeroedt2 <- P915_total_zeroedt %>% filter(!Speciescommonname %in% "bl
 P915_total_zeroedt2 %>% group_by(Species) %>% summarize(sum_spp = sum(Colnum), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/posneg.png")
 P915_total_zeroedt2 %>% group_by(Species, Year) %>% summarize(sum_spp = sum(Colnum), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/posneg.year.pdf")
 P915_total_zeroedt2 %>% group_by(Species, Year, Season) %>% summarize(sum_spp = sum(Colnum), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/posneg.season.pdf")
-
-##Positive predator, 0 blue crab: can't do this right now due to data 
-P915_total_pos <- P915_total %>% filter(Colnum > 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID)
-P915_total_posedt <- P915_total_pos %>% left_join()
 ```
 
-#### Plots: spatial and temporal overlap
+##### Overlap plots: 
+
 ```{r}
 total_edt_new <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer", Longitude > -77.0)
 
@@ -374,6 +391,16 @@ sp_over_pos_pos("blue catfish") + ggtitle("Postive, positive: blue catfish")
 sp_over_pos_zero("blue catfish") + ggtitle("Postive, zero: blue catfish") 
 sp_over_zero_pos("blue catfish") + ggtitle("Zero, positive: blue catfish")
 sp_over_zero_zero("blue catfish") + ggtitle("Zero, zero: blue catfish") 
+
+
+
+
+
+
+
+
+
+
 
 sp_over_pos_pos("blue catfish") + ggtitle("Postive, positive: blue catfish")
 sp_over_pos_zero("blue catfish") + ggtitle("Postive, zero: blue catfish")
@@ -408,31 +435,21 @@ sp_over_zero_zero("striped bass") + ggtitle("Zero, zero: striped bass")
 #Temporal overlap
 #histogram where count is the # of grid cells that overlap in year-month 
 #pos, pos
-match_data2 %>% filter(Speciescommonname %in% select_spp) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme #x= Year works because didn't summarize 
+
+
+
+match_data2 %>% filter(Speciescommonname %in% select_spp2) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme #x= Year works because didn't summarize 
 ggsave("/users/sallydowd/desktop/match.jpg", width=25, height= 25, units= c("cm")) 
 
-#pos, zero
-P120_bc_sum <- P120_total %>% filter(Colnum > 0, Speciescommonname %in% "blue crab") %>% select(gridID, Season, Year, Colnum) %>% rename("bc_colnum"= "Colnum")
-P915_total_zero <- P915_total %>% filter(Colnum == 0) %>% drop_na(Colnum) %>% dplyr::select(Year, Speciescommonname, Season, Colnum, gridID) %>% group_by(Season, Year, gridID, Speciescommonname) %>% distinct(Colnum)
+#pos, zero: tried w/ pos_zero2 as well (no big differences)
+pos_zero %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme
+ggsave("/users/sallydowd/desktop/pos_zero.jpg", width=25, height= 25, units= c("cm")) 
 
-P915_total_zeroedt <- P915_total_zero %>% left_join(P120_bc_sum, by = c("Year", "Season", "gridID")) #it's only gridIDs that overlap bc is the ones present in P915
+#zero, pos: same graph no matter how left_join
+zero_pos %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme
+ggsave("/users/sallydowd/desktop/zero_pos.jpg", width=25, height= 25, units= c("cm")) 
 
-
-#zero, pos
-
-#zero, zero
-
-
-#count: number of gridIDs that have overlapping observations in a season, year and month
-
-haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 9x (# of species) larger so it worked
-
-
-
+#zero, zero: same graph no matter how left_join
+zero_zero %>% filter(Speciescommonname %in% select_spp2) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme #x= Year works because didn't summarize 
+ggsave("/users/sallydowd/desktop/zerozero.jpg", width=25, height= 25, units= c("cm")) 
 ```
-
-
-
-
-
-
