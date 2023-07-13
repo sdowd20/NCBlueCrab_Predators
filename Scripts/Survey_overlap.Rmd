@@ -45,7 +45,6 @@ globe_bb <- matrix(c(-78.900147,33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
 
 globe_grid_20 <- st_make_grid(x= globe_bb, n = c(20,20), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
-
 ```
 
 #### Load functions for graphs
@@ -392,21 +391,6 @@ sp_over_pos_zero("blue catfish") + ggtitle("Postive, zero: blue catfish")
 sp_over_zero_pos("blue catfish") + ggtitle("Zero, positive: blue catfish")
 sp_over_zero_zero("blue catfish") + ggtitle("Zero, zero: blue catfish") 
 
-
-
-
-
-
-
-
-
-
-
-sp_over_pos_pos("blue catfish") + ggtitle("Postive, positive: blue catfish")
-sp_over_pos_zero("blue catfish") + ggtitle("Postive, zero: blue catfish")
-sp_over_zero_pos("blue catfish") + ggtitle("Zero, positive: blue catfish")
-sp_over_zero_zero("blue catfish") + ggtitle("Zero, zero: blue catfish")
-
 sp_over_pos_pos("bonnethead hammerhead") + ggtitle("Postive, positive: bonnethead")
 sp_over_pos_zero("bonnethead hammerhead") + ggtitle("Postive, zero: bonnethead")
 sp_over_zero_pos("bonnethead hammerhead") + ggtitle("Zero, positive: bonnethead")
@@ -435,9 +419,6 @@ sp_over_zero_zero("striped bass") + ggtitle("Zero, zero: striped bass")
 #Temporal overlap
 #histogram where count is the # of grid cells that overlap in year-month 
 #pos, pos
-
-
-
 match_data2 %>% filter(Speciescommonname %in% select_spp2) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme #x= Year works because didn't summarize 
 ggsave("/users/sallydowd/desktop/match.jpg", width=25, height= 25, units= c("cm")) 
 
@@ -453,3 +434,29 @@ ggsave("/users/sallydowd/desktop/zero_pos.jpg", width=25, height= 25, units= c("
 zero_zero %>% filter(Speciescommonname %in% select_spp2) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname + Season) + standard_theme #x= Year works because didn't summarize 
 ggsave("/users/sallydowd/desktop/zerozero.jpg", width=25, height= 25, units= c("cm")) 
 ```
+
+```{r}
+#MAP of blue crab CPUE: in each grid cell, changing over time 
+##p120
+#Effort, all tows are 1 minute and speed adjusted to cover 75 yards, headrope is 10.5 feet, so area covered in one tow is 0.02195 hectares
+summary(haul.shrimp$Duration)#only 1 minute tows, add ones for NAs
+haul.shrimp=haul.shrimp%>%mutate(Duration=if_else(is.na(Duration),1,as.numeric(Duration)))
+
+p120_bc_CPUE <- P120_total %>% filter(Speciescommonname %in% "blue crab") %>% mutate(CPUE= Colnum/0.02195) %>% group_by(Year, Latitude, Longitude) %>% mutate(avg_CPUE= mean(CPUE)) %>% distinct(avg_CPUE, .keep_all= TRUE)
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = p120_bc_CPUE, aes(x = Longitude, y = Latitude, size= avg_CPUE), colour= "orange") + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + facet_wrap(~Season) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") 
+
+
+
+
+
+test <- P120_total %>% filter(Speciescommonname %in% "blue crab") %>% mutate(CPUE= Colnum/0.02195) %>% filter(Season %in% "Summer") %>% group_by(Year, gridID) %>% mutate(avg_CPUE= mean(CPUE), long= mean(Longitude), lat= mean(Latitude))
+
+a <- ggmap(myMap) + geom_point(data = test, aes(x = long, y = lat, color = avg_CPUE)) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Summer Blue crab CPUE during {frame_time}') +
+  transition_time(Year) 
+gganimate::animate(a, duration = 12)
+anim_save("~/Desktop/P195SpeciesOverTime.gif", width = 6, height = 4, unit = "in")
+```
+
