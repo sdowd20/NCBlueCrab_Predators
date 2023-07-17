@@ -6,6 +6,7 @@ library(stringr)
 library(readr)
 library(dplyr)
 library(lubridate)
+library(geosphere)
 
 #Species names
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
@@ -76,15 +77,19 @@ for (col in columns) {
 
 P915_CPUE <- merged %>% dplyr::rename("Sciname"= "Species")
 P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
+P915_CPUE$doy <- yday(P915_CPUE$Date)
+P915_CPUE <- P915_CPUE %>% mutate_at(vars(c(10:17, 25, 26)), as.numeric)
+P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 write.csv(P915_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
 
+colnames(P915_CPUE)
 ##New biological data files 
 ###General
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
 #write.csv(p915_biol1, "Data/P915/Raw/p915_biol1new.csv")
 
-p915_biol1 <- read_csv("Data/P915/Raw/p915_biol1new.csv")
+p915_biol1 <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Raw/p915_biol1new.csv")
 colnames(p915_biol1) <- str_to_title(colnames(p915_biol1))
 p915_biol1$Location <- str_to_title(p915_biol1$Location)
 p915_biol1 <- p915_biol1 %>% select(-Year) %>% mutate(Year= lubridate::year(Date))
@@ -93,8 +98,10 @@ p915_biol1_apply[p915_biol1_apply== "ERROR"] <- NA
 p915_biol1[ , colnames(p915_biol1) %in% colnames(p915_biol1_apply)] <- p915_biol1_apply #replace updated columns in original dataset
 p915_biol1$Season <- ifelse(p915_biol1$Month==4 | p915_biol1$Month==5 | p915_biol1$Month==6, "Spring", ifelse(p915_biol1$Month==9 |p915_biol1$Month==10 | p915_biol1$Month==11 | p915_biol1$Month==12, "Fall", ifelse(p915_biol1$Month==7 |p915_biol1$Month==8, "Summer", "Winter")))
 p915_biol1$Ym_date <- format(p915_biol1$Date, "%Y-%m")
+p915_biol1$doy <- yday(p915_biol1$Date)
+p915_biol1$Photoperiod <- daylength(lat= p915_biol1$Latitude, doy= p915_biol1$doy)
 
-p915_biol2 <- read.csv("Data/P915/Raw/p915_biol2new.csv")
+p915_biol2 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Raw/p915_biol2new.csv")
 colnames(p915_biol2) <- str_to_title(colnames(p915_biol2))
 p915_biol2$Location <- str_to_title(p915_biol2$Location)
 p915_biol2 <- p915_biol2 %>% select(-Year) %>% mutate(Year= lubridate::year(Date))
@@ -104,6 +111,8 @@ p915_biol2[ , colnames(p915_biol2) %in% colnames(p915_biol2_apply)] <- p915_biol
 p915_biol2$Season <- ifelse(p915_biol2$Month==4 | p915_biol2$Month==5 | p915_biol2$Month==6, "Spring", ifelse(p915_biol2$Month==9 |p915_biol2$Month==10 | p915_biol2$Month==11 | p915_biol2$Month==12, "Fall", ifelse(p915_biol2$Month==7 |p915_biol2$Month==8, "Summer", "Winter")))
 p915_biol2$Date <- as.Date(p915_biol2$Date, "%Y-%m-%d")
 p915_biol2$Ym_date <- format(p915_biol2$Date, "%Y-%m")
+p915_biol2$doy <- yday(p915_biol2$Date)
+p915_biol2$Photoperiod <- daylength(lat= p915_biol2$Latitude, doy= p915_biol2$doy)
 
 unique(p915_biol2$Species)
 unique(p915$Speciescommonname)

@@ -26,6 +26,15 @@ p195 <- read.csv("Data/P195/Finalized/p195_abund.csv")
 p195$Season <- ifelse(p195$Month==4 | p195$Month==5 | p195$Month==6, "Spring", ifelse(p195$Month==9 |p195$Month==10 | p195$Month==11 | p195$Month==12, "Fall", ifelse(p195$Month==7 |p195$Month==8, "Summer", "Winter")))
 #p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv") #changed to new p120 and p195 dataset on 07/10/23
 
+min(p120$Depth)
+min(p915$Depth)
+min(p195$Depth)
+
+colnames(p195)
+unique(p120$Location)
+p195 %>% select(Depthend)
+unique(p195$Location)
+
 #Select columns from datasets
 p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
 p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Lat_dd, Long_dd, Sciname, Season) %>% dplyr::rename("Area" = "Station", "Latitude"= "Lat_dd", "Longitude" = "Long_dd") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
