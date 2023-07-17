@@ -7,6 +7,11 @@ library(readr)
 library(dplyr)
 library(lubridate)
 library(geosphere)
+library(ggplot2)
+library(rnaturalearth)
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
 
 #######SPEICES NAMES########
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
@@ -119,31 +124,18 @@ p915_biol2$Ym_date <- format(p915_biol2$Date, "%Y-%m")
 ##Add other predictor variables : stopped here! 
 p915_biol2$doy <- yday(p915_biol2$Date)
 p915_biol2$Photoperiod <- daylength(lat= p915_biol2$Latitude, doy= p915_biol2$doy)
-#p915_biol2$Wbdytype <- ifelse(p915_biol1$Area %in% "PUNGO" | p915_biol1$Area %in% "NEUSE" | p915_biol1$Area %in% "NEWR"| p915_biol1$Area %in% "CAPEF" | p915_biol1$Area %in% "miss" & p915_biol1$Location %in% "Queen's Creek", "River", "Sound")
-#p915_biol1$Wbd <- ifelse(p915_biol1$Area %in% "DARE1" |p915_biol1$Area %in% "DARE2" | p915_biol1$Area %in% "DARE3"| p915_biol1$Area %in% "DARE4" | p915_biol1$Area %in% "HYDE1"| p915_biol1$Area %in% "HYDE2"| p915_biol1$Area %in% "HYDE3"| p915_biol1$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(p915_biol1$Area %in% "MHDC1"| p915_biol1$Area %in% "MHDC2"| p915_biol1$Area %in% "MHDC3", "MHDC", p915_biol1$Area))
+p915_biol2$Wbdytype <- ifelse(p915_biol2$Area %in% "PUNGO" | p915_biol2$Area %in% "NEUSE" | p915_biol2$Area %in% "NEWR"| p915_biol2$Area %in% "CAPEF"| p915_biol2$Area %in% "PAMLI", "River", "Sound")
+p915_biol2$Wbd <- ifelse(p915_biol2$Area %in% "DARE1" |p915_biol2$Area %in% "DARE2" | p915_biol2$Area %in% "DARE3"| p915_biol2$Area %in% "DARE4" | p915_biol2$Area %in% "HYDE1"| p915_biol2$Area %in% "HYDE2"| p915_biol2$Area %in% "HYDE3"| p915_biol2$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(p915_biol2$Area %in% "MHDC1"| p915_biol2$Area %in% "MHDC2"| p915_biol2$Area %in% "MHDC3"| p915_biol2$Area %in% "MHDC4", "MHDC", p915_biol2$Area))
+#To note: MISS has 4 data points of a creek (Queen's Creek) but that's labeled as sound 
 
-p915_biol2$Wbdytype <- ifelse(p915_biol2$Area %in% "miss" & p915_biol2$Location %in% "Queen’s Creek", "River", ifelse(p915_biol2$Area %in% c("PUNGO", "NEUSE", "NEWR", "CAPEF"), "River", "Sound"))
-colnames(p915_biol2)
-
-unique(p915_biol2$Location)
-
-t <- p915_biol2 %>% filter(Location %in% "Queen's Creek")
-unique(t$Location)
-unique(p915_biol2$Area)
-
-#HANDLE MISS differently
-t <- p915_biol2 %>% filter(Area %in% "miss")
-unique(t$Location)
-
-unique(p915$Speciescommonname)
 ###Adding species commonnames
 p915_biol1 <- p915_biol1 %>% dplyr::rename("Sciname"= "Species")
 p915_biol2 <- p915_biol2 %>% dplyr::rename("Sciname"= "Species")
 p915_biol1_new <- p915_biol1 %>% left_join(spp_list, by= "Sciname")
 p915_biol2_new <- p915_biol2 %>% left_join(spp_list, by= "Sciname") #no NAs for Sciname for 1st and 2nd df, a couple of NAs for Speciescommonname in 1st and 2nd b/c of angel shark
 
-write.csv(p915_biol1_new, "Data/P915/Finalized/p915_biol1new_clean.csv")
-write.csv(p915_biol2_new, "Data/P915/Finalized/p915_biol2new_clean.csv")
+write.csv(p915_biol1_new, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_biol1new_clean.csv")
+write.csv(p915_biol2_new, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_biol2new_clean.csv")
 
 #######P120########
 #P120 OLD
@@ -186,12 +178,12 @@ species_namesedt$Speciescommonname <- str_to_lower(species_namesedt$Speciescommo
 fulld2_edt <- fulld2 %>% left_join(species_namesedt, by = "Species") %>% rename("Sciname"= "Species") #NAs in common name from plants, jellys, non-sessile things and airbreathers (Lela edited these out)
 #fulld=fulld%>%filter(CORE==1|CORE==2)%>%as.data.frame() #core stations
 fulld2_edt <- fulld2_edt %>% rename("Latitude"= "Lat_dd", "Longitude"= "Long_dd")
+
+##Add in other predictor variables 
 fulld2_edt$doy <- yday(fulld2_edt$Date)
 fulld2_edt$Photoperiod <- daylength(lat= fulld2_edt$Latitude, doy= fulld2_edt$doy)
 
-fulld2_edt$Speciescommonname[fulld2_edt$Speciescommonname %in% "northern brown shrimp"] <- "brown shrimp"
 write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
-
 write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
 
 #######P195########
@@ -215,27 +207,24 @@ length(unique(P195_event$EVENTNAME))
 length(unique(P195_biomass$EVENTNAME)) #same numbers of events, tow #
 
 P195_event_edt <- P195_event %>% select(DATE, EVENTNAME, DEPTHSTART, DEPTHEND, LOCATION, LIGHTPHASE, PRESSURE) %>% group_by(DATE, DEPTHEND, DEPTHSTART, LOCATION) %>% distinct(EVENTNAME, .keep_all= TRUE)
-P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE", "LOCATION")) #added the 18 variables not present in biomass df about event 
+P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE", "LOCATION")) %>% filter(!LOCATION %in% NA)
+#added the 18 variables not present in biomass df about event, removed 8 rows that had NA for Location (and almost every cell)
 
-summary(is.na(P195_bind))
-summary(is.na(P195_biomass))
-summary(is.na(P195_event))
-
-colnames(P195_bind)
 merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:27, 29:30, 31, 43, 47)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
 P195_bind[ , colnames(P195_bind) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
 colnames(P195_bind) <- str_to_title(colnames(P195_bind))
-colnames(P195_bind)
-library(lubridate)
 P195_bind$Date <- as.Date(P195_bind$Date, "%m-%d-%Y")
 P195_bind$Ym_date <- format(P195_bind$Date, "%Y-%m")
 P195_bind$Year <- year(P195_bind$Date)
 P195_bind$Month <- month(P195_bind$Date)
 P195_bind$Day <- day(P195_bind$Date)
+
+##Add in other predictor variables
 P195_bind$doy <- yday(P195_bind$Date)
 P195_bind$Photoperiod <- daylength(lat= P195_bind$Latitudestart, doy= P195_bind$doy)
+P195_bind$Wbdytype <- ifelse(P195_bind$Location %in% "NEUSE RIVER" | P195_bind$Location %in% "PAMLICO RIVER" | P195_bind$Location %in% "PUNGO RIVER", "River", "Sound")
+P195_bind$Wbd <- ifelse(P195_bind$Location %in% "PAMLICO SOUND WEST OF BLUFF SHOAL" | P195_bind$Location %in% "PAMLICO SOUND EAST OF BLUFF SHOAL", "PAMLICO SOUND", P195_bind$Location)
 
-colnames(P195_bind)
 #Adding in Sciname for species
 P195_bind$Speciescommonname <- str_to_lower(P195_bind$Speciescommonname)
 P195_bind$Speciesscientificname <- str_to_lower(P195_bind$Speciesscientificname)
