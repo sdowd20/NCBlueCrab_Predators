@@ -188,12 +188,18 @@ write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
 
 #P195: 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data")
-P195_biomass <- read_csv("Data/P195/Raw/P195.abubio.2023-07-07.csv")
-P195_event <- read_csv("Data/P195/Raw/P195.event.2023-07-07.csv")
+P195_biomass <- read_csv("P195/Raw/P195.abubio.2023-07-07.csv")
+P195_event <- read_csv("P195/Raw/P195.event.2023-07-07.csv")
 length(unique(P195_event$EVENTNAME)) 
 length(unique(P195_biomass$EVENTNAME)) #same numbers of events, tow #
 
-P195_bind <- P195_biomass %>% left_join(P195_event_edt) #added the 18 variables not present in biomass df about event 
+P195_event_edt <- P195_event %>% select(DATE, EVENTNAME, DEPTHSTART, DEPTHEND, LOCATION, LIGHTPHASE, PRESSURE) %>% group_by(DATE, DEPTHEND, DEPTHSTART, LOCATION) %>% distinct(EVENTNAME, .keep_all= TRUE)
+P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE", "LOCATION")) #added the 18 variables not present in biomass df about event 
+
+summary(is.na(P195_bind))
+summary(is.na(P195_biomass))
+summary(is.na(P195_event))
+
 merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:27, 29:30, 31, 43)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
 P195_bind[ , colnames(P195_bind) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
 colnames(P195_bind) <- str_to_title(colnames(P195_bind))
