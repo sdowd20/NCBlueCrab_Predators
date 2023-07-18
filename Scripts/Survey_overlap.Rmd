@@ -26,6 +26,7 @@ p195 <- read.csv("Data/P195/Finalized/p195_abund.csv")
 p195$Season <- ifelse(p195$Month==4 | p195$Month==5 | p195$Month==6, "Spring", ifelse(p195$Month==9 |p195$Month==10 | p195$Month==11 | p195$Month==12, "Fall", ifelse(p195$Month==7 |p195$Month==8, "Summer", "Winter")))
 #p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv") #changed to new p120 and p195 dataset on 07/10/23
 
+colnames(p915)
 min(p120$Depth)
 min(p915$Depth)
 min(p195$Depth)
