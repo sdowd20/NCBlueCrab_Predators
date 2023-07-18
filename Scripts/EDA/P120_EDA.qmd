@@ -163,14 +163,14 @@ diff_values <- setdiff(P120_bioledt$Control1, haul$Control1)
 ##Create dummy column for species of focus
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")) #this repeats these species common names for the entirety of the length of the haul df
-haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Lat_dd, Long_dd, Core, Species)
+haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
 haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 9x (# of species) larger so it worked
 haul=haul_df %>%select(-Species) #drop dummy species common name from hauldf
 
 #now can merge haul.all and haul to create a df with a row for species associated with each collection number
 haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
 
-sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Lat_dd,-Long_dd) %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame()
+sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Latitude, Longitude) %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame()
 
 sel_spp_120edt = sel_spp_120 %>% select(Control1,Date,Speciescommonname,Colnum)
 
