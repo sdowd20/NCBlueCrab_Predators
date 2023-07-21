@@ -27,7 +27,7 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 }
 
 p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
-p195_abund_edt <- p195_abund %>% filter(Month == 6| Month== 9, Year > 2000)
+p195_abund_edt <- p195_abund %>% filter(Month == 6| Month== 9, Year > 2000, !Location %in% "ALBEMARLE SOUND")
 ```
 
 #### General
@@ -44,16 +44,25 @@ ggplot(data = world) + geom_sf() + geom_point(data = p195_abund_edt, aes(x = Lon
 length(unique(p195_abund$Stationcode)) #1189 stations
 ggplot(data = world) + geom_sf() + geom_point(data = p195_abund_edt, aes(x = Longitudestart, y = Latitudestart, colour= Stationcode)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + guides(colour= FALSE)
 
-stationcount <- p195_abund %>% group_by(Stationcode) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% dplyr::select(count, Stationcode) #times a station is sampled runs from 1-222, need to explore this more 
+stationcount <- p195_abund_edt %>% group_by(Stationcode) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% dplyr::select(count, Stationcode) #times a station is sampled runs from 1-222, need to explore this more 
 
-strata_station <- p195_abund %>% group_by(Location) %>% 
+#visualize how many stations are sampled at each location and depth over time
+
+p195_abund_edt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Location) + standard_theme #Number of sampling points, makes sense bc Pamlico Sound has deep and shallow sets
+
+p195_abund_edt %>% group_by(Date, Location, Depthzone) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Location + Depthzone) + standard_theme #Sampling amount throughout strata (locations plus shallow and deep look good)
   
-  unique(p195_abund$Location)
+p195_abund_edt %>% group_by(Date, Location, Depthzone) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% ggplot() + geom_histogram(aes(x= Ym_date), stat= "count") + facet_wrap(~Location + Depthzone) + standard_theme 
 
-p195_abund %>% filter(Depthzone 
+p195_abund_edt %>% group_by(Location, Depthzone, Date) %>% distinct(Ym_date, .keep_all= TRUE) %>% ggplot() + geom_histogram(stat="count", aes(x=Ym_date, fill = Location)) + standard_theme + facet_wrap(~Depthzone) #consistent sampling: less sampling in rivers than main Pamlico Sound even when divide by depth 
+#I think this is right as opposed to: p195_abund_edt %>% ggplot() + geom_histogram(stat="count", aes(x=Ym_date, fill = Location)) + standard_theme
+  
 
-ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==3), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
-#core 0 looks the same as 1 or 2, core 3 has only 35 stations 
+
+ggplot() + geom_histogram(data = total, stat="count", aes(x=Ym_date, fill = Survey)) + standard_theme
+
+
+
 
 ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==0), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
 
