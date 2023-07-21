@@ -137,6 +137,18 @@ P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length)
 length(unique(P120_bioledt$Control1))
 length(unique(P120_bioledt$Location))
 length(unique(P120_bioledt$Station))
+
+#Blue crab length
+
+#50.8 cm (2 inches) is the harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
+
+P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% mutate("Ageclass"= ifelse(Length < 50.8, "juvenile", ifelse(Length >= 50.8, "adult", "NA"))) 
+P120_bc_juv <- P120_bc %>% filter(Ageclass %in% "juvenile") 
+P120_bc_juv_edt <- P120_bc_juv %>% group_by(Control1) %>% mutate(Colnum_juv= n()) #number of rows correspond to # captured of age class 
+
+P120_bc_adult <- P120_bc %>% filter(Ageclass %in% "adult") 
+P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n()) 
+
 ```
 
 #### CPUE
@@ -173,7 +185,7 @@ haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
 sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Latitude, Longitude) %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame()
 
 sel_spp_120edt = sel_spp_120 %>% select(Control1,Date,Speciescommonname,Colnum)
-
+#Add in juveniles here 
 haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
 haul_sel_spp <- left_join(haul_final, sel_spp_120edt) %>% as.data.frame()
 haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0

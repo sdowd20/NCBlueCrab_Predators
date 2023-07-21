@@ -11,3 +11,70 @@ P195 is a stratified-random trawl survey that has collected both biotic and abio
 The survey collects total abundance and weight for each species found, environmental information at the site, and additional length data for target species. A total number and weight is recorded for each species. For target species, at least 30 individuals are measured and total weights are recorded. Water clarity started to be recorded in 2008 with a Secchi disk and shoreline and sediment data started to be recorded in 2009.
 
 On 07/07/23, I downloaded Abundance and Biomass & Event Information from the SEAMAP website for the Pamlico Sound Survey and processed it in Toclean.R. The downloaded files had all years available, all locations, latitudes, were for Summer (June, July, and August) as well as Fall (September, October, and November), and contained all species. Although I had downloaded it in April to use it for BIOL 562 project, I decided it would be better to redownload for the purpose of this study.
+
+```{r}
+##Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+coords_captured <- function(species){
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_CPUEold$Species %in% species & as.numeric(p915_CPUEold$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+}
+
+p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
+p195_abund_edt <- p195_abund %>% filter(Month == 6| Month== 9, Year > 2000)
+```
+
+#### General
+
+```{r}
+summary(is.na(p195_abund_edt)) #NAs present Speciescommonname (expected), Numbertotal, biological characteristics, environmental variables, Latitudestart, Longitudestart
+summary(is.na(subset(p195_abund_edt, Year > 2008))) #less NAs in environmental variables after 2008 
+
+#Spatial orientation
+##All stations
+ggplot(data = world) + geom_sf() + geom_point(data = p195_abund_edt, aes(x = Longitudestart, y = Latitudestart)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
+
+##Stations
+length(unique(p195_abund$Stationcode)) #1189 stations
+ggplot(data = world) + geom_sf() + geom_point(data = p195_abund_edt, aes(x = Longitudestart, y = Latitudestart, colour= Stationcode)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + guides(colour= FALSE)
+
+stationcount <- p195_abund %>% group_by(Stationcode) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% dplyr::select(count, Stationcode) #times a station is sampled runs from 1-222, need to explore this more 
+
+strata_station <- p195_abund %>% group_by(Location) %>% 
+  
+  unique(p195_abund$Location)
+
+p195_abund %>% filter(Depthzone 
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==3), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+#core 0 looks the same as 1 or 2, core 3 has only 35 stations 
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==0), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+
+nrow(P120_bioledt %>% filter(Core== 0) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #2304 samples
+P120_bioledt %>% filter(Core== 0) %>% select(Month) %>% distinct(Month) #all months
+nrow(P120_bioledt %>% filter(Core== 1) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #7725 samples
+P120_bioledt %>% filter(Core== 1) %>% select(Month) %>% distinct(Month) #5, 6 
+nrow(P120_bioledt %>% filter(Core== 2) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #737 samples
+P120_bioledt %>% filter(Core== 2) %>% select(Month) %>% distinct(Month) #5, 6 
+nrow(P120_bioledt %>% filter(Core== 3) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #854 samples
+P120_bioledt %>% filter(Core== 3) %>% select(Month) %>% distinct(Month) #7
+
+#Sampling effort: general
+ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme #sampling picked up in 2008, I wonder why- just added more habitat fields here
+ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Core) #more sampling in core = 1 throughout the years 
+ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Year)) + standard_theme #more sampling in core = 1 throughout the years 
+
+P120_bioledt %>% group_by(Date, Lat_dd, Long_dd) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 2008, 2020)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") 
+
+ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 1989, 2007)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
+```
+

@@ -10,12 +10,19 @@ library(geosphere)
 library(ggplot2)
 library(rnaturalearth)
 library(ggmap)
+library(sf)
+library(tidyr)
+library(geosphere)
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 inlet_coords <- st_read("~/Desktop/Inlet.points.kml")
-inlet_coords <- cbind(inlet_coords[, !grepl("geometry", colnames(inlet_coords))], st_coordinates(inlet_coords)) #retain columns that doesn't have geometry in it
-inlet_coords <- inlet_coords %>% select(Name, X, Y) %>% rename("Longitude"= "X", "Latitude"= "Y")
+coords <- st_coordinates(inlet_coords)
+inlet_coords$Latitude <- coords[, "Y"]
+inlet_coords$Longitude <- coords[, "X"]
+inlet_coords <- inlet_coords %>% select(-Description)
+
+ggplot(data= world) + geom_sf() + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude, color= Name)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + theme(legend.position="none")
 
 #######SPEICES NAMES########
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
@@ -93,16 +100,27 @@ P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
 #distance to inlet:
+
 P915_CPUE_edt <- P915_CPUE %>% drop_na(Latitude, Longitude) 
 P915_CPUE_sf <- st_as_sf(P915_CPUE_edt, coords = c("Longitude", "Latitude"), crs= 4326) 
-P915_CPUE_sf <- P915_CPUE_sf %>% select(geometry) 
-coords_inlet_nearest <- st_nearest_feature(P915_CPUE_sf, inlet_coords_sf)
-dist_inlets = st_distance(P915_CPUE_sf, inlet_coords_sf[coords_inlet_nearest,], by_element=TRUE)
+
+coords_inlet_nearest <- st_nearest_feature(P915_CPUE_sf, inlet_coords)
+dist_inlets = st_distance(P915_CPUE_sf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
 dist_inlets <- as.numeric(dist_inlets)
-P915_CPUE_edt <- P915_CPUE_edt %>% mutate(inlets_dist = dist_inlets)
 
+ggplot(data= world) + geom_sf() + geom_point(data= P915_CPUE_edt, aes(x= Longitude, y= Latitude, color= inlets_dist)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis()
 
+library(viridis)
+geom_segment(
+  data = distance_df,
+  aes(x = your_data[distance_df$from, "longitude_column"],
+      y = your_data[distance_df$from, "latitude_column"],
+      xend = your_data[distance_df$to, "longitude_column"],
+      yend = your_data[distance_df$to, "latitude_column"]),
+  color = "blue"  # You can customize the line color here
+) +
 
+library(tidyr)
 
 coords_shore_nearest <- st_nearest_feature(lat_longs_sf, shape) #find nearest coastline
 dist_shore = st_distance(lat_longs_sf, shape[coords_shore_nearest,], by_element = TRUE) #find shortest distance to nearest coastline 
@@ -290,7 +308,7 @@ P195_event_edt <- P195_event %>% select(DATE, EVENTNAME, DEPTHSTART, DEPTHEND, L
 P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE", "LOCATION")) %>% filter(!LOCATION %in% NA)
 #added the 18 variables not present in biomass df about event, removed 8 rows that had NA for Location (and almost every cell)
 
-merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:27, 29:30, 31, 43, 47)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
+merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:28, 29:30, 31, 43, 47)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
 P195_bind[ , colnames(P195_bind) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
 colnames(P195_bind) <- str_to_title(colnames(P195_bind))
 P195_bind$Date <- as.Date(P195_bind$Date, "%m-%d-%Y")
