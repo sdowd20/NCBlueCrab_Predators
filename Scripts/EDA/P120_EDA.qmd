@@ -95,22 +95,23 @@ Both core 0 and core 3 seem to sample a subset of stations of core 1 and 2 (near
 
 ```{r}
 coords_captured <- function(species){
-ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, P120_bioledt$Speciescommonname %in% species & as.numeric(P120_bioledt$Colnum > 0)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, P120_bioledt$Speciescommonname %in% species & as.numeric(P120_bioledt$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
 }
 
-ggplot(data = world) + geom_sf() + geom_point(data = P120_bioledt, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
-coords_captured("northern brown shrimp")
+
+coords_captured("brown shrimp")
 coords_captured("bluefish")
 coords_captured("atlantic croaker")
 coords_captured("southern flounder")
-coords_captured("red drum")
-coords_captured("black drum")
+coords_captured("red drum") #red drum are present but not that common (573 rows)
+coords_captured("black drum") #red drum are present but not that common (99 rows)
 coords_captured("blue catfish")
-coords_captured("gizzard shad")
+coords_captured("gizzard shad") #blue catfish, shads, and cownose ray not around 
 coords_captured("american shad")
 coords_captured("cownose ray")
 coords_captured("blue crab")
 
+P120_bioledt %>% filter(Speciescommonname %in% "black drum") %>% mutate(count= n())
 #Depth distribution for species
 t <- P120_bioledt %>% drop_na(Depth)
 min(t$Depth) #0.1 m 

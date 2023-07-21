@@ -14,7 +14,7 @@ On 07/07/23, I downloaded Abundance and Biomass & Event Information from the SEA
 
 ```{r}
 ##Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "tidyr")
 
 invisible(lapply(packages, library, character.only= TRUE))
 
@@ -28,6 +28,11 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 
 p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
 p195_abund_edt <- p195_abund %>% filter(Month == 6| Month== 9, Year > 2000, !Location %in% "ALBEMARLE SOUND")
+p195_abund_edt$Season <- ifelse(p195_abund_edt$Month==4 | p195_abund_edt$Month==5 | p195_abund_edt$Month==6, "Spring", ifelse(p195_abund_edt$Month==9 |p195_abund_edt$Month==10 | p195_abund_edt$Month==11 | p195_abund_edt$Month==12, "Fall", ifelse(p195_abund_edt$Month==7 |p195_abund_edt$Month==8, "Summer", "Winter")))
+p195_abund_edt$Ym_date <- format(p195_abund_edt$Date, "%Y-%m")
+
+t <- p195_abund_edt %>% filter(Season %in% "Summer")
+unique(t$Month)
 ```
 
 #### General
@@ -46,44 +51,61 @@ ggplot(data = world) + geom_sf() + geom_point(data = p195_abund_edt, aes(x = Lon
 
 stationcount <- p195_abund_edt %>% group_by(Stationcode) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% dplyr::select(count, Stationcode) #times a station is sampled runs from 1-222, need to explore this more 
 
-#visualize how many stations are sampled at each location and depth over time
-
+#Sampling effort: general
 p195_abund_edt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Location) + standard_theme #Number of sampling points, makes sense bc Pamlico Sound has deep and shallow sets
-
 p195_abund_edt %>% group_by(Date, Location, Depthzone) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Location + Depthzone) + standard_theme #Sampling amount throughout strata (locations plus shallow and deep look good)
-  
-p195_abund_edt %>% group_by(Date, Location, Depthzone) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% ggplot() + geom_histogram(aes(x= Ym_date), stat= "count") + facet_wrap(~Location + Depthzone) + standard_theme 
-
 p195_abund_edt %>% group_by(Location, Depthzone, Date) %>% distinct(Ym_date, .keep_all= TRUE) %>% ggplot() + geom_histogram(stat="count", aes(x=Ym_date, fill = Location)) + standard_theme + facet_wrap(~Depthzone) #consistent sampling: less sampling in rivers than main Pamlico Sound even when divide by depth 
 #I think this is right as opposed to: p195_abund_edt %>% ggplot() + geom_histogram(stat="count", aes(x=Ym_date, fill = Location)) + standard_theme
-  
+
+p195_abund_edt %>% group_by(Date, Latitudestart, Longitudestart) %>% summarize(abundance= mean(Numbertotal)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
+```
 
 
-ggplot() + geom_histogram(data = total, stat="count", aes(x=Ym_date, fill = Survey)) + standard_theme
+#### Species specific: spatial and temporal
 
+```{r}
+coords_captured <- function(species){
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p195_abund_edt, p195_abund_edt$Speciescommonname %in% species & as.numeric(p195_abund_edt$Numbertotal > 0)), aes(x = as.numeric(Longitudestart), y = as.numeric(Latitudestart), colour = Numbertotal)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+}
 
+coords_captured("brown shrimp")
+coords_captured("bluefish")
+coords_captured("atlantic croaker")
+coords_captured("southern flounder")
+coords_captured("red drum") #red drum and black drum aren't really caught
+coords_captured("black drum")
+coords_captured("blue catfish") #blue catfish aren't around 
+coords_captured("gizzard shad") #shads not really caught 
+coords_captured("american shad")
+coords_captured("cownose ray") #plenty of cownose rays 
+coords_captured("blue crab")
 
+coords_captured("bonnethead hammerhead")
+coords_captured("blue crab") 
+coords_captured("blue catfish") 
+coords_captured("red drum") 
+coords_captured("southern kingfish") 
+coords_captured("southern flounder") 
+coords_captured("striped bass")
 
-ggplot(data = world) + geom_sf() + geom_point(data = subset(P120_bioledt, Core==0), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
+#Temporal:
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "bonnethead hammerhead", "southern kingfish", "striped bass")
+fine <- p195_abund_edt %>% filter(Speciescommonname %in% interest_spp) #species of interest
+ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count", aes(x=Season)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free")
 
-nrow(P120_bioledt %>% filter(Core== 0) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #2304 samples
-P120_bioledt %>% filter(Core== 0) %>% select(Month) %>% distinct(Month) #all months
-nrow(P120_bioledt %>% filter(Core== 1) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #7725 samples
-P120_bioledt %>% filter(Core== 1) %>% select(Month) %>% distinct(Month) #5, 6 
-nrow(P120_bioledt %>% filter(Core== 2) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #737 samples
-P120_bioledt %>% filter(Core== 2) %>% select(Month) %>% distinct(Month) #5, 6 
-nrow(P120_bioledt %>% filter(Core== 3) %>% group_by(Date,Location) %>% mutate(id=cur_group_id()) %>% distinct(id)) #854 samples
-P120_bioledt %>% filter(Core== 3) %>% select(Month) %>% distinct(Month) #7
+#Seasonally: 
+#Fall: atlantic croaker, atlantic menhaden, black drum? blue crab, bluefish, brown shrimp, cownose ray, gizzard shad, southern flounder, spot, summer flounder, southern kingfish
+#Spring: atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, gizzard shad? southern flounder, spot, summer flounder, southern kingfish
 
-#Sampling effort: general
-ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme #sampling picked up in 2008, I wonder why- just added more habitat fields here
-ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Core) #more sampling in core = 1 throughout the years 
-ggplot() + geom_histogram(data = P120_bioledt, stat="count", aes(x=Year)) + standard_theme #more sampling in core = 1 throughout the years 
+##Number of observations for species of interest
+p195_nums <- fine %>% group_by(Speciescommonname, Month) %>% drop_na(Numbertotal) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P120") #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, southern kingfish, spot, and summer flounder have the most data
 
-P120_bioledt %>% group_by(Date, Lat_dd, Long_dd) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
+###Combine with other datasets
+p120_nums <- P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120")
 
-ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 2008, 2020)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") 
+p915_nums <- p915_CPUE %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6|Month==9) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
 
-ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 1989, 2007)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
+survey_seasonality <- rbind(p195_nums, p120_nums, p915_nums)
+#write.csv(test, "~/Desktop/Survey_seasonality.csv")
 ```
 
