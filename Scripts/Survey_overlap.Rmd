@@ -26,24 +26,10 @@ p195 <- read.csv("Data/P195/Finalized/p195_abund.csv")
 p195$Season <- ifelse(p195$Month==4 | p195$Month==5 | p195$Month==6, "Spring", ifelse(p195$Month==9 |p195$Month==10 | p195$Month==11 | p195$Month==12, "Fall", ifelse(p195$Month==7 |p195$Month==8, "Summer", "Winter")))
 #p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv") #changed to new p120 and p195 dataset on 07/10/23
 
-colnames(p915)
-min(p120$Depth)
-min(p915$Depth)
-min(p195$Depth)
-
-colnames(p195)
-unique(p120$Location)
-p195 %>% select(Depthend)
-unique(p195$Location)
-
 #Select columns from datasets
-p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% dplyr::rename("Area" = "Station") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname, Season) %>% dplyr::rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude)
-
-colnames(p915_overlap)
-colnames(p120_overlap)
-colnames(p195_overlap)
+p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2001)
+p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% dplyr::rename("Area" = "Station") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2001)
+p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname, Season) %>% dplyr::rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2001)
 
 #Load in world datasest and form grid
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -186,11 +172,11 @@ total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridde
 total_edt <- total_edt[,-1]
 select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp", "gizzard shad", "american shad")
 
-total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer", Longitude > -77.0)
+total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Season %in% "Spring"| Season %in% "Summer", Month == 5| Month== 6| Month== 9, Longitude > -77.0)
 
-p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp)
-p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp)
-p195_overlap_edt <- p195_overlap %>% filter(Speciescommonname %in% select_spp)
+p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp) %>% filter(Year >= 2008, Month == 5| Month== 6| Month== 9)
+p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp) %>% filter(Year >= 2008, Month == 5| Month== 6| Month== 9)
+p195_overlap_edt <- p195_overlap %>% filter(Speciescommonname %in% select_spp) %>% filter(Year >= 2008, Month == 5| Month== 6| Month== 9)
 
 total_edt_month <- total_edt %>% dplyr::select(-Season)
 total_edt_seas <- total_edt %>% dplyr::select(-Month) 
@@ -323,6 +309,7 @@ summary(match_data2$count)
 unique(match_data2$Year)
 ```
 
+###### P915 & P120: Year > 2008, Month= 5,6,9, group_by Season
 ```{r}
 select_spp2 <- c("atlantic croaker", "black drum", "blue catfish", "bonnethead hammerhead", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass")
 
@@ -347,7 +334,7 @@ match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_bc_gridID, on = c("gridID
 detach(package:plyr)
 library(dplyr)
 match_data2 <- as.data.frame(do.call(rbind, match_df)) 
-match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dplyr::mutate(count= n()) %>% select(-gridID) #count: number of observations overlapping for a predator species and blue crab for a season and year (includes all grid cells)
+match_data2 <- match_data2 %>% group_by(Speciescommonname, Season, Year) %>% dplyr::mutate(count= n()) #%>% select(-gridID) #count: number of observations overlapping for a predator species and blue crab for a season and year (includes all grid cells)
 
 #pos, zero
 ##p915 first 
@@ -367,8 +354,6 @@ zero_pos <- p915_pos %>% left_join(bc_zero, by= c("Year", "Season", "gridID")) %
 ##p120 first 
 zero_pos2 <- bc_zero %>% left_join(p915_pos, by= c("Year", "Season", "gridID")) %>% drop_na(Speciescommonname) #exclude when blue crabs weren't sampled
 
-library(arsenal)
-summary(comparedf(zero_pos, zero_pos2))
 #zero, zero
 zero_zero <- p915_zero %>% select(-Colnum) %>% left_join(bc_zero, by= c("Year", "Season", "gridID")) %>% drop_na(Colnum) %>% group_by(Speciescommonname, Season, Year) %>% mutate(count= n()) #NAs are a grid cell where blue crab wasn't sampled, drop this, count gets at # of grid cells overlapping 
 zero_zero2 <- bc_zero %>% select(-Colnum) %>% left_join(p915_zero, by= c("Year", "Season", "gridID")) %>% drop_na(Colnum) %>% group_by(Speciescommonname, Season, Year) %>% mutate(count= n())
@@ -378,9 +363,12 @@ zero_zero2 <- bc_zero %>% select(-Colnum) %>% left_join(p915_zero, by= c("Year",
 ```{r}
 ##Summary tables
 ###Positive, positive 
-match_data2edt <- match_data2edt %>% filter(!Speciescommonname %in% "blue crab", !Speciescommonname %in% "brown shrimp", !Speciescommonname %in% "white shrimp") %>% rename(Species= Speciescommonname)
-match_data2edt %>% group_by(Species) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.png")
-match_data2edt %>% group_by(Species, Year) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.year.pdf")
+P915_total_sum <- P915_total %>% filter(Colnum > 0) %>% dplyr::group_by(Speciescommonname, Year, Season, gridID) %>% summarise(sum_Colnum_pred = sum(Colnum)) #add up number of predators based on year, season and gridID
+P120_bc_sum <- P120_total %>% filter(Colnum > 0, Speciescommonname %in% "blue crab") %>% dplyr::group_by(Year, Season, gridID) %>% summarise(sum_Colnum_bc = sum(Colnum)) match_data2edt <- match_data2 %>% left_join(P915_total_sum) %>% left_join(P120_bc_sum, by= c("Year", "Season", "gridID"))
+
+match_data2edt %>% rename(Species = Speciescommonname) %>% group_by(Species) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc))%>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.png")
+print(names(match_data2edt))
+match_data2edt %>% group_by(Species, Year) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc, na.rm= T)) %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.year.pdf")
 match_data2edt %>% group_by(Species, Year, Season) %>% summarize(sum_spp = sum(sum_Colnum_pred), sum_bc = sum(sum_Colnum_bc)) %>% gt() %>% cols_align(align= "center") %>% gtsave(filename = "~/Desktop/pospos.year.season.pdf")
 
 ###Positive blue crab in P120, 0 predator in P915

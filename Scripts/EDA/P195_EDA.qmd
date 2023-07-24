@@ -60,7 +60,6 @@ p195_abund_edt %>% group_by(Location, Depthzone, Date) %>% distinct(Ym_date, .ke
 p195_abund_edt %>% group_by(Date, Latitudestart, Longitudestart) %>% summarize(abundance= mean(Numbertotal)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
 ```
 
-
 #### Species specific: spatial and temporal
 
 ```{r}
@@ -90,8 +89,8 @@ coords_captured("striped bass")
 
 #Temporal:
 interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "bonnethead hammerhead", "southern kingfish", "striped bass")
-fine <- p195_abund_edt %>% filter(Speciescommonname %in% interest_spp) #species of interest
-ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count", aes(x=Season)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free")
+fine <- p195_abund_edt %>% filter(Speciescommonname %in% interest_spp, Month == 6| Month== 9, Year > 2008) #species of interest
+ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count", aes(x=factor(Month))) + standard_theme + facet_wrap(~Speciescommonname, scales= "free") + xlab("Month")
 
 #Seasonally: 
 #Fall: atlantic croaker, atlantic menhaden, black drum? blue crab, bluefish, brown shrimp, cownose ray, gizzard shad, southern flounder, spot, summer flounder, southern kingfish
@@ -108,4 +107,3 @@ p915_nums <- p915_CPUE %>% filter(Speciescommonname %in% interest_spp, Month == 
 survey_seasonality <- rbind(p195_nums, p120_nums, p915_nums)
 #write.csv(test, "~/Desktop/Survey_seasonality.csv")
 ```
-

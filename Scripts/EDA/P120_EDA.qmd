@@ -119,8 +119,8 @@ max(t$Depth) #9.9 m
 
 #Temporal: for P915 you know it's not a function of sampling since they sample year around
 interest_spp <- c("northern brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel")
-fine <- P120_bioledt %>% filter(Speciescommonname %in% interest_spp) #species of interest
-ggplot() + geom_histogram(data = subset(fine, fine$Colnum > 0), stat="count", aes(x=Season)) + standard_theme + facet_wrap(~Speciescommonname)
+fine <- P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5| Month==6, Year > 2000) #species of interest
+ggplot() + geom_histogram(data = subset(fine, fine$Colnum > 0), stat="count", aes(x=factor(Month))) + standard_theme + facet_wrap(~Speciescommonname, scales= "free") + xlab("Month")
 
 #Number of observations for species of interest
 test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(sum_colnum= sum(Colnum)) #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, spot, and summer flounder have the most data 
