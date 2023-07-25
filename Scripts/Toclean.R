@@ -87,15 +87,31 @@ colnames(merged) <- str_to_title(colnames(merged))
 merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Spring", ifelse(merged$Month==9 |merged$Month==10 | merged$Month==11 | merged$Month==12, "Fall", ifelse(merged$Month==7 |merged$Month==8, "Summer", "Winter")))
 merged$Date <- as.Date(paste(merged$Month, merged$Day, merged$Year, sep= "-"), "%m-%d-%Y")
 merged$Ym_date <- format(merged$Date, "%Y-%m")
-merged_apply <- as.data.frame(sapply(merged[,c(18:19)], function(x) gsub('[^[:alnum:] ]', "", x))) #select only columns with ***ERROR*** to modify 
-merged_apply[merged_apply== "ERROR"] <- NA
-merged[ , colnames(merged) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
+
+#Make Sedsize and Btmcomp consistent: 
+unique(merged$Sedsize)
+unique(merged$Btmcomp)
+
+merged <- merged %>% mutate(Sedsize_new = ifelse(merged$Sedsize %in% "Mud", 9, ifelse(merged$Sedsize %in% "Sandy mud", 7, ifelse(merged$Sedsize %in% "Sand", 8, ifelse(merged$Sedsize %in% "Muddy sand", 6, ifelse(merged$Sedsize %in% "Soft mud", 2, 
+ifelse(merged$Sedsize %in% "Hard sand", 1, ifelse(merged$Sedsize %in% "Clay", 4, ifelse(merged$Sedsize %in% "Hard mud", 3, ifelse(merged$Sedsize %in% "Silt", 5, ifelse(merged$Sedsize %in% "Cemented hard bottom or rock", 0, ifelse(!merged$Sedsize %in% c(NA, "***ERROR***", "Coarse sand: Coarse silt", "I"), merged$Sedsize, NA)))))))))))) #keep the rest of the values the same 
+nrow(merged_new %>% filter(Year> 2008, Sedsize_new %in% NA)) #only 7,320 NAs, this is correct! 
+
+#Removed 25 rows where Sedsize was equal to I 
+#Rock, shell, algae isn't on there so classified as rock, shell
+#no grass meant no structure (O) prior to 2008 
+merged_new <- merged %>% mutate(Btmcomp_new = ifelse(merged$Btmcomp %in% "Grass", "B", ifelse(merged$Btmcomp %in% "No Grass", "O", ifelse(merged$Btmcomp %in% "Bryozoan", "Q", ifelse(merged$Btmcomp %in% "Grass, Algae", "H", ifelse(merged$Btmcomp %in% "Tunicate", "P",
+ifelse(merged$Btmcomp %in% "Algae", "C", ifelse(merged$Btmcomp %in% "Grass, Algae, Detritus", "L", ifelse(merged$Btmcomp %in% "Shell, Algae", "J", ifelse(merged$Btmcomp %in% "Shell", "A", ifelse(merged$Btmcomp %in% "Shell, Grass", "G", ifelse(merged$Btmcomp %in% "Shell, Grass, Algae", "I",
+ifelse(merged$Btmcomp %in% "Grass, Detritus", "K", ifelse(merged$Btmcomp %in% "Detritus", "D", ifelse(merged$Btmcomp %in% "Shell, Detritus", "M", ifelse(merged$Btmcomp %in% "Rock, Shell, Algae"| merged$Btmcomp %in% "Rock, Shell", "S", ifelse(merged$Btmcomp %in% "Other", "Z", ifelse(merged$Btmcomp %in% "Rock", "R",
+ifelse(merged$Btmcomp %in% "Rock, Algae", "U",ifelse(merged$Btmcomp %in% "Rock, Shell, Grass, Algae", "W", ifelse(merged$Btmcomp %in% "Rock, Grass", "T", ifelse(merged$Btmcomp %in% "Cinder", "N", ifelse(merged$Btmcomp %in% "Shell, Algae", "H", ifelse(!merged$Btmcomp %in% c(NA, "Tow relocated due to Grass (1993)", "***ERROR***"), merged$Btmcomp, NA))))))))))))))))))))))))  
+nrow(merged_new %>% filter(Year> 2008, Btmcomp_new %in% NA)) #only 5171 NAs, this is correct! 
+
+#Coarse sand: Coarse silt had 11 rows and was removed b/c didn't match a classification
+#Tow relocated to not grass (1993) had 11 rows and was marked as NA
 
 columns <- c(6, 10:17, 20:22, 25:26)
 for (col in columns) {
   merged[[col]][is.na(merged[[col]]) | merged[[col]] == "."] <- NA
 } #some values only have a dot or maybe it is an NA that R generated, replace these with NA instead, I checked with Depth and Ssal and it worked! 
-nrow(merged %>% filter(Year>2008, Sedsize %in% NA))
 
 P915_CPUE <- merged %>% dplyr::rename("Sciname"= "Species")
 P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
