@@ -297,7 +297,7 @@ P120_speciesnms_ssn[316, 2] <- "M. saxatilis" #add in striped bass b/c wasn't in
 p195_edt <-p195 %>% left_join(P120_speciesnms_ssn, by= "Speciesscientificname") #All NAs now for Sciname are for species common names not in dataset (we don't need)
 write.csv(p195_edt, "Data/P195/Finalized/p195_clean_new.csv")
 
-#P195 NEW
+#P195 NEW: abundance 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data")
 P195_biomass <- read_csv("P195/Raw/P195.abubio.2023-07-07.csv")
 P195_event <- read_csv("P195/Raw/P195.event.2023-07-07.csv")
@@ -336,3 +336,34 @@ P195_bind_edt <- P195_bind %>% left_join(species_P195_edt, by= "Speciesscientifi
 P195_bind_edt$Speciescommonname[P195_bind_edt$Speciescommonname== "northern brown shrimp"] <- "brown shrimp"
 
 write.csv(P195_bind_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
+
+#P195: Length frequency
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p195_lengthfreq <- read_csv("Data/P195/Raw/p195.lengthfreq.2023-07-25.csv")
+#length(unique(P195_event$EVENTNAME)) 
+length(unique(p195_lengthfreq$EVENTNAME)) #diff number of eventnames, makes sense because this is just when individuals were measured 
+
+merged_apply <- as.data.frame(sapply(p195_lengthfreq[,c(1:2, 4:14, 18:24, 31, 33)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
+p195_lengthfreq[ , colnames(p195_lengthfreq) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
+colnames(p195_lengthfreq) <- str_to_title(colnames(p195_lengthfreq))
+p195_lengthfreq$Date <- as.Date(p195_lengthfreq$Date, "%m/%d/%y")
+p195_lengthfreq$Ym_date <- format(p195_lengthfreq$Date, "%Y-%m")
+p195_lengthfreq$Year <- year(p195_lengthfreq$Date)
+p195_lengthfreq$Month <- month(p195_lengthfreq$Date)
+p195_lengthfreq$Day <- day(p195_lengthfreq$Date)
+
+#Adding in Sciname for species
+p195_lengthfreq$Speciescommonname <- str_to_lower(p195_lengthfreq$Speciescommonname)
+p195_lengthfreq$Speciesscientificname <- str_to_lower(p195_lengthfreq$Speciesscientificname)
+species_P195 <- read_csv("DATA/species.P195.csv")
+colnames(species_P195) <- str_to_title(colnames(species_P195))
+species_P195$Speciescommonname <- str_to_lower(species_P195$Speciescommonname)
+species_P195$Speciesscientificname <- str_to_lower(species_P195$Speciesscientificname)
+species_P195_edt <- as.data.frame(species_P195[, c(1,9)])
+
+p195_lengthfreq_edt <- p195_lengthfreq %>% left_join(species_P195_edt, by= "Speciesscientificname") %>% rename("Sciname"= "Species")
+p195_lengthfreq_edt$Speciescommonname[p195_lengthfreq_edt$Speciescommonname== "northern brown shrimp"] <- "brown shrimp"
+summary(is.na(p195_lengthfreq_edt)) #no NAs in Sciname, makes sense 
+
+write.csv(p195_lengthfreq_edt, "Data/P195/Finalized/p195_lengthfreq.csv")
+

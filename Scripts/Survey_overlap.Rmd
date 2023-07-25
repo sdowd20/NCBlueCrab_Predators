@@ -27,9 +27,9 @@ p195$Season <- ifelse(p195$Month==4 | p195$Month==5 | p195$Month==6, "Spring", i
 #p195 <- read.csv("Data/P195/Finalized/p195_clean_new.csv") #changed to new p120 and p195 dataset on 07/10/23
 
 #Select columns from datasets
-p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2001)
-p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% dplyr::rename("Area" = "Station") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2001)
-p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname, Season) %>% dplyr::rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2001)
+p915_overlap <- p915 %>% dplyr::select(Date, Year, Month, Area, Ssal, Stemp, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% mutate(Survey= "P915", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2008)
+p120_overlap <- p120 %>% dplyr::select(Date, Year, Month, Station, Stemp, Ssal, Sdo, Speciescommonname, Colnum, Latitude, Longitude, Sciname, Season) %>% dplyr::rename("Area" = "Station") %>% mutate(Survey= "P120", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2008)
+p195_overlap <- p195 %>% dplyr::select(Date, Year, Month, Location, Tempsurface, Salinitysurface, Sdo, Speciescommonname, Numbertotal, Latitudestart, Longitudestart, Sciname, Season) %>% dplyr::rename("Area"= "Location", "Stemp"= "Tempsurface", "Ssal"= "Salinitysurface", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal") %>% mutate(Survey= "P195", lat_lon= paste(Latitude, Longitude, sep= "_")) %>% drop_na(Latitude, Longitude) %>% filter(Year > 2008)
 
 #Load in world datasest and form grid
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -41,6 +41,12 @@ globe_bb <- matrix(c(-78.900147,33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
 
 globe_grid_20 <- st_make_grid(x= globe_bb, n = c(20,20), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
+
+
+test <- p120 %>% drop_na(Sedsize)
+
+colnames(p120)
+colnames(p195)
 ```
 
 #### Load functions for graphs
@@ -172,7 +178,7 @@ total_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/total_gridde
 total_edt <- total_edt[,-1]
 select_spp <- c("atlantic croaker", "blue crab", "black drum", "blue catfish", "bonnethead hammerhead", "brown shrimp", "red drum", "sheepshead", "southern flounder", "southern kingfish", "striped bass", "white shrimp", "pink shrimp", "gizzard shad", "american shad")
 
-total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Month == 5| Month== 6| Month== 9, Longitude > -77.0)
+total_edt <- total_edt %>% filter(Speciescommonname %in% select_spp, !Area %in% "CAPEF", !Area %in% "NEWR", Year >= 2008, Month == 5| Month== 6| Month== 9, Longitude > -77.0) %>% drop_na(Latitude, Longitude) #NA coordinates already dropped
 
 p915_overlap_edt <- p915_overlap %>% filter(Speciescommonname %in% select_spp) %>% filter(Year >= 2008, Month == 5| Month== 6| Month== 9)
 p120_overlap_edt <- p120_overlap %>% filter(Speciescommonname %in% select_spp) %>% filter(Year >= 2008, Month == 5| Month== 6| Month== 9)
