@@ -60,6 +60,10 @@ p195_abund_edt %>% group_by(Location, Depthzone, Date) %>% distinct(Ym_date, .ke
 #I think this is right as opposed to: p195_abund_edt %>% ggplot() + geom_histogram(stat="count", aes(x=Ym_date, fill = Location)) + standard_theme
 
 p195_abund_edt %>% group_by(Date, Latitudestart, Longitudestart) %>% summarize(abundance= mean(Numbertotal)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
+
+##Environmental
+
+p195_abund_edt_test <- p195_abund_edt %>% filter(Year > 2008) %>% drop_na(Btmcompdesc, Sedsizedesc) #drops only 214 data points if drop na with Sedsize and Btmcomp after 2008
 ```
 
 There are 961 unique stations sampled in P195 (after 2001) that have different sampling frequencies. Some stations are sampled only once whereas others have been sampled over 163 times. The ideal approach will be to classify stations based on grid cells because the strata are at too big of a scale.

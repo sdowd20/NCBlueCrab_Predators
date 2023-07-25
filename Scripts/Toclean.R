@@ -53,8 +53,8 @@ spp_list <- as.data.frame(spp_list[,-1])
 #######P915########
 #P915 OLD
 ##Creating old CPUE file (p195clean.csv)
-setwd("/Users/sallydowd/Desktop/pamlicodatasets/p915/Data/Individual")
-filenames <- list.files("/Users/sallydowd/Desktop/pamlicodatasets/p915/Data/Individual", pattern= '*.xlsx')  
+#setwd("/Users/sallydowd/Desktop/pamlicodatasets/p915/Data/Individual")
+filenames <- list.files("~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Raw/Old_CPUE", pattern= '*.xlsx')  
 all <- lapply(filenames, readxl::read_excel)
 merged <- do.call(rbind, all)
 
@@ -68,14 +68,20 @@ p915$Date <- as.Date(paste(p915$Month, p915$Day, p915$Year, sep= "-"), "%m-%d-%Y
 p915_spp <- p915 %>% left_join(spp_list, by= "Speciescommonname") #No NAs for species name, same row #
 write.csv(p915_spp, "Data/P915/Finalized/p915clean_new.csv")
 
+t <- p915 %>% filter(Year > 2008) %>% drop_na(Sedsize, Btmcomp)
+
 #P915 NEW
 setwd("/Users/sallydowd/Desktop/CPUE")
 filenames <- list.files("/Users/sallydowd/Desktop/CPUE", pattern= '*.xlsx')  
 filenames <- filenames[-c(1,16)]
-all <- lapply(filenames, readxl::read_excel)
+all <- lapply(filenames, readxl::read_excel, col_types= "text") #read in as text to avoid parsing warnings, sedsize and btmcomp was getting messed up
 merged <- do.call(rbind, all)
-angelshark <- read_excel("/Users/sallydowd/Desktop/CPUE/Angelshark_CPUEupdates.XLS.xlsx", sheet= 2)
-oystertoadfish <- read_excel("/Users/sallydowd/Desktop/CPUE/oystertoadfish_CPUEupdates.XLS.xlsx", sheet= 2)
+t <- merged %>% filter(Year > 2008, SedSize %in% "***ERROR***") #most with error for Sedsize are before 2008, 21618 in all and 3,285 after 2008
+nrow(merged %>% filter(Year > 2008, SedSize %in% NA)) #errors are just NA
+t2 <- merged %>% filter(Year > 2008,BtmComp %in% "***ERROR***") #most with error for Btmcomp are before 2008, 25857 in all and 2,322 after 2008
+nrow(merged %>% filter(Year > 2008, BtmComp %in% NA)) #errors are just NA
+angelshark <- read_excel("/Users/sallydowd/Desktop/CPUE/Angelshark_CPUEupdates.XLS.xlsx", sheet= 2, col_types= "text")
+oystertoadfish <- read_excel("/Users/sallydowd/Desktop/CPUE/oystertoadfish_CPUEupdates.XLS.xlsx", sheet= 2, col_types= "text")
 merged <- rbind(merged, angelshark, oystertoadfish)
 colnames(merged) <- str_to_title(colnames(merged))
 merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Spring", ifelse(merged$Month==9 |merged$Month==10 | merged$Month==11 | merged$Month==12, "Fall", ifelse(merged$Month==7 |merged$Month==8, "Summer", "Winter")))
@@ -89,6 +95,7 @@ columns <- c(6, 10:17, 20:22, 25:26)
 for (col in columns) {
   merged[[col]][is.na(merged[[col]]) | merged[[col]] == "."] <- NA
 } #some values only have a dot or maybe it is an NA that R generated, replace these with NA instead, I checked with Depth and Ssal and it worked! 
+nrow(merged %>% filter(Year>2008, Sedsize %in% NA))
 
 P915_CPUE <- merged %>% dplyr::rename("Sciname"= "Species")
 P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
@@ -159,7 +166,7 @@ unique(P915_CPUE_edt$inlet_dist_m)
 
 
 
-write.csv(P915_CPUE_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
+write.csv(P915_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
 
   
   
