@@ -304,7 +304,7 @@ P195_event <- read_csv("P195/Raw/P195.event.2023-07-07.csv")
 length(unique(P195_event$EVENTNAME)) 
 length(unique(P195_biomass$EVENTNAME)) #same numbers of events, tow #
 
-P195_event_edt <- P195_event %>% select(DATE, EVENTNAME, DEPTHSTART, DEPTHEND, LOCATION, LIGHTPHASE, PRESSURE) %>% group_by(DATE, DEPTHEND, DEPTHSTART, LOCATION) %>% distinct(EVENTNAME, .keep_all= TRUE)
+P195_event_edt <- P195_event %>% select(DATE, EVENTNAME, DEPTHSTART, DEPTHEND, LOCATION, LIGHTPHASE, PRESSURE, SEDSIZEDESC, BTMCOMPDESC) %>% group_by(DATE, DEPTHEND, DEPTHSTART, LOCATION) %>% distinct(EVENTNAME, .keep_all= TRUE)
 P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE", "LOCATION")) %>% filter(!LOCATION %in% NA)
 #added the 18 variables not present in biomass df about event, removed 8 rows that had NA for Location (and almost every cell)
 

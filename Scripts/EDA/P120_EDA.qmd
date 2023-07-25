@@ -43,9 +43,6 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 #### General
 
 ```{r}
-summary(is.na(P120_bioledt)) #NAs present in Grid, Quad, Time, environmental variables, Colnum, biological variables, Speciesscientificname
-summary(is.na(subset(P120_bioledt, Year > 2008))) #less NAs in environmental variables after 2008
-
 #Spatial orientation
 ##All stations
 ggplot(data = world) + geom_sf() + geom_point(data = P120_bioledt, aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
@@ -83,6 +80,12 @@ P120_bioledt %>% group_by(Date, Lat_dd, Long_dd) %>% summarize(abundance= mean(C
 ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 2008, 2020)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") 
 
 ggplot(data = world) + geom_sf() + geom_point(data = subset(core, between(Year, 1989, 2007)), aes(x = as.numeric(Long_dd), y = as.numeric(Lat_dd))) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
+
+#Environmental variables 
+summary(is.na(P120_bioledt)) #NAs present in Grid, Quad, Time, environmental variables, Colnum, biological variables, Speciesscientificname
+summary(is.na(subset(P120_bioledt, Year > 2008))) #less NAs in environmental variables after 2008
+
+P120_bioledt_test <- P120_bioledt %>% filter(Year > 2008) %>% drop_na(Sedsize, Btmcomp) #drops only 806 data points if drop na with Sedsize and Btmcomp after 2008
 ```
 
 There are a good amount of NAs in the dataset particularly with environmental variables. We might want to start analyzing the data in 2008 (or 2009?) when more of those habitat variables were included.
@@ -133,7 +136,11 @@ colnames(P120_bioledt)
 
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length*0.0393701), max_l= max(Length*0.0393701), mean_l = mean(Length*0.0393701), sd_l= sd(Length*0.0393701))
 
-P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p120_length.png", width= 25, height= 25)
+
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp,Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname, Month) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname + Month, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p120_length.month.png", width= 25, height= 25)
 
 length(unique(P120_bioledt$Control1))
 length(unique(P120_bioledt$Location))

@@ -30,6 +30,11 @@ p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finali
 p195_abund_edt <- p195_abund %>% filter(Month == 6| Month== 9, Year > 2000, !Location %in% "ALBEMARLE SOUND")
 p195_abund_edt$Season <- ifelse(p195_abund_edt$Month==4 | p195_abund_edt$Month==5 | p195_abund_edt$Month==6, "Spring", ifelse(p195_abund_edt$Month==9 |p195_abund_edt$Month==10 | p195_abund_edt$Month==11 | p195_abund_edt$Month==12, "Fall", ifelse(p195_abund_edt$Month==7 |p195_abund_edt$Month==8, "Summer", "Winter")))
 p195_abund_edt$Ym_date <- format(p195_abund_edt$Date, "%Y-%m")
+
+p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
+p195_lengthfreq$Season <- ifelse(p195_lengthfreq$Month==4 | p195_lengthfreq$Month==5 | p195_lengthfreq$Month==6, "Spring", ifelse(p195_lengthfreq$Month==9 |p195_lengthfreq$Month==10 | p195_lengthfreq$Month==11 | p195_lengthfreq$Month==12, "Fall", ifelse(p195_lengthfreq$Month==7 |p195_lengthfreq$Month==8, "Summer", "Winter")))
+
+p195_lengthfreq <- p195_lengthfreq %>% filter(Month == 6| Month==9)
 ```
 
 #### General
@@ -57,11 +62,11 @@ p195_abund_edt %>% group_by(Location, Depthzone, Date) %>% distinct(Ym_date, .ke
 p195_abund_edt %>% group_by(Date, Latitudestart, Longitudestart) %>% summarize(abundance= mean(Numbertotal)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme #sum outliers with mean abundance to correct for
 ```
 
-There are 961 unique stations sampled in P195 (after 2001) that have different sampling frequencies. Some stations are sampled only once whereas others have been sampled over 163 times. The ideal approach will be to classify stations based on grid cells because the strata are at too big of a scale. 
+There are 961 unique stations sampled in P195 (after 2001) that have different sampling frequencies. Some stations are sampled only once whereas others have been sampled over 163 times. The ideal approach will be to classify stations based on grid cells because the strata are at too big of a scale.
 
-Sampling effort checks out and has been consistent thorughout the sampling period (with occasional peaks). There is more sampling in Pamlico Sound because shallow and deep strata are sampled. In general, when divided out by Ym_date, depth, and strata it does still seem like there is more sampling in main parts of the sound as compared to rivers. 
+Sampling effort checks out and has been consistent thorughout the sampling period (with occasional peaks). There is more sampling in Pamlico Sound because shallow and deep strata are sampled. In general, when divided out by Ym_date, depth, and strata it does still seem like there is more sampling in main parts of the sound as compared to rivers.
 
-In terms of outliers, it does seem like there are outliers in terms of abundance that I will have to remove.  
+In terms of outliers, it does seem like there are outliers in terms of abundance that I will have to remove.
 
 #### Species specific: spatial and temporal
 
@@ -103,16 +108,20 @@ ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count
 p195_nums <- fine %>% group_by(Speciescommonname, Month) %>% drop_na(Numbertotal) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P120") #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, southern kingfish, spot, and summer flounder have the most data
 ```
 
-For seasonality, it does appear that there is enough data to look at these species in June and September: Atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, southern flounder, spot, summer flounder, southern kingfish. Refer to the seasonality.csv file in EDA folder in the Blue Crab google drive. 
+For seasonality, it does appear that there is enough data to look at these species in June and September: Atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, southern flounder, spot, summer flounder, southern kingfish. Refer to the seasonality.csv file in EDA folder in the Blue Crab google drive.
 
 #### Length
 
 ```{r}
-length_test <- read.csv("~/Desktop/test.bc.csv")
-length_test <- length_test %>% rename(Length= LENGTH) 
-length_test %>% drop_na(Length) %>% summarise(min_l= min(Length), max_l= max(Length), mean_l = mean(Length), sd_l= sd(Length)) #def should divide up blue crabs 
+p195_lengthfreq %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p195_length.png", width= 25, height= 25)
 
-P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+p195_lengthfreq %>% drop_na(Length) %>% group_by(Speciescommonname, Season) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Season, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p195_length_season.png", width= 25, height= 25)
+
+
+
+colnames(p195_lengthfreq)
 
 length(unique(P120_bioledt$Control1))
 length(unique(P120_bioledt$Location))
@@ -131,14 +140,4 @@ P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n
 
 ```
 
-Length data pulled: 
-DataType:	Length Frequency
-AreaLocation:	NEUSE RIVER;PAMLICO RIVER;PAMLICO SOUND; EAST OF BLUFF SHOAL;PAMLICO SOUND; WEST OF BLUFF SHOAL;PUNGO RIVER
-CommonName:	ATLANTIC CROAKER;ATLANTIC MENHADEN;BLUE CRAB;BLUEFISH;NORTHERN BROWN SHRIMP;NORTHERN KINGFISH;SOUTHERN FLOUNDER;SOUTHERN KINGFISH;SPOT;SUMMER FLOUNDER
-Season:	Summer (June|July|August);Fall (September|October|November)
-Year:	2001;2002;2003;2004;2005;2006;2007;2008;2009;2010;2011;2012;2013;2014;2015;2016;2017;2018;2019;2020;2021
-
-
-
-
-
+Length data pulled: DataType: Length Frequency AreaLocation: NEUSE RIVER;PAMLICO RIVER;PAMLICO SOUND; EAST OF BLUFF SHOAL;PAMLICO SOUND; WEST OF BLUFF SHOAL;PUNGO RIVER CommonName: ATLANTIC CROAKER;ATLANTIC MENHADEN;BLUE CRAB;BLUEFISH;NORTHERN BROWN SHRIMP;NORTHERN KINGFISH;SOUTHERN FLOUNDER;SOUTHERN KINGFISH;SPOT;SUMMER FLOUNDER Season: Summer (June\|July\|August);Fall (September\|October\|November) Year: 2001;2002;2003;2004;2005;2006;2007;2008;2009;2010;2011;2012;2013;2014;2015;2016;2017;2018;2019;2020;2021
