@@ -91,20 +91,17 @@ merged$Ym_date <- format(merged$Date, "%Y-%m")
 #Make Sedsize and Btmcomp consistent: 
 unique(merged$Sedsize)
 unique(merged$Btmcomp)
-
 merged <- merged %>% mutate(Sedsize_new = ifelse(merged$Sedsize %in% "Mud", 9, ifelse(merged$Sedsize %in% "Sandy mud", 7, ifelse(merged$Sedsize %in% "Sand", 8, ifelse(merged$Sedsize %in% "Muddy sand", 6, ifelse(merged$Sedsize %in% "Soft mud", 2, 
 ifelse(merged$Sedsize %in% "Hard sand", 1, ifelse(merged$Sedsize %in% "Clay", 4, ifelse(merged$Sedsize %in% "Hard mud", 3, ifelse(merged$Sedsize %in% "Silt", 5, ifelse(merged$Sedsize %in% "Cemented hard bottom or rock", 0, ifelse(!merged$Sedsize %in% c(NA, "***ERROR***", "Coarse sand: Coarse silt", "I"), merged$Sedsize, NA)))))))))))) #keep the rest of the values the same 
-nrow(merged_new %>% filter(Year> 2008, Sedsize_new %in% NA)) #only 7,320 NAs, this is correct! 
-
+nrow(merged %>% filter(Year> 2008, Sedsize_new %in% NA)) #only 7,320 NAs, this is correct! 
 #Removed 25 rows where Sedsize was equal to I 
 #Rock, shell, algae isn't on there so classified as rock, shell
 #no grass meant no structure (O) prior to 2008 
-merged_new <- merged %>% mutate(Btmcomp_new = ifelse(merged$Btmcomp %in% "Grass", "B", ifelse(merged$Btmcomp %in% "No Grass", "O", ifelse(merged$Btmcomp %in% "Bryozoan", "Q", ifelse(merged$Btmcomp %in% "Grass, Algae", "H", ifelse(merged$Btmcomp %in% "Tunicate", "P",
+merged<- merged %>% mutate(Btmcomp_new = ifelse(merged$Btmcomp %in% "Grass", "B", ifelse(merged$Btmcomp %in% "No Grass", "O", ifelse(merged$Btmcomp %in% "Bryozoan", "Q", ifelse(merged$Btmcomp %in% "Grass, Algae", "H", ifelse(merged$Btmcomp %in% "Tunicate", "P",
 ifelse(merged$Btmcomp %in% "Algae", "C", ifelse(merged$Btmcomp %in% "Grass, Algae, Detritus", "L", ifelse(merged$Btmcomp %in% "Shell, Algae", "J", ifelse(merged$Btmcomp %in% "Shell", "A", ifelse(merged$Btmcomp %in% "Shell, Grass", "G", ifelse(merged$Btmcomp %in% "Shell, Grass, Algae", "I",
 ifelse(merged$Btmcomp %in% "Grass, Detritus", "K", ifelse(merged$Btmcomp %in% "Detritus", "D", ifelse(merged$Btmcomp %in% "Shell, Detritus", "M", ifelse(merged$Btmcomp %in% "Rock, Shell, Algae"| merged$Btmcomp %in% "Rock, Shell", "S", ifelse(merged$Btmcomp %in% "Other", "Z", ifelse(merged$Btmcomp %in% "Rock", "R",
 ifelse(merged$Btmcomp %in% "Rock, Algae", "U",ifelse(merged$Btmcomp %in% "Rock, Shell, Grass, Algae", "W", ifelse(merged$Btmcomp %in% "Rock, Grass", "T", ifelse(merged$Btmcomp %in% "Cinder", "N", ifelse(merged$Btmcomp %in% "Shell, Algae", "H", ifelse(!merged$Btmcomp %in% c(NA, "Tow relocated due to Grass (1993)", "***ERROR***"), merged$Btmcomp, NA))))))))))))))))))))))))  
-nrow(merged_new %>% filter(Year> 2008, Btmcomp_new %in% NA)) #only 5171 NAs, this is correct! 
-
+nrow(merged %>% filter(Year> 2008, Btmcomp_new %in% NA)) #only 5171 NAs, this is correct! 
 #Coarse sand: Coarse silt had 11 rows and was removed b/c didn't match a classification
 #Tow relocated to not grass (1993) had 11 rows and was marked as NA
 
@@ -179,8 +176,6 @@ ggmap(myMap) +
 str(P915_CPUE_edt$inlet_dist_m)
 
 unique(P915_CPUE_edt$inlet_dist_m)
-
-
 
 write.csv(P915_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
 
@@ -331,7 +326,8 @@ P195_event_edt <- P195_event %>% select(DATE, EVENTNAME, DEPTHSTART, DEPTHEND, L
 P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE", "LOCATION")) %>% filter(!LOCATION %in% NA)
 #added the 18 variables not present in biomass df about event, removed 8 rows that had NA for Location (and almost every cell)
 
-merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:28, 29:30, 31, 43, 47)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
+colnames(P195_bind)
+merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:28, 29:30, 31, 43, 47, 49:50)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
 P195_bind[ , colnames(P195_bind) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
 colnames(P195_bind) <- str_to_title(colnames(P195_bind))
 P195_bind$Date <- as.Date(P195_bind$Date, "%m-%d-%Y")
@@ -357,6 +353,23 @@ species_P195_edt <- as.data.frame(species_P195[, c(1,9)])
 
 P195_bind_edt <- P195_bind %>% left_join(species_P195_edt, by= "Speciesscientificname") %>% rename("Sciname"= "Species")
 P195_bind_edt$Speciescommonname[P195_bind_edt$Speciescommonname== "northern brown shrimp"] <- "brown shrimp"
+
+#Standardize SedSize and Btmcomp
+P195_bind_edt <- P195_bind_edt %>% rename("Sedsize"= "Sedsizedesc", "Btmcomp"= "Btmcompdesc")
+P195_bind_edt$Sedsize <- str_to_title(P195_bind_edt$Sedsize)
+P195_bind_edt$Btmcomp <- str_to_title(P195_bind_edt$Btmcomp)
+unique(P195_bind_edt$Sedsize)
+
+P195_bind_edt <- P195_bind_edt %>% mutate(Sedsize_new = ifelse(P195_bind_edt$Sedsize %in% "Mud", 9, ifelse(P195_bind_edt$Sedsize %in% "Sandy Mud", 7, ifelse(P195_bind_edt$Sedsize %in% "Sand", 8, ifelse(P195_bind_edt$Sedsize %in% "Muddy Sand", 6, ifelse(P195_bind_edt$Sedsize %in% "Soft Mud", 2, 
+ifelse(P195_bind_edt$Sedsize %in% "Hard Sand", 1, ifelse(P195_bind_edt$Sedsize %in% "Clay", 4, ifelse(P195_bind_edt$Sedsize %in% "Hard Mud", 3, ifelse(P195_bind_edt$Sedsize %in% "Silt", 5,  NA)))))))))) #keep the rest of the values the same 
+nrow(P195_bind_edt %>% filter(Year> 2008, Sedsize_new %in% NA)) #221 NAs before and after Sedsize 
+
+unique(P195_bind_edt$Btmcomp)
+
+P195_bind_edt<- P195_bind_edt %>% mutate(Btmcomp_new = ifelse(P195_bind_edt$Btmcomp %in% "Grass", "B", ifelse(P195_bind_edt$Btmcomp %in% "No Grass", "O", ifelse(P195_bind_edt$Btmcomp %in% "Byozoan", "Q", ifelse(P195_bind_edt$Btmcomp %in% "Grass Algae", "H", ifelse(P195_bind_edt$Btmcomp %in% "Tunicate", "P",
+ifelse(P195_bind_edt$Btmcomp %in% "Algae", "C", ifelse(P195_bind_edt$Btmcomp %in% "Shellgrass Algae", "I", ifelse(P195_bind_edt$Btmcomp %in% "Shell Detritus", "M", ifelse(P195_bind_edt$Btmcomp %in% "Shell", "A", ifelse(P195_bind_edt$Btmcomp %in% "Shell Grass", "G", ifelse(P195_bind_edt$Btmcomp %in% "Detritus", "C",
+ifelse(P195_bind_edt$Btmcomp %in% "Rock Shell", "S", NA)))))))))))))
+nrow(P195_bind_edt %>% filter(Year> 2008, Btmcomp_new %in% NA)) #0 NAs after 2008, this is correct 
 
 write.csv(P195_bind_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
 
