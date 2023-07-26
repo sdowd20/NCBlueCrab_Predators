@@ -27,14 +27,8 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 }
 
 p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
-p195_abund_edt <- p195_abund %>% filter(Month == 6| Month== 9, Year > 2000, !Location %in% "ALBEMARLE SOUND")
-p195_abund_edt$Season <- ifelse(p195_abund_edt$Month==4 | p195_abund_edt$Month==5 | p195_abund_edt$Month==6, "Spring", ifelse(p195_abund_edt$Month==9 |p195_abund_edt$Month==10 | p195_abund_edt$Month==11 | p195_abund_edt$Month==12, "Fall", ifelse(p195_abund_edt$Month==7 |p195_abund_edt$Month==8, "Summer", "Winter")))
-p195_abund_edt$Ym_date <- format(p195_abund_edt$Date, "%Y-%m")
 
 p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
-p195_lengthfreq$Season <- ifelse(p195_lengthfreq$Month==4 | p195_lengthfreq$Month==5 | p195_lengthfreq$Month==6, "Spring", ifelse(p195_lengthfreq$Month==9 |p195_lengthfreq$Month==10 | p195_lengthfreq$Month==11 | p195_lengthfreq$Month==12, "Fall", ifelse(p195_lengthfreq$Month==7 |p195_lengthfreq$Month==8, "Summer", "Winter")))
-
-p195_lengthfreq <- p195_lengthfreq %>% filter(Month == 6| Month==9)
 ```
 
 #### General

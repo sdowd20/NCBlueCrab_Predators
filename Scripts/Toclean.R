@@ -295,11 +295,18 @@ fulld2_edt <- fulld2 %>% left_join(species_namesedt, by = "Species") %>% rename(
 #fulld=fulld%>%filter(CORE==1|CORE==2)%>%as.data.frame() #core stations
 fulld2_edt <- fulld2_edt %>% rename("Latitude"= "Lat_dd", "Longitude"= "Long_dd")
 
+fulld2_edt$Year <- as.numeric(fulld2_edt$Year)
+fulld2_edt <- fulld2_edt %>% arrange(Year)
+fulld2_edt <- fulld2_edt %>% filter(Year > 1988)
+fulld2_edt$Season <- ifelse(fulld2_edt$Month==4 | fulld2_edt$Month==5 | fulld2_edt$Month==6, "Spring", ifelse(fulld2_edt$Month==9 |fulld2_edt$Month==10 | fulld2_edt$Month==11 | fulld2_edt$Month==12, "Fall", ifelse(fulld2_edt$Month==7 |fulld2_edt$Month==8, "Summer", "Winter")))
+fulld2_edt$Ym_date <- format(fulld2_edt$Date, "%Y-%m")
+fulld2_edt$Location <- as.numeric(fulld2_edt$Location) #remove leading 0s, make sure this is ok, 184 locations w/ out this and 101 locations with this, I checked the data and the data is difference between locations (e.g: 0527010000 vs. 527010000). The station, grid and quad are the same though! #removes leading zeros, 101 locations is the same in old processed data (p120_clean_2021) 
+
 ##Add in other predictor variables 
 fulld2_edt$doy <- yday(fulld2_edt$Date)
 fulld2_edt$Photoperiod <- daylength(lat= fulld2_edt$Latitude, doy= fulld2_edt$doy)
 
-write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
+#write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
 
 #######P195########
@@ -335,6 +342,9 @@ P195_bind$Ym_date <- format(P195_bind$Date, "%Y-%m")
 P195_bind$Year <- year(P195_bind$Date)
 P195_bind$Month <- month(P195_bind$Date)
 P195_bind$Day <- day(P195_bind$Date)
+P195_bind <- P195_bind %>% filter(Month == 6| Month== 9, Year > 2000, !Location %in% "ALBEMARLE SOUND")
+P195_bind$Season <- ifelse(P195_bind$Month==4 | P195_bind$Month==5 | P195_bind$Month==6, "Spring", ifelse(P195_bind$Month==9 |P195_bind$Month==10 | P195_bind$Month==11 | P195_bind$Month==12, "Fall", ifelse(P195_bind$Month==7 |P195_bind$Month==8, "Summer", "Winter")))
+P195_bind$Ym_date <- format(P195_bind$Date, "%Y-%m")
 
 ##Add in other predictor variables
 P195_bind$doy <- yday(P195_bind$Date)
@@ -387,6 +397,8 @@ p195_lengthfreq$Ym_date <- format(p195_lengthfreq$Date, "%Y-%m")
 p195_lengthfreq$Year <- year(p195_lengthfreq$Date)
 p195_lengthfreq$Month <- month(p195_lengthfreq$Date)
 p195_lengthfreq$Day <- day(p195_lengthfreq$Date)
+p195_lengthfreq$Season <- ifelse(p195_lengthfreq$Month==4 | p195_lengthfreq$Month==5 | p195_lengthfreq$Month==6, "Spring", ifelse(p195_lengthfreq$Month==9 |p195_lengthfreq$Month==10 | p195_lengthfreq$Month==11 | p195_lengthfreq$Month==12, "Fall", ifelse(p195_lengthfreq$Month==7 |p195_lengthfreq$Month==8, "Summer", "Winter")))
+p195_lengthfreq <- p195_lengthfreq %>% filter(Month == 6| Month==9)
 
 #Adding in Sciname for species
 p195_lengthfreq$Speciescommonname <- str_to_lower(p195_lengthfreq$Speciescommonname)

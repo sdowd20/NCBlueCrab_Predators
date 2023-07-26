@@ -28,13 +28,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 
 ##Load and edit data set
 setwd("~/Desktop")
-P120_biol <- read_csv("p120_biol_new.csv")
-P120_biol$Year <- as.numeric(P120_biol$Year)
-P120_biol <- P120_biol %>% arrange(Year)
-P120_bioledt <- P120_biol %>% filter(Year > 1988)
-P120_bioledt$Season <- ifelse(P120_bioledt$Month==4 | P120_bioledt$Month==5 | P120_bioledt$Month==6, "Spring", ifelse(P120_bioledt$Month==9 |P120_bioledt$Month==10 | P120_bioledt$Month==11 | P120_bioledt$Month==12, "Fall", ifelse(P120_bioledt$Month==7 |P120_bioledt$Month==8, "Summer", "Winter")))
-P120_bioledt$Ym_date <- format(P120_bioledt$Date, "%Y-%m")
-P120_bioledt$Location <- as.numeric(P120_bioledt$Location) #remove leading 0s, make this in clean 
+P120_bioledt <- read_csv("p120_biol_new.csv")
 
 coords_captured <- function(species){
 ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_CPUEold$Species %in% species & as.numeric(p915_CPUEold$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
@@ -185,7 +179,7 @@ result_df_new <- result_df %>%
 #Want there to be the number of rows for corresponding to the Colnum 
 ```
 
-#For blue crabs in P120, each 
+#For blue crabs in P120, each
 
 #### CPUE
 
@@ -196,7 +190,6 @@ speciescount <- P120_bioledt %>% group_by(Speciescommonname, Date, Location) %>%
 #Remove cownose ray, Atlantic thread herring, and black drum b/c n < 100
 select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "blue catfish", "gizzard shad", "american shad", "blue crab")
 
-P120_bioledt$Location <- as.numeric(P120_bioledt$Location) #removes leading zeros, 101 locations is the same in old processed data (p120_clean_2021) 
 length(unique(P120_bioledt$Location))
 
 ##Form a haul dataset where every row is one haul 
@@ -205,6 +198,7 @@ P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
 length(unique(P120_bioledt$Control1)) #full dataset has more unique control1 than haul, 9641 vs. 9330, doesn't have to do with just selecting cores 
 haul <- P120_bioledt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (9310 variables whereas Lela had 8099), for all species
 length(unique(haul$Control1))
+length(unique(P120_bioledt$Control1))
 #Let's look at which values are different: there are ~20 not in main cores, 311 values that are different--> need to ask about this 
 diff_values <- setdiff(P120_bioledt$Control1, haul$Control1)
 
