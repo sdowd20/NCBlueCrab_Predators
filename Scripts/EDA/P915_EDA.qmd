@@ -56,16 +56,8 @@ p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 p915_CPUE <- p915_CPUE %>% filter(between(Year, 2001, 2020))
 p915_bioln <- p915_bioln %>% filter(between(Year, 2001, 2020)) %>% filter(!Area %in% "miss")
 
-
-#UGHHHH
-
-mergedtry <- merged %>% mutate(Btmcomp_let = ifelse(merged$Btmcomp %in% "Grass", "B", ifelse(merged$Btmcomp %in% "No Grass", "O", ifelse(merged$Btmcomp %in% "Bryozoan", "Q", ifelse(merged$Btmcomp %in% "Grass, Algae", "H", ifelse(merged$Btmcomp %in% "Tunicate", "P",
-                                                                                                                                                                                                                                     ifelse(merged$Btmcomp %in% "Algae", "C", ifelse(merged$Btmcomp %in% "Grass, Algae, Detritus", "L", ifelse(merged$Btmcomp %in% "Shell, Algae", "J", ifelse(merged$Btmcomp %in% "Shell", "A", ifelse(merged$Btmcomp %in% "Shell, Grass", "G", ifelse(merged$Btmcomp %in% "Shell, Grass, Algae", "I",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ifelse(merged$Btmcomp %in% "Grass, Detritus", "K", ifelse(merged$Btmcomp %in% "Detritus", "D", ifelse(merged$Btmcomp %in% "Shell, Detritus", "M", ifelse(merged$Btmcomp %in% "Rock, Shell, Algae"| merged$Btmcomp %in% "Rock, Shell", "S", ifelse(merged$Btmcomp %in% "Other", "Z", ifelse(merged$Btmcomp %in% "Rock", "R",
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ifelse(merged$Btmcomp %in% "Rock, Algae", "U",ifelse(merged$Btmcomp %in% "Rock, Shell, Grass, Algae", "W", ifelse(merged$Btmcomp %in% "Rock, Grass", "T", ifelse(merged$Btmcomp %in% "Cinder", "N", ifelse(merged$Btmcomp %in% "Shell, Algae", "H", NA)))))))))))))))))))))))  
-
-                                                                                                                                                                                                                                                                                                                                                                                                       
-
+unique(p915_CPUE$Speciescommonname)
+      p915_bioln %>% filter(Speciescommonname %in% "bluefish")      
 ```
 
 ##### General

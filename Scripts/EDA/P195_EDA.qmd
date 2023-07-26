@@ -109,7 +109,15 @@ ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count
 #Spring: atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, gizzard shad? southern flounder, spot, summer flounder, southern kingfish
 
 ##Number of observations for species of interest
-p195_nums <- fine %>% group_by(Speciescommonname, Month) %>% drop_na(Numbertotal) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P120") #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, southern kingfish, spot, and summer flounder have the most data
+p195_nums <- fine %>% filter(Year > 2008) %>% group_by(Speciescommonname, Month) %>% drop_na(Numbertotal) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P195") #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, southern kingfish, spot, and summer flounder have the most data
+
+p120_nums <- P120_bioledt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month == 5| Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
+
+p915_nums <- p915_bioln %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month == 5| Month==6| Month==9) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
+
+combo <- rbind(p195_nums, p120_nums, p915_nums)
+combo <- combo %>% arrange(Speciescommonname, Month)
+write.csv(combo, "~/Desktop/seasonality.csv")
 ```
 
 For seasonality, it does appear that there is enough data to look at these species in June and September: Atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, southern flounder, spot, summer flounder, southern kingfish. Refer to the seasonality.csv file in EDA folder in the Blue Crab google drive.

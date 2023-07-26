@@ -136,10 +136,10 @@ colnames(P120_bioledt)
 
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length*0.0393701), max_l= max(Length*0.0393701), mean_l = mean(Length*0.0393701), sd_l= sd(Length*0.0393701))
 
-P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p120_length.png", width= 25, height= 25)
 
-P120_bioledt %>% filter(Speciescommonname %in% interest_spp,Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname, Month) %>% ggplot() + geom_histogram(aes(x= Length*0.0393701)) + facet_wrap(~Speciescommonname + Month, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp,Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname, Month) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Month, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p120_length.month.png", width= 25, height= 25)
 
 length(unique(P120_bioledt$Control1))
