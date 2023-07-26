@@ -134,7 +134,7 @@ test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(s
 ```{r}
 colnames(P120_bioledt)
 
-P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length*0.0393701), max_l= max(Length*0.0393701), mean_l = mean(Length*0.0393701), sd_l= sd(Length*0.0393701))
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length), max_l= max(Length), mean_l = mean(Length), sd_l= sd(Length))
 
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p120_length.png", width= 25, height= 25)
@@ -151,13 +151,74 @@ length(unique(P120_bioledt$Station))
 #50.8 cm (2 inches) is the harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
 
 P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% mutate("Ageclass"= ifelse(Length < 50.8, "juvenile", ifelse(Length >= 50.8, "adult", "NA"))) 
+
+P120_bc %>% select()
+
 P120_bc_juv <- P120_bc %>% filter(Ageclass %in% "juvenile") 
 P120_bc_juv_edt <- P120_bc_juv %>% group_by(Control1) %>% mutate(Colnum_juv= n()) #number of rows correspond to # captured of age class 
 
 P120_bc_adult <- P120_bc %>% filter(Ageclass %in% "adult") 
 P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n()) 
+P120_bc_test <- P120_bc %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #63690 to 63680 when drop_na
 
+result_df <- P120_bc_test %>% group_by(Control1, Colnum, Length) %>% uncount(Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #Now Frequenc 
+
+
+
+
+result_df_new <- result_df %>%
+  group_by(Control1, Colnum) %>%
+  mutate(
+    rows_to_add = Colnum - n(),
+    Length2 = if_else(rows_to_add > 0, mean(Length), Length)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    Length = if_else(row_number() <= n(), Length2, Length)
+  ) %>%
+  select(-Length2)
+
+result_df_new <- result_df %>%
+  group_by(Control1, Colnum) %>%
+  mutate(
+    rows_to_add = Colnum - n(),
+    Length2 = if_else(rows_to_add > 0, mean(Length), Length))
+  )  #subset rows 
+  ungroup() %>%
+  complete(Control1, Colnum, Length = Length2) %>%
+  select(-Length2)
+
+
+  
+?slice()
+result_df_new <- result_df_ %>%
+  group_by(Control1, Colnum) %>%
+  mutate(rows_to_add = Colnum - n()) %>%
+  slice(1:n()) %>%
+  mutate(Length = if_else(rows_to_add > 0, mean(Length), Length)) %>%
+  slice(rep(1:n(), times = pmax(rows_to_add, 0) + 1)) %>%
+  ungroup() %>%
+  select(-rows_to_add)
+
+
+result_df_new <- result_df %>%
+  group_by(Control1, Colnum) %>%
+  mutate(
+    rows_to_add = Colnum - n()) %>% slice(1:n()) %>% 
+mutate(Length2 = if_else(rows_to_add > 0, mean(Length), Length)) %>%
+  slice(rep(1:n(), times = pmax(rows_to_add, 0) + 1)) %>%
+  ungroup() %>%
+  mutate(
+    Length = if_else(row_number() <= n(), Length2, Length)
+  ) %>%
+  select(-Length2)
+
+
+
+#Want there to be the number of rows for corresponding to the Colnum 
 ```
+
+#For blue crabs in P120, each 
 
 #### CPUE
 
