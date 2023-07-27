@@ -45,7 +45,7 @@ sppcommonnmsc[18,2] <- "angel shark"
 sppcommonnmsc[20,2] <- "scallop hammerhead"
 sppcommonnmsc[3,2] <- "striped bass" #northern kingfish doesn't exist in dataset, has same abbreviated name 
 
-write.csv(sppcommonnmsc, "Data/sppcommonnmsc.csv")
+#write.csv(sppcommonnmsc, "Data/sppcommonnmsc.csv")
 
 spp_list <- read.csv("Data/sppcommonnmsc.csv")
 spp_list <- as.data.frame(spp_list[,-1])
@@ -119,6 +119,17 @@ P915_CPUE <- P915_CPUE %>% mutate_at(vars(c(10:17, 25, 26)), as.numeric)
 P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
+
+##Waterbody
+NC_wb <- st_read("~/Desktop/NC_watersheds/HUC_10.shp")
+P915_CPUE$lat_lon <- paste(P915_CPUE$Latitude, P915_CPUE$Longitude, sep = "_")
+P915_sf <- P915_CPUE %>% drop_na(Latitude, Longitude) %>% select(Latitude, Longitude, lat_lon)
+P915_sf <- st_as_sf(P915_sf, coords = c("Longitude", "Latitude"), crs = "NAD83") #needs to match waterbody CRS
+#intersected_points <- st_intersection(NC_wb, P915_sf)
+
+
+
+st_crs(P915_sf)
 #distance to inlet:
 
 P915_CPUE_edt <- P915_CPUE %>% drop_na(Latitude, Longitude) 
@@ -334,7 +345,7 @@ P195_bind <- P195_biomass %>% left_join(P195_event_edt, by= c("EVENTNAME", "DATE
 #added the 18 variables not present in biomass df about event, removed 8 rows that had NA for Location (and almost every cell)
 
 colnames(P195_bind)
-merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:17, 23, 25, 26:28, 29:30, 31, 43, 47, 49:50)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
+merged_apply <- as.data.frame(sapply(P195_bind[,c(1:2, 4:13, 23, 25, 26:28, 29:30, 31, 43, 47, 49:50)], function(x) gsub('[^[:alnum:] ]', "", x))) #remove all special characters
 P195_bind[ , colnames(P195_bind) %in% colnames(merged_apply)] <- merged_apply #replace updated columns in original dataset
 colnames(P195_bind) <- str_to_title(colnames(P195_bind))
 P195_bind$Date <- as.Date(P195_bind$Date, "%m-%d-%Y")

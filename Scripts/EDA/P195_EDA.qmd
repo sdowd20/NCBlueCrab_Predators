@@ -6,7 +6,7 @@ editor: visual
 
 #### Overall data set description
 
-P195 is a stratified-random trawl survey that has collected both biotic and abiotic information since 1987 in both June and September in Pamlico Sound and its tributaries. In 1990, all sampling in the Albemarle Sound and the March and December sampling in Pamlico Sound was elmiinated. The survey uses two 30-foot head rope demersal mongoose trawls to sample waters within Pamlico Sound as well as the Pamlico, Neuse, and Pungo rivers (4 areas). As there are both deep and shallow sampling sites for the two locations in Pamlico Sound, the survey area is divided into seven strata. Since the survey is stratified-random, fifty-four stations are selected at random from the seven strata for June and September. The fishing effort is kept consistent with 20 minute tows at a speed of 2.5 knots to cover 87,750 square feet. The catch from the two nets are combined to form a single sample.
+P195 is a stratified-random trawl survey that has collected both biotic and abiotic information since 1987 in both June and September in Pamlico Sound and its tributaries. In 1990, all sampling in the Albemarle Sound and the March and December sampling in Pamlico Sound was elmiinated. The survey uses two 30-foot head rope demersal mongoose trawls to sample waters within Pamlico Sound as well as the Pamlico, Neuse, and Pungo rivers (4 areas). As there are both deep and shallow sampling sites for the two locations in Pamlico Sound, the survey area is divided into seven strata. Since the survey is stratified-random, fifty-four stations are selected at random from the seven strata for June and September. The fishing effort is kept consistent with 20 minute tows at a speed of 2.5 knots to cover 87,750 square feet. The catch from the two nets are combined to form a single sample. However, the dataset doesn't already have the catch from the nets combined. I did this for the CPUE dataset.
 
 The survey collects total abundance and weight for each species found, environmental information at the site, and additional length data for target species. A total number and weight is recorded for each species. For target species, at least 30 individuals are measured and total weights are recorded. Water clarity started to be recorded in 2008 with a Secchi disk and shoreline and sediment data started to be recorded in 2009.
 
@@ -149,6 +149,7 @@ P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n
 Length data pulled: DataType: Length Frequency AreaLocation: NEUSE RIVER;PAMLICO RIVER;PAMLICO SOUND; EAST OF BLUFF SHOAL;PAMLICO SOUND; WEST OF BLUFF SHOAL;PUNGO RIVER CommonName: ATLANTIC CROAKER;ATLANTIC MENHADEN;BLUE CRAB;BLUEFISH;NORTHERN BROWN SHRIMP;NORTHERN KINGFISH;SOUTHERN FLOUNDER;SOUTHERN KINGFISH;SPOT;SUMMER FLOUNDER Season: Summer (June\|July\|August);Fall (September\|October\|November) Year: 2001;2002;2003;2004;2005;2006;2007;2008;2009;2010;2011;2012;2013;2014;2015;2016;2017;2018;2019;2020;2021
 
 #### CPUE
+
 ```{r}
 summary(is.na(p195_abund$Speciesscientificname)) #1 NA for Sciname 
 p195_abundedt <- p195_abund %>% drop_na(Sciname)
@@ -162,16 +163,16 @@ haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, S
 
 haul_df_all <- haul_df %>% tidyr::expand(Species,Eventname)
 haul=haul_df %>%select(-Species)
-haul_final=left_join(haul_df_all,haul,by="Eventname")%>%as.data.frame()
-
-sel_spp_195 <- p195_abundedt %>% filter(Speciescommonname %in% select_spp) %>% group_by(Speciescommonname,Eventname) %>% mutate(Numbertotal_new = sum(Numbertotal)) %>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() #catches weren't combined yet, Numbertotal_new is the combined catch, don't have to worry about shallow vs. deep b/c the eventnames are the same 
+haul_final=left_join(haul_df_all,haul,by="Eventname")%>%as.data.frame() #7*2012= 14084, it worked
 
 select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden")
+sel_spp_195 <- p195_abundedt %>% filter(Speciescommonname %in% select_spp) %>% group_by(Speciescommonname,Eventname) %>% mutate(Numbertotal_new = sum(Numbertotal)) %>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() #some catches for atlantic menhaden and brown shrimp were not combined yet, Numbertotal_new is the combined catch, don't have to worry about shallow vs. deep b/c the eventnames are the same 
+
 sel_spp_195edt = sel_spp_195 %>% select(Eventname,Date,Speciescommonname,Numbertotal_new)
 haul_final <- haul_final %>% select(-Speciescommonname) %>% rename("Speciescommonname" = "Species")
 haul_sel_spp <- left_join(haul_final, sel_spp_195edt ) %>% as.data.frame()
 haul_sel_spp$Numbertotal_new[haul_sel_spp$Numbertotal_new %in% NA] <- 0
 
 p195_CPUE <- haul_sel_spp 
+write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```
-
