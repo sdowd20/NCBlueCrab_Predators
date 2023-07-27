@@ -168,7 +168,8 @@ haul_final=left_join(haul_df_all,haul,by="Eventname")%>%as.data.frame() #7*2012=
 select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden")
 sel_spp_195 <- p195_abundedt %>% filter(Speciescommonname %in% select_spp) %>% group_by(Speciescommonname,Eventname) %>% mutate(Numbertotal_new = sum(Numbertotal)) %>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() #some catches for atlantic menhaden and brown shrimp were not combined yet, Numbertotal_new is the combined catch, don't have to worry about shallow vs. deep b/c the eventnames are the same 
 
-sel_spp_195edt = sel_spp_195 %>% select(Eventname,Date,Speciescommonname,Numbertotal_new)
+colnames(sel_spp_195)
+sel_spp_195edt = sel_spp_195 %>% select(Eventname,Date,Speciescommonname,Numbertotal_new, Btmcomp_new, Sedsize_new, Photoperiod, Ym_date, Wbdytype, Wbd)
 haul_final <- haul_final %>% select(-Speciescommonname) %>% rename("Speciescommonname" = "Species")
 haul_sel_spp <- left_join(haul_final, sel_spp_195edt ) %>% as.data.frame()
 haul_sel_spp$Numbertotal_new[haul_sel_spp$Numbertotal_new %in% NA] <- 0

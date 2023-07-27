@@ -1,0 +1,31 @@
+---
+title: "GAM_sd"
+format: html
+editor: visual
+---
+
+```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+invisible(lapply(packages, library, character.only= TRUE))
+
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p915_CPUE <- read_csv("Data/P915/Finalized/p915_CPUE.csv")
+p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
+p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
+
+p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy) 
+p120_CPUEedt <- p120_CPUE %>% select(-...1, -...2, -Program, -Nbrrec3, -Time, -Duration)  #still don't have btmcomp or sedsize 
+p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Sedsize, -Btmcomp)  #still don't have btmcomp or sedsize 
+
+colnames(p915_CPUEedt)
+colnames(p120_CPUEedt)
+colnames(p195_CPUEedt)
+
+#Area, Strata vs. Locaation, Station vs. 
+
+#P120: no sedsize_new or btmcomp_new, P120 still has core right now, doesn't have wbdytype or wbd 
+
+
+
+```
+

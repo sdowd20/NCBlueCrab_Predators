@@ -212,16 +212,12 @@ haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
 
 sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Latitude, Longitude) %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame()
 
-sel_spp_120edt = sel_spp_120 %>% select(Control1,Date,Speciescommonname,Colnum)
+colnames(P120_bioledt)
+sel_spp_120edt = sel_spp_120 %>% select(Control1,Date,Speciescommonname,Colnum, Photoperiod, Season, Ym_date)
 #Add in juveniles here 
 haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
 haul_sel_spp <- left_join(haul_final, sel_spp_120edt) %>% as.data.frame()
 haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0
-
-p120_CPUE <- haul_sel_spp 
-p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
-p120_CPUE$Date <- as.Date(p120_CPUE$Date, "%Y-%m-%d")
-p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 
 names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
 p120_CPUE <- p120_CPUE %>% left_join(names_join)
