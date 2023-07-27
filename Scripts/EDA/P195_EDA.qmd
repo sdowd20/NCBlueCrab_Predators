@@ -159,7 +159,7 @@ haul <- p195_abundedt %>% group_by(Date, Stationcode) %>% mutate(ID=row_number()
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden"))
 
-haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Species, Speciesscientificname, Speciescommonname, Sciname, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize, Btmcomp, Photoperiod, Wbdytype, Season)
+haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Species, Speciesscientificname, Speciescommonname, Sciname, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Photoperiod, Wbdytype, Season, Ym_date, Wbd)
 
 haul_df_all <- haul_df %>% tidyr::expand(Species,Eventname)
 haul=haul_df %>%select(-Species)
@@ -169,11 +169,12 @@ select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flound
 sel_spp_195 <- p195_abundedt %>% filter(Speciescommonname %in% select_spp) %>% group_by(Speciescommonname,Eventname) %>% mutate(Numbertotal_new = sum(Numbertotal)) %>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() #some catches for atlantic menhaden and brown shrimp were not combined yet, Numbertotal_new is the combined catch, don't have to worry about shallow vs. deep b/c the eventnames are the same 
 
 colnames(sel_spp_195)
-sel_spp_195edt = sel_spp_195 %>% select(Eventname,Date,Speciescommonname,Numbertotal_new, Btmcomp_new, Sedsize_new, Photoperiod, Ym_date, Wbdytype, Wbd)
+sel_spp_195edt = sel_spp_195 %>% select(Eventname,Date,Speciescommonname,Numbertotal_new)
 haul_final <- haul_final %>% select(-Speciescommonname) %>% rename("Speciescommonname" = "Species")
 haul_sel_spp <- left_join(haul_final, sel_spp_195edt ) %>% as.data.frame()
 haul_sel_spp$Numbertotal_new[haul_sel_spp$Numbertotal_new %in% NA] <- 0
 
+nrow(haul_sel_spp %>% filter(Year>2008, Sedsize_new %in% NA))
 p195_CPUE <- haul_sel_spp 
 write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```

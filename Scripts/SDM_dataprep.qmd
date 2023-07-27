@@ -5,7 +5,7 @@ editor: visual
 ---
 
 ```{r}
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix")
 invisible(lapply(packages, library, character.only= TRUE))
 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
@@ -13,17 +13,71 @@ p915_CPUE <- read_csv("Data/P915/Finalized/p915_CPUE.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy) 
-p120_CPUEedt <- p120_CPUE %>% select(-...1, -...2, -Program, -Nbrrec3, -Time, -Duration)  #still don't have btmcomp or sedsize 
-p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Sedsize, -Btmcomp)  #still don't have btmcomp or sedsize 
+p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass")) %>% filter(Year >= 2008) #added in species of focus for now (still waiting on data) 
+p120_CPUEedt <- p120_CPUE %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration) %>% filter(Year >= 2008) #still don't have btmcomp or sedsize 
+p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthstart) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal_new") %>% filter(Year >= 2008)
 
 colnames(p915_CPUEedt)
 colnames(p120_CPUEedt)
 colnames(p195_CPUEedt)
 
-#Area, Strata vs. Locaation, Station vs. 
+#Area, Strata vs. Location, Station vs. Location, Stationcode, Eventname vs. Control1 
+#P120: no sedsize_new or btmcomp_new, doesn't have wbdytype or wbd, P120 still has core right now
+```
 
-#P120: no sedsize_new or btmcomp_new, P120 still has core right now, doesn't have wbdytype or wbd 
+###Outlier analysis 
+```{r}
+#Remove NAs
+summary(is.na(p915_CPUEedt)) #No NAs where it doesn't make sense
+summary(is.na(p120_CPUEedt)) #Almost no NAs in general
+summary(is.na(p195_CPUEedt)) #A good amount of NAs for Sedsize_new and Btmcomp_new b/c isn't greater than 2008 
+
+p915_CPUEedt <- p915_CPUEedt %>% drop_na() #drops 6914 data points
+p120_CPUEedt <- p120_CPUEedt %>% drop_na() #drops 564 data points 
+p195_CPUEedt <- p195_CPUEedt %>% drop_na() #drops 1137 data points 
+
+#Outliers
+t<- p915_CPUEedt %>% identify_outliers(Latitude)
+t2 <-t[which(t$is.extreme %in% TRUE), ]
+```
+
+```{r}
+#Add grid cells in 
+p915_latlon <- p915_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
+p120_latlon <- p120_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
+p195_latlon <- p195_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
+
+lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
+lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE)
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+# make an object the size and shape of the output you want
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+
+globe_grid_20 <- st_make_grid(x= globe_bb, n = c(20,20), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
+
+fish_spat <- as.data.frame(lat_lon_combo)
+fish_spat$rowID <- 1:nrow(fish_spat)
+
+coordinates(fish_spat) <- ~ Longitude + Latitude
+fish_spat <- st_as_sf(fish_spat)
+fish_spat <- st_set_crs(fish_spat, 4326)
+grid <- globe_grid_20
+
+fish_extract <- st_intersection(fish_spat, grid)
+fish_extract_2 <- as.data.frame(fish_extract)
+
+#Group to get rid of duplicates (there are times when a point is overlapping two grid cells)
+fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
+fish_extract_2_2$gridID <- fish_extract_2_2$ID
+fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
+
+unique(fish_extract_2_2edt$gridID)
+#write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv") #updated on 07/11/23
 
 
 
