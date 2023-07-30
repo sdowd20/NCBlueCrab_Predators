@@ -5,7 +5,7 @@ editor: visual
 ---
 
 ```{r}
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis")
 invisible(lapply(packages, library, character.only= TRUE))
 
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
@@ -25,7 +25,23 @@ colnames(p195_CPUEedt)
 #P120: no sedsize_new or btmcomp_new, doesn't have wbdytype or wbd, P120 still has core right now
 ```
 
-###Outlier analysis 
+###Calculate CPUE (move this to after outlier analysis), also might need to do at grid cell level- just making sure it works with data
+
+```{r}
+#P120: 
+summary(p120_CPUE$Duration) #All tows are 1 minute speed in duration
+#Adjusted to cover 75 yards, headrope is 10.5 feet, so area covered in one tow is 0.02195 hectares
+p120_CPUEedt$Effort= 0.02195
+p120_CPUEedt$CPUE=p120_CPUEedt$Colnum/p120_CPUEedt$Effort
+
+#P195 
+p915_CPUEedt
+
+
+```
+
+###Outlier analysis
+
 ```{r}
 #Remove NAs
 summary(is.na(p915_CPUEedt)) #No NAs where it doesn't make sense
@@ -40,6 +56,45 @@ p195_CPUEedt <- p195_CPUEedt %>% drop_na() #drops 1137 data points
 t<- p915_CPUEedt %>% identify_outliers(Latitude)
 t2 <-t[which(t$is.extreme %in% TRUE), ]
 ```
+
+####Other predictor variable datasets
+
+```{r}
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+inlet_coords <- st_read("Data/Inlet.points.kml")
+coords2 <- st_coordinates(inlet_coords)
+inlet_coords$Latitude <- coords2[, "Y"]
+inlet_coords$Longitude <- coords2[, "X"]
+inlet_coords <- inlet_coords %>% select(-Description)
+st_crs(inlet_coords)
+
+NC_watersheds <- st_read("Data/NC_watersheds/HUC_10.shp")
+NC_watersheds <- st_transform(NC_watersheds, crs = 4326)
+
+intersections <- st_intersection(coords_surveysf, NC_watersheds)
+```
+
+#### Add in other metrics to coordinates
+
+```{r}
+coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude), p120_CPUEedt %>% select(Latitude, Longitude), p195_CPUEedt %>% select(Latitude, Longitude))
+coords_surveysf <- st_as_sf(coords_survey, coords= c("Longitude", "Latitude"), crs= 4326)
+coords_inlet_nearest <- st_nearest_feature(coords_surveysf, inlet_coords)
+dist_inlets = st_distance(coords_surveysf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
+dist_inlets <- as.numeric(dist_inlets)
+
+coords_surveysf <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
+coords2 <- st_coordinates(coords_surveysf)
+coords_surveysf$Latitude <- coords2[, "Y"]
+coords_surveysf$Longitude <- coords2[, "X"]
+coords_survey_test <- coords_surveysf[80000:90000,]
+ggplot(data= world) + geom_sf() + geom_point(data= coords_survey_test, aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
+
+
+
+```
+
+#### Add in metrics to grid
 
 ```{r}
 #Add grid cells in 
@@ -78,8 +133,10 @@ fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
 
 unique(fish_extract_2_2edt$gridID)
 #write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv") #updated on 07/11/23
-
-
-
 ```
 
+```{r}
+Btm_test <- rbind(p915_CPUEedt %>% select(Btmcomp_new, Sedsize_new, Latitude, Longitude) %>% mutate(Survey= "P915"), p195_CPUEedt %>% select(Btmcomp_new, Sedsize_new, Latitude, Longitude) %>% mutate(Survey= "P195"))
+
+ggplot(data= world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = Btm_test, aes(x = Longitude, y = Latitude, colour = Survey), size = .2)
+```

@@ -159,7 +159,7 @@ haul <- p195_abundedt %>% group_by(Date, Stationcode) %>% mutate(ID=row_number()
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden"))
 
-haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Species, Speciesscientificname, Speciescommonname, Sciname, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Photoperiod, Wbdytype, Season, Ym_date, Wbd)
+haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Species, Speciesscientificname, Speciescommonname, Sciname, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Photoperiod, Wbdytype, Season, Ym_date, Wbd, Depthzone)
 
 haul_df_all <- haul_df %>% tidyr::expand(Species,Eventname)
 haul=haul_df %>%select(-Species)
