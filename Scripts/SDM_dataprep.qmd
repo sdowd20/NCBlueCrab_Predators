@@ -35,7 +35,15 @@ p120_CPUEedt$Effort= 0.02195
 p120_CPUEedt$CPUE=p120_CPUEedt$Colnum/p120_CPUEedt$Effort
 
 #P195 
-p195_CPUEedt
+##Effort in p195_abund is 1.812, double rigged trawl, duration is 20 mins at a speed of 2.5 knots to cover 87,750 square feet.
+p195_CPUEedt$Effort = 1.812
+p195_CPUEedt$CPUE=p195_CPUEedt$Colnum/p195_CPUEedt$Effort
+
+#P915
+p915_CPUEedt <- p915_CPUEedt %>% mutate("Soak_time" = ifelse(Area == 'CAPEF' & Month  %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Area == 'NEWR' & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))) #add in standard soak time, max is 12 hours, soak time 4 hours for CAPEF and NEWR b/w April and September
+p915_CPUEedt$CPUE= p915_CPUEedt$Colnum/p915_CPUEedt$Soak_time #calculate CPUE
+
+t <- p915_CPUEedt %>% filter(Area %in% "DARE2", Strata %in% "MANT2")
 
 
 ```
