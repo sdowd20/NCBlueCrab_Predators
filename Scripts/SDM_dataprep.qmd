@@ -35,7 +35,7 @@ p120_CPUEedt$Effort= 0.02195
 p120_CPUEedt$CPUE=p120_CPUEedt$Colnum/p120_CPUEedt$Effort
 
 #P195 
-p915_CPUEedt
+p195_CPUEedt
 
 
 ```
