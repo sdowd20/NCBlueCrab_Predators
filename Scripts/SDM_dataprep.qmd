@@ -13,9 +13,12 @@ p915_CPUE <- read_csv("Data/P915/Finalized/p915_CPUE.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
 p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass")) %>% filter(Year >= 2008) #added in species of focus for now (still waiting on data) 
 p120_CPUEedt <- p120_CPUE %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration) %>% filter(Year >= 2008) #still don't have btmcomp or sedsize 
 p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthstart) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal_new") %>% filter(Year >= 2008)
+p195_CPUEedt$Depthzone[p195_CPUEedt$Depthzone %in% NA] <- "River"
 
 colnames(p915_CPUEedt)
 colnames(p120_CPUEedt)
@@ -57,16 +60,29 @@ summary(is.na(p120_CPUEedt)) #Almost no NAs in general
 summary(is.na(p195_CPUEedt)) #A good amount of NAs for Sedsize_new and Btmcomp_new b/c isn't greater than 2008 
 
 p915_CPUEedt <- p915_CPUEedt %>% drop_na() #drops 6914 data points
+p915_CPUEedt$Survey <- "P915"
 p120_CPUEedt <- p120_CPUEedt %>% drop_na() #drops 564 data points 
+p120_CPUEedt$Survey <- "P120"
 p195_CPUEedt <- p195_CPUEedt %>% drop_na() #drops 1137 data points 
+p195_CPUEedt$Survey <- "P195"
+
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p195_CPUEedt, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE)
 
 #Outliers
 t<- p915_CPUEedt %>% identify_outliers(Latitude)
 t2 <-t[which(t$is.extreme %in% TRUE), ]
+
+lower_bound_SummerFlounder <- quantile(P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount, 0.01)
+upper_bound_SummerFlounder <- quantile(P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount, 0.99)
+outlier_ind_SummerFlounder <- which(P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount < lower_bound_SummerFlounder | P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount> upper_bound_SummerFlounder)
+View(P195JuneSDMDATAREDO_SummerFlounderF[outlier_ind_SummerFlounder, ])
+
 ```
 
-####Other predictor variable datasets
+#### Predictor variables: coordinates
 
+##### Load predictor variable datasets
 ```{r}
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 inlet_coords <- st_read("Data/Inlet.points.kml")
@@ -79,27 +95,68 @@ st_crs(inlet_coords)
 NC_watersheds <- st_read("Data/NC_watersheds/HUC_10.shp")
 NC_watersheds <- st_transform(NC_watersheds, crs = 4326)
 
-intersections <- st_intersection(coords_surveysf, NC_watersheds)
+SAV_06
 ```
 
-#### Add in other metrics to coordinates
-
+##### Add in other metrics to coordinates
 ```{r}
-coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude), p120_CPUEedt %>% select(Latitude, Longitude), p195_CPUEedt %>% select(Latitude, Longitude))
-coords_surveysf <- st_as_sf(coords_survey, coords= c("Longitude", "Latitude"), crs= 4326)
+#Distance to inlet 
+coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey), p120_CPUEedt %>% select(Latitude, Longitude, Survey), p195_CPUEedt %>% select(Latitude, Longitude, Survey))
+coords_surveyedt <- coords_survey %>% distinct(Latitude, Longitude, .keep_all= TRUE)
+coords_surveysf <- st_as_sf(coords_surveyedt, coords= c("Longitude", "Latitude"), crs= 4326)
 coords_inlet_nearest <- st_nearest_feature(coords_surveysf, inlet_coords)
 dist_inlets = st_distance(coords_surveysf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
 dist_inlets <- as.numeric(dist_inlets)
-
 coords_surveysf <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
+
+ggplot(data= world) + geom_sf() + geom_point(data= coords_surveysf[100:200,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
+
+intersections <- st_intersection(coords_surveysf, NC_watersheds)
+unique(intersections$HU_10_NAME)
+
+intersections_edt <- intersections %>% mutate(Wbd = ifelse(HU_10_NAME %in% "Brunswick River-Cape Fear River"|HU_10_NAME %in% "Goshen Swamp"|HU_10_NAME %in% "Liliput Creek-Cape Fear River"|HU_10_NAME %in% "Harrisons Creek-Northeast Cape Fear River", "Cape Fear River", ifelse(HU_10_NAME %in% "South Creek-Pamlico River"|HU_10_NAME %in% "Chocowinity Bay-Pamlico River", "Pamlico River", ifelse(HU_10_NAME %in% "Pantego Creek"|HU_10_NAME %in% "Headwaters Pungo River"| HU_10_NAME %in% "Intracoastal Waterway-Pungo River"| HU_10_NAME %in% "Outlet Pungo River", "Pungo River", ifelse(HU_10_NAME %in% "Pamlico Sound-Ocracoke Inlet"|HU_10_NAME %in% "Pamlico Sound-Hatteras Inlet", HU_10_NAME %in% "Cape Lookout Shoals-Core Banks"|HU_10_NAME %in% "Neuse River-Pamlico Sound"|HU_10_NAME %in% "Oyster Creek-Jarrett Bay"|HU_10_NAME %in% "Bogue Banks-Shackleford Banks"|HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay"|HU_10_NAME %in% "Jones Bay-Bay River", "Pamlico Sound", NA)))))
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ifelse(HU_10_NAME %in% "Headwaters New River"|HU_10_NAME %in% "New River Inlet", "New River", ifelse(HU_10_NAME %in% "Upper Broad Creek-Neuse River"|HU_10_NAME %in% "Cherry Point-Neuse River"|HU_10_NAME %in% "Town of Oriental-Neuse River", "Neuse River", intersections$HU_10_NAME)))))))
+                                                             
+                                                             
+
+"Brunswick River-Cape Fear River", "Goshen Swamp", "Liliput Creek-Cape Fear River", "Harrisons Creek-Northeast Cape Fear River",  --> "Cape Fear River"
+
+"South Creek-Pamlico River", "Chocowinity Bay-Pamlico River" --> "Pamlico River"
+
+"Pantego Creek", "Headwaters Pungo River", "Intracoastal Waterway-Pungo River", "Outlet Pungo River" --> "Pungo river"
+
+"Pamlico Sound-Ocracoke Inlet" --> "Pamlico Sound"
+"Pamlico Sound-Hatteras Inlet"
+"Cape Lookout Shoals-Core Banks"
+"Neuse River-Pamlico Sound"
+"Oyster Creek-Jarrett Bay"
+"Bogue Banks-Shackleford Banks"
+Lake Mattamuskeet-Rose Bay
+Jones Bay-Bay River
+
+"Headwaters New River" --> "New River", "New River Inlet", 
+
+
+"Upper Broad Creek-Neuse River", "Cherry Point-Neuse River", "Town of Oriental-Neuse River" --> "Neuse River"
+
+unique(intersections$DWQ_Basin)
+ggplot(data= world) + geom_sf() + geom_point(data= t, aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
+
+t <- intersections %>% filter(HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay")
+coords2 <- st_coordinates(t)
+t$Latitude <- coords2[, "Y"]
+t$Longitude <- coords2[, "X"]
+#shallotte river, outlet cashie river, 
+
 coords2 <- st_coordinates(coords_surveysf)
 coords_surveysf$Latitude <- coords2[, "Y"]
 coords_surveysf$Longitude <- coords2[, "X"]
-coords_survey_test <- coords_surveysf[80000:90000,]
-ggplot(data= world) + geom_sf() + geom_point(data= coords_survey_test, aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
+```
 
-
-
+#### Predictor variables: grid
+```{r}
+#visualize btmcomp and sedsize
 ```
 
 #### Add in metrics to grid
@@ -144,6 +201,27 @@ unique(fish_extract_2_2edt$gridID)
 ```
 
 ```{r}
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+
+globe_grid_20 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #0.13 degrees
+
+degrees_per_km = 1/111.0 #1 degree is 111 km 
+degress <- 14.4*degrees_per_km #0.129
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = coords_survey, aes(x = Longitude, y = Latitude, color= Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE)
+ggsave("Users/sallydowd/Desktop.savedIT.png")
+```
+
+```{r}
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+grid_t <- read.csv("Data/SDM.grids.csv")
+
+
+
 Btm_test <- rbind(p915_CPUEedt %>% select(Btmcomp_new, Sedsize_new, Latitude, Longitude) %>% mutate(Survey= "P915"), p195_CPUEedt %>% select(Btmcomp_new, Sedsize_new, Latitude, Longitude) %>% mutate(Survey= "P195"))
 
 ggplot(data= world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = Btm_test, aes(x = Longitude, y = Latitude, colour = Survey), size = .2)
