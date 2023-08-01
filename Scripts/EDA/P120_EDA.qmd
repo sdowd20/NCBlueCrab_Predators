@@ -143,7 +143,7 @@ length(unique(P120_bioledt$Station))
 
 #Blue crab length
 
-#50.8 cm (2 inches) is the harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
+
 
  #%>% mutate("Ageclass"= ifelse(Length < 50.8, "juvenile", ifelse(Length >= 50.8, "adult", "NA"))) 
 
@@ -155,32 +155,60 @@ P120_bc_adult <- P120_bc %>% filter(Ageclass %in% "adult")
 P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n()) 
 P120_bc_test <- P120_bc %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #63690 to 63680 when drop_na
 
-P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
-result_df <- P120_bc %>% group_by(Control1, Colnum, Length) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #Make sure each crab sampling has an individual row 
+ #Make sure each crab sampling has an individual row 
 #uncount: opposite direction of count, weights (Frequenc) specifies the number of times a row should be repeated 
 #Subnum: # of individuals sampling in unit 
 
-write.csv(P120_bc, "~/Desktop/P120_bc.csv")
-
-
-unique(P120_bioledt$Sedsize)
-result_df_new <- result_df %>%
-  group_by(Control1, Colnum) %>%
-  mutate(rows_to_add = Colnum - n()) %>%
-  slice(1:n()) %>%
-  mutate(Length2 = if_else(rows_to_add > 0, mean(Length), Length)) %>%
-  slice(rep(1:n(), times = pmax(rows_to_add, 0) + 1)) %>%
-  ungroup() %>%
-  select(-rows_to_add)
-
-?slice()
-?rep()
+min(P120_bc$Length) #min is 1, max is 266 mm
+max(P120_bc$Length)
 
 
 
 
-#Want there to be the number of rows for corresponding to the Colnum 
+
+
 ```
+
+#### Actually dealing with length
+```{r}
+#Form blue crab dataset and make sure each blue crab in the subsample has their own row
+P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
+P120_bc_edt <- P120_bc %>% group_by(Control1, Colnum, Length) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1)
+
+#Bin length: define the breaks for the intervals
+values <- 1:300
+breaks <- seq(0, 300, by = 10)
+assigned_values <- seq(10, 300, by = 10)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+#Calculate proportion of juveniles and adults in each Eventname
+P120_bc_prop <- P120_bc_edt %>% left_join(df, by= "Length")
+P120_bc_prop$Age_class <- ifelse(P120_bc_prop$Assigned_length < 50, "J", "A") #assign juvenile if under 50 cm (harvestable length, after 1 year)
+P120_bc_prop <- P120_bc_prop %>% group_by(Control1, Age_class, Colnum) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion)
+
+#Now apply proportion to Colnum 
+P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0))
+
+#Count how many of each age class, calculate how many were sampled for Control1 and Colnum, calculate proportion of each
+
+
+t<- P120_bc_prop %>% filter(Control1 == "9712836")
+colnames(P120_bc_edt)
+
+#Assign as juvenile or adult
+#50.8 mm (2 inches) is the harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
+
+summary(P120_bc$Assigned_length)
+#Proportion of each length bin for Colnum 
+
+
+
+```
+
+
+
 
 #For blue crabs in P120, each
 
