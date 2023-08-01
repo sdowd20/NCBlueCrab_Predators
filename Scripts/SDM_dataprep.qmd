@@ -83,6 +83,7 @@ View(P195JuneSDMDATAREDO_SummerFlounderF[outlier_ind_SummerFlounder, ])
 #### Predictor variables: coordinates
 
 ##### Load predictor variable datasets
+
 ```{r}
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 inlet_coords <- st_read("Data/Inlet.points.kml")
@@ -95,66 +96,47 @@ st_crs(inlet_coords)
 NC_watersheds <- st_read("Data/NC_watersheds/HUC_10.shp")
 NC_watersheds <- st_transform(NC_watersheds, crs = 4326)
 
-SAV_06
+
 ```
 
 ##### Add in other metrics to coordinates
+
 ```{r}
 #Distance to inlet 
 coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey), p120_CPUEedt %>% select(Latitude, Longitude, Survey), p195_CPUEedt %>% select(Latitude, Longitude, Survey))
-coords_surveyedt <- coords_survey %>% distinct(Latitude, Longitude, .keep_all= TRUE)
+coords_surveyedt <- coords_survey %>% distinct(Latitude, Longitude, .keep_all= TRUE) %>% select(-Survey)
 coords_surveysf <- st_as_sf(coords_surveyedt, coords= c("Longitude", "Latitude"), crs= 4326)
 coords_inlet_nearest <- st_nearest_feature(coords_surveysf, inlet_coords)
 dist_inlets = st_distance(coords_surveysf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
 dist_inlets <- as.numeric(dist_inlets)
 coords_surveysf <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
 
-ggplot(data= world) + geom_sf() + geom_point(data= coords_surveysf[100:200,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
-
+#Wbd 
 intersections <- st_intersection(coords_surveysf, NC_watersheds)
 unique(intersections$HU_10_NAME)
 
-intersections_edt <- intersections %>% mutate(Wbd = ifelse(HU_10_NAME %in% "Brunswick River-Cape Fear River"|HU_10_NAME %in% "Goshen Swamp"|HU_10_NAME %in% "Liliput Creek-Cape Fear River"|HU_10_NAME %in% "Harrisons Creek-Northeast Cape Fear River", "Cape Fear River", ifelse(HU_10_NAME %in% "South Creek-Pamlico River"|HU_10_NAME %in% "Chocowinity Bay-Pamlico River", "Pamlico River", ifelse(HU_10_NAME %in% "Pantego Creek"|HU_10_NAME %in% "Headwaters Pungo River"| HU_10_NAME %in% "Intracoastal Waterway-Pungo River"| HU_10_NAME %in% "Outlet Pungo River", "Pungo River", ifelse(HU_10_NAME %in% "Pamlico Sound-Ocracoke Inlet"|HU_10_NAME %in% "Pamlico Sound-Hatteras Inlet", HU_10_NAME %in% "Cape Lookout Shoals-Core Banks"|HU_10_NAME %in% "Neuse River-Pamlico Sound"|HU_10_NAME %in% "Oyster Creek-Jarrett Bay"|HU_10_NAME %in% "Bogue Banks-Shackleford Banks"|HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay"|HU_10_NAME %in% "Jones Bay-Bay River", "Pamlico Sound", NA)))))
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ifelse(HU_10_NAME %in% "Headwaters New River"|HU_10_NAME %in% "New River Inlet", "New River", ifelse(HU_10_NAME %in% "Upper Broad Creek-Neuse River"|HU_10_NAME %in% "Cherry Point-Neuse River"|HU_10_NAME %in% "Town of Oriental-Neuse River", "Neuse River", intersections$HU_10_NAME)))))))
-                                                             
-                                                             
+intersections_edt <- intersections %>% mutate(Wbd = ifelse(HU_10_NAME %in% "Brunswick River-Cape Fear River"|HU_10_NAME %in% "Goshen Swamp"|HU_10_NAME %in% "Liliput Creek-Cape Fear River"|HU_10_NAME %in% "Harrisons Creek-Northeast Cape Fear River", "Cape Fear River", ifelse(HU_10_NAME %in% "South Creek-Pamlico River"|HU_10_NAME %in% "Chocowinity Bay-Pamlico River", "Pamlico River", ifelse(HU_10_NAME %in% "Pantego Creek"|HU_10_NAME %in% "Headwaters Pungo River"| HU_10_NAME %in% "Intracoastal Waterway-Pungo River"| HU_10_NAME %in% "Outlet Pungo River", "Pungo River", ifelse(HU_10_NAME %in% "Pamlico Sound-Ocracoke Inlet"|HU_10_NAME %in% "Pamlico Sound-Hatteras Inlet"| HU_10_NAME %in% "Cape Lookout Shoals-Core Banks"|HU_10_NAME %in% "Neuse River-Pamlico Sound"|HU_10_NAME %in% "Oyster Creek-Jarrett Bay"|HU_10_NAME %in% "Bogue Banks-Shackleford Banks"|HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay"|HU_10_NAME %in% "Jones Bay-Bay River", "Pamlico Sound", ifelse(HU_10_NAME %in% "Headwaters New River"|HU_10_NAME %in% "New River Inlet", "New River", ifelse(HU_10_NAME %in% "Upper Broad Creek-Neuse River"|HU_10_NAME %in% "Cherry Point-Neuse River"|HU_10_NAME %in% "Town of Oriental-Neuse River", "Neuse River", intersections$HU_10_NAME)))))))
 
-"Brunswick River-Cape Fear River", "Goshen Swamp", "Liliput Creek-Cape Fear River", "Harrisons Creek-Northeast Cape Fear River",  --> "Cape Fear River"
+predictors_df <- intersections_edt %>% select(geometry, dist_inlets, Wbd, HU_10_NAME)
 
-"South Creek-Pamlico River", "Chocowinity Bay-Pamlico River" --> "Pamlico River"
+#Wbd type
+predictors_df <- predictors_df %>% mutate(Wbd_type= ifelse(grepl("River", Wbd), "River", ifelse(grepl("Sound", Wbd), "Sound", predictors_df$Wbd))) #this worked! 
 
-"Pantego Creek", "Headwaters Pungo River", "Intracoastal Waterway-Pungo River", "Outlet Pungo River" --> "Pungo river"
+#Distance to SAV
 
-"Pamlico Sound-Ocracoke Inlet" --> "Pamlico Sound"
-"Pamlico Sound-Hatteras Inlet"
-"Cape Lookout Shoals-Core Banks"
-"Neuse River-Pamlico Sound"
-"Oyster Creek-Jarrett Bay"
-"Bogue Banks-Shackleford Banks"
-Lake Mattamuskeet-Rose Bay
-Jones Bay-Bay River
-
-"Headwaters New River" --> "New River", "New River Inlet", 
-
-
-"Upper Broad Creek-Neuse River", "Cherry Point-Neuse River", "Town of Oriental-Neuse River" --> "Neuse River"
-
-unique(intersections$DWQ_Basin)
-ggplot(data= world) + geom_sf() + geom_point(data= t, aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
-
-t <- intersections %>% filter(HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay")
-coords2 <- st_coordinates(t)
-t$Latitude <- coords2[, "Y"]
-t$Longitude <- coords2[, "X"]
-#shallotte river, outlet cashie river, 
 
 coords2 <- st_coordinates(coords_surveysf)
 coords_surveysf$Latitude <- coords2[, "Y"]
 coords_surveysf$Longitude <- coords2[, "X"]
+
+#ggplot(data= world) + geom_sf() + geom_point(data= t, aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
+
+
+#ggplot(data= world) + geom_sf() + geom_point(data= coords_surveysf[100:200,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
 ```
 
 #### Predictor variables: grid
+
 ```{r}
 #visualize btmcomp and sedsize
 ```
