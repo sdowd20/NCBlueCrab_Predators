@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="1bDeJOPd5sz4cSvtJi4_DZi66fCa61uiC">
+	<name>Inlet points</name>
+	<gx:CascadingStyle kml:id="__managed_style_1FA2751C942A9F94B765">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>3</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_0533C6DF5C2A9F94B765">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/rpc/cc/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_08BC3217292A9F94B764">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_0533C6DF5C2A9F94B765</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_1FA2751C942A9F94B765</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="006ACB56492A9E901A71">
+		<name>Oregon inlet</name>
+		<LookAt>
+			<longitude>-75.52590565876916</longitude>
+			<latitude>35.76341738209339</latitude>
+			<altitude>1.596917383548211</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>11754.06523435959</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-75.52919019117867,35.77870870818864,1.601083087478462</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0440D774382A9E9120E2">
+		<name>Hatteras Inlet</name>
+		<LookAt>
+			<longitude>-75.7268920595816</longitude>
+			<latitude>35.208597973816</latitude>
+			<altitude>-3.006100959134991</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>13583.21096682223</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-75.7537320865289,35.18880303828202,-2.937627620750165</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0B8C95517E2A9E92AAD4">
+		<name>Ocracoke Inlet</name>
+		<LookAt>
+			<longitude>-75.91959512905113</longitude>
+			<latitude>35.06792268117631</latitude>
+			<altitude>-7.606109335323113</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>60629.50858966449</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-76.02349840902325,35.06038965610114,-7.647876431540269</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="02C4BF6C792A9E9361C6">
+		<name>Drum Inlet</name>
+		<LookAt>
+			<longitude>-76.31159166974288</longitude>
+			<latitude>34.83528305516979</latitude>
+			<altitude>1.615534552573015</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>11444.72401384846</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-76.33693629813396,34.83652992456234,1.612051916258539</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0838EAC3442A9E93D3D8">
+		<name>Barden&apos;s Inlet</name>
+		<LookAt>
+			<longitude>-76.52741845211514</longitude>
+			<latitude>34.62782725209929</latitude>
+			<altitude>1.611359755391459</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>9067.1666132065</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-76.55167842472035,34.64069416332464,1.626145706694094</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0CCEAE7C132A9E9430EF">
+		<name>Beaufort Inlet</name>
+		<LookAt>
+			<longitude>-76.61357986782443</longitude>
+			<latitude>34.66946419626652</latitude>
+			<altitude>-2.934458314116795</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>15939.93152021896</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-76.66625150709912,34.68725396505067,-2.953734690350177</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="05F69B3FED2A9E94A1A2">
+		<name>Bogue Inlet</name>
+		<LookAt>
+			<longitude>-77.07557819450915</longitude>
+			<latitude>34.64042753981079</latitude>
+			<altitude>-2.986696334567095</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>14302.47158045182</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.10994724157366,34.64122458972033,-3.011205815836544</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="09C6E3A37E2A9E951E2D">
+		<name>Bear Inlet</name>
+		<LookAt>
+			<longitude>-77.17329601587336</longitude>
+			<latitude>34.61840847074881</latitude>
+			<altitude>-0.748846241068174</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>3601.248240747373</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.17869319307297,34.61790893138699,-0.7476960691652333</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="096644404D2A9E956E3F">
+		<name>Brown&apos;s Inlet</name>
+		<LookAt>
+			<longitude>-77.21730828937326</longitude>
+			<latitude>34.59706159348892</latitude>
+			<altitude>-0.7512815872863521</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>5848.574975265074</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.22971874267822,34.59338516678249,-0.7579610453451889</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="08DA40585B2A9E95D63A">
+		<name>New River Inlet</name>
+		<LookAt>
+			<longitude>-77.33409243993808</longitude>
+			<latitude>34.5245913082334</latitude>
+			<altitude>-0.7495245119259031</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>6268.508945514914</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.33826832520369,34.52871586273204,-0.752414764324064</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0BDA2910AB2A9E964656">
+		<name>New Topsail Inlet</name>
+		<LookAt>
+			<longitude>-77.65977001302394</longitude>
+			<latitude>34.33990716652718</latitude>
+			<altitude>-0.7581221288121431</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>3958.324561533519</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.6634476455876,34.3389143508191,-0.7553531942063434</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0A8371563A2A9E969743">
+		<name>Rich Inlet</name>
+		<LookAt>
+			<longitude>-77.70479547678734</longitude>
+			<latitude>34.29487728252429</latitude>
+			<altitude>-0.7543842641788701</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>3481.496445424855</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.71205719256628,34.2951338851423,-0.7529634936120003</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="017D5D50CF2A9E96E274">
+		<name>Mason Inlet</name>
+		<LookAt>
+			<longitude>-77.76327975877885</longitude>
+			<latitude>34.24214110472111</latitude>
+			<altitude>0.4050670484681329</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>2455.715046995028</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.76845120894146,34.2414526324612,0.4054816639190197</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0AEFB9DDFD2A9E973BE7">
+		<name>Masonboro Inlet</name>
+		<LookAt>
+			<longitude>-77.79313717940369</longitude>
+			<latitude>34.18853600367784</latitude>
+			<altitude>1.622685232418462</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>8439.908089579549</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.80818901905485,34.181586977351,1.600626041439083</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0C051831932A9E982701">
+		<name>Carolina Beach Inlet</name>
+		<LookAt>
+			<longitude>-77.85745968548557</longitude>
+			<latitude>34.07584819650722</latitude>
+			<altitude>-0.7575246478171238</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>5628.573943825323</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-77.87121986877484,34.07844968287543,1.72347153501733</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0A7DD2B3022A9E98F4CC">
+		<name>Cape Fear Inlet</name>
+		<LookAt>
+			<longitude>-77.99536089881009</longitude>
+			<latitude>33.87807560760586</latitude>
+			<altitude>-2.955920239923468</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>12230.63301967224</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-78.02560245329683,33.87190286255865,1.628535698323889</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0A77507ABC2A9E997A10">
+		<name>Lockwoods Folly Inlet</name>
+		<LookAt>
+			<longitude>-78.23388083289811</longitude>
+			<latitude>33.90871894889526</latitude>
+			<altitude>1.608616490436963</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>8589.775559564587</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_08BC3217292A9F94B764</styleUrl>
+		<Point>
+			<coordinates>-78.23876733778162,33.91295151187403,1.604040732781733</coordinates>
+		</Point>
+	</Placemark>
+</Document>
+</kml>

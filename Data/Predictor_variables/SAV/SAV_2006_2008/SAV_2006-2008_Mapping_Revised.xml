@@ -1,0 +1,1600 @@
+<?xml version="1.0" encoding="UTF-8"?><MD_Metadata xmlns:gts="http://www.isotc211.org/2005/gts" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:xalan="http://xml.apache.org/xalan" xmlns:srv="http://www.isotc211.org/2005/srv" xmlns:gmx="http://www.isotc211.org/2005/gmx" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.isotc211.org/2005/gmd">
+    <fileIdentifier>
+        <gco:CharacterString>1568817230665r6471920314051146</gco:CharacterString>
+    </fileIdentifier>
+    <language>
+        <LanguageCode codeList="http://www.loc.gov/standards/iso639-2/php/code_list.php" codeListValue="eng" codeSpace="ISO639-2">eng</LanguageCode>
+    </language>
+    <characterSet>
+        <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8" codeSpace="ISOTC211/19115">utf8</MD_CharacterSetCode>
+    </characterSet>
+    <hierarchyLevel>
+        <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="dataset" codeSpace="ISOTC211/19115">dataset</MD_ScopeCode>
+    </hierarchyLevel>
+    <hierarchyLevelName>
+        <gco:CharacterString>dataset</gco:CharacterString>
+    </hierarchyLevelName>
+    <contact>
+        <CI_ResponsibleParty>
+            <individualName>
+                <gco:CharacterString>Tim Ellis</gco:CharacterString>
+            </individualName>
+            <organisationName>
+                <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+            </organisationName>
+            <positionName>
+                <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+            </positionName>
+            <contactInfo>
+                <CI_Contact>
+                    <phone>
+                        <CI_Telephone>
+                            <voice>
+                                <gco:CharacterString>919-707-8106</gco:CharacterString>
+                            </voice>
+                        </CI_Telephone>
+                    </phone>
+                    <address>
+                        <CI_Address>
+                            <deliveryPoint>
+                                <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                            </deliveryPoint>
+                            <city>
+                                <gco:CharacterString>Raleigh</gco:CharacterString>
+                            </city>
+                            <administrativeArea>
+                                <gco:CharacterString>North Carolina</gco:CharacterString>
+                            </administrativeArea>
+                            <postalCode>
+                                <gco:CharacterString>27699-1601</gco:CharacterString>
+                            </postalCode>
+                            <country>
+                                <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                            </country>
+                            <electronicMailAddress>
+                                <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                            </electronicMailAddress>
+                        </CI_Address>
+                    </address>
+                    <onlineResource>
+                        <CI_OnlineResource>
+                            <linkage>
+                                <URL>https://www.apnep.org</URL>
+                            </linkage>
+                            <name>
+                                <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                            </name>
+                            <function>
+                                <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                            </function>
+                        </CI_OnlineResource>
+                    </onlineResource>
+                    <hoursOfService>
+                        <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                    </hoursOfService>
+                    <contactInstructions>
+                        <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                    </contactInstructions>
+                </CI_Contact>
+            </contactInfo>
+            <role>
+                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+            </role>
+        </CI_ResponsibleParty>
+    </contact>
+    <dateStamp>
+        <gco:Date>2019-09-18</gco:Date>
+    </dateStamp>
+    <metadataStandardName>
+        <gco:CharacterString>ISO 19139 Geographic Information - Metadata - Implementation Specification</gco:CharacterString>
+    </metadataStandardName>
+    <metadataStandardVersion>
+        <gco:CharacterString>2007</gco:CharacterString>
+    </metadataStandardVersion>
+    <spatialRepresentationInfo>
+        <MD_VectorSpatialRepresentation>
+            <topologyLevel>
+                <MD_TopologyLevelCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_TopologyLevelCode" codeListValue="geometryOnly" codeSpace="ISOTC211/19115">geometryOnly</MD_TopologyLevelCode>
+            </topologyLevel>
+            <geometricObjects>
+                <MD_GeometricObjects>
+                    <geometricObjectType>
+                        <MD_GeometricObjectTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_GeometricObjectTypeCode" codeListValue="composite" codeSpace="ISOTC211/19115">composite</MD_GeometricObjectTypeCode>
+                    </geometricObjectType>
+                    <geometricObjectCount>
+                        <gco:Integer>6937</gco:Integer>
+                    </geometricObjectCount>
+                </MD_GeometricObjects>
+            </geometricObjects>
+        </MD_VectorSpatialRepresentation>
+    </spatialRepresentationInfo>
+    <referenceSystemInfo>
+        <MD_ReferenceSystem>
+            <referenceSystemIdentifier>
+                <RS_Identifier>
+                    <code>
+                        <gco:CharacterString>32119</gco:CharacterString>
+                    </code>
+                    <codeSpace>
+                        <gco:CharacterString>EPSG</gco:CharacterString>
+                    </codeSpace>
+                    <version>
+                        <gco:CharacterString>6.12(3.0.1)</gco:CharacterString>
+                    </version>
+                </RS_Identifier>
+            </referenceSystemIdentifier>
+        </MD_ReferenceSystem>
+    </referenceSystemInfo>
+    <identificationInfo>
+        <MD_DataIdentification>
+            <citation>
+                <CI_Citation>
+                    <title>
+                        <gco:CharacterString>Submerged Aquatic Vegetation (SAV) 2006-2008 Mapping Effort - Revised</gco:CharacterString>
+                    </title>
+                    <date>
+                        <CI_Date>
+                            <date>
+                                <gco:Date>2019-09-16</gco:Date>
+                            </date>
+                            <dateType>
+                                <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                            </dateType>
+                        </CI_Date>
+                    </date>
+                    <citedResponsibleParty>
+                        <CI_ResponsibleParty>
+                            <individualName>
+                                <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                            </individualName>
+                            <organisationName>
+                                <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                            </organisationName>
+                            <positionName>
+                                <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                            </positionName>
+                            <contactInfo>
+                                <CI_Contact>
+                                    <phone>
+                                        <CI_Telephone>
+                                            <voice>
+                                                <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                            </voice>
+                                        </CI_Telephone>
+                                    </phone>
+                                    <address>
+                                        <CI_Address>
+                                            <deliveryPoint>
+                                                <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                            </deliveryPoint>
+                                            <city>
+                                                <gco:CharacterString>Raleigh</gco:CharacterString>
+                                            </city>
+                                            <administrativeArea>
+                                                <gco:CharacterString>North Carolina</gco:CharacterString>
+                                            </administrativeArea>
+                                            <postalCode>
+                                                <gco:CharacterString>27699-1601</gco:CharacterString>
+                                            </postalCode>
+                                            <country>
+                                                <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                            </country>
+                                            <electronicMailAddress>
+                                                <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                            </electronicMailAddress>
+                                        </CI_Address>
+                                    </address>
+                                    <onlineResource>
+                                        <CI_OnlineResource>
+                                            <linkage>
+                                                <URL>https://www.apnep.org</URL>
+                                            </linkage>
+                                            <name>
+                                                <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                            </name>
+                                            <function>
+                                                <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                            </function>
+                                        </CI_OnlineResource>
+                                    </onlineResource>
+                                    <hoursOfService>
+                                        <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                                    </hoursOfService>
+                                    <contactInstructions>
+                                        <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                                    </contactInstructions>
+                                </CI_Contact>
+                            </contactInfo>
+                            <role>
+                                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                            </role>
+                        </CI_ResponsibleParty>
+                    </citedResponsibleParty>
+                    <presentationForm>
+                        <CI_PresentationFormCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_PresentationFormCode" codeListValue="mapDigital" codeSpace="ISOTC211/19115">mapDigital</CI_PresentationFormCode>
+                    </presentationForm>
+                </CI_Citation>
+            </citation>
+            <abstract>
+                <gco:CharacterString>Summary:With funding from the Albemarle-Pamlico National Estuary Partnership (APNEP) and others [NC Division of Marine Fisheries (NC-DMF), National Oceanic and Atmospheric Administration (NOAA), and US Fish and Wildlife Service (US-FWS)], digital data of coastal submerged aquatic vegetation (SAV) was mapped by NC-DMF and Atkins for imagery years 2006-2008. In addition to its role as critical habitat for many aquatic fauna species, SAV is an important bio-indicator of environmental health because of its sensitivity to aquatic stressors. The ability to detect SAV is critical in understanding ecosystem health and effects of restoration and protection activities. Because SAV distribution, abundance, and density varies seasonally and annually in response to climatic variability, large-scale SAV changes may occur; thus, due to its dynamic nature, these data need to be continually updated as monitoring continues in the APNEP region.This represents the second release of this product.  When compared to imagery flown in 2013 for the second large-scale SAV mapping effort, errors in the 2006-2008 map were noticed and corrected.  The errors were mostly from mis-labelled polygons or areas erroneously mapped as SAV.  The first set of errors were in high salinity areas along the sound side of the Outer Banks between Roanoke Island and Bogue Inlet.  In this area 102,553 acres of SAV were initially mapped.  After editing, that area decreased to 100,842 acres, a decrease of 1,698 acres or 1.66%.  The second set of errors were south of Fort Fisher, in the southernmost part of the mapped area.  Field investigations after the first SAV map release indicated that these areas were not SAV (some were benthic macroalgae).  Polygons totaling 316 acres were removed and are not included in this release. Finally, the SAV category “Dense” used in the first release of this map has been replaced by “Continuous” to define areas with 70% or greater SAV coverage.Purpose:These data were created to assist governmental agencies and others in making resource management decisions through use of a Geographic Information System (GIS).  These data are intended for research or planning projects that will contribute to better protection for the ecological features involved.  APNEP should be contacted prior to use of this dataset to ensure and confirm its currency.Mapping Extent:Visible SAV was mapped along the coast of North Carolina and northward into Back Bay, Virginia. This extent encompasses the coastal zone that lies within the APNEP regional boundary (Bogue Inlet north to Back Bay), as well as that which is outside of that boundary (Bogue Inlet south to Masonboro Inlet).Completeness Report:These data represent the locations of visible SAV, as could be digitized from remotely-sensed imagery. A substantial portion of SAV beds remain invisible from remote sensing due to environmental factors above (e.g., haze and clouds), on (e.g., white caps), and below (e.g., turbidity) the water's surface.Imagery Acquisition:All imagery was collected with Intergraphs Z/I Digital Mapping Camera (DMC).  Aircraft height for 2006 imagery was 3,048 m for a final imagery product with a 0.3 m pixel size.  Aircraft height for 2007 and 2008 imagery was 6,096 m for a final imagery product with a 1.0 m pixel size. The mainland and outer banks of Bogue Sound and Back Sound, and the mainland side of Core Sound north to Atlantic, North Carolina were collected on May 31 and June 1, 2006.Pamlico River and Pungo River were collected on September 25 and 26, 2007.All other areas were collected on October 12, 14, and 15, 2007 except for additional imagery for Bogue Sound, Back Sound, and Core Sound that were collected on May 26 and 27, 2008, and June 8, 2008.Map Digitization:Imagery was loaded into ArcGIS for manual on-screen digitizing using procedures described in Rohman and Monaco (2005).  Digitizing scale was typically set to 1:1,500 except when larger homogeneous areas required zooming out to a greater extent that was usually accomplished at approximately 1:6,000.  Habitat boundaries were delineated around benthic habitat features (e.g., areas with visually discernible differences in color and texture patterns).  The scanned images were occasionally manipulated in terms of brightness, contrast and color balance to enhance interpretability of subtle features and boundaries. The minimum mapping unit (MMU) is generally defined as the smallest feature (e.g., an individual SAV bed) or aggregate of features (e.g., SAV patches) that is delineated using a given source of imagery.  For this study the MMU was approximately 0.2 ha, or in general patches that were at least 15 m across on their longest axis.Attributes/Values:CLASS: Type of classification for SAV polygonCONTINUOUS: A polygon with 70-100% SAV coverageCONTINUOUS_I: A polygon with 70-100% SAV coverage and is also a waterfowl impoundmentPATCHY: A polygon with 5-70% SAV coveragePATCHY_I: A polygon with 5-70% SAV coverage and is also a waterfowl impoundmentAQUACULTURE: A polygon that consists of aquaculture vegetationACRES: SAV polygon area in acresCredits:NCDEQ / APNEP / NCDMF / NCDOT / NOAA / Atkins / USFWSFor more information, please view the metadata and visit the APNEP SAV monitoring website.</gco:CharacterString>
+            </abstract>
+            <purpose>
+                <gco:CharacterString>Submerged Aquatic Vegetation (SAV) Mapping Effort for Imagery Years 2006-2008 - Revised</gco:CharacterString>
+            </purpose>
+            <credit>
+                <gco:CharacterString>NCDEQ / APNEP / NCDMF / NCDOT / NOAA / Atkins / USFWS</gco:CharacterString>
+            </credit>
+            <status>
+                <MD_ProgressCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ProgressCode" codeListValue="completed" codeSpace="ISOTC211/19115">completed</MD_ProgressCode>
+            </status>
+            <pointOfContact>
+                <CI_ResponsibleParty>
+                    <individualName>
+                        <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                    </individualName>
+                    <organisationName>
+                        <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                    </organisationName>
+                    <positionName>
+                        <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                    </positionName>
+                    <contactInfo>
+                        <CI_Contact>
+                            <phone>
+                                <CI_Telephone>
+                                    <voice>
+                                        <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                    </voice>
+                                </CI_Telephone>
+                            </phone>
+                            <address>
+                                <CI_Address>
+                                    <deliveryPoint>
+                                        <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                    </deliveryPoint>
+                                    <city>
+                                        <gco:CharacterString>Raleigh</gco:CharacterString>
+                                    </city>
+                                    <administrativeArea>
+                                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                                    </administrativeArea>
+                                    <postalCode>
+                                        <gco:CharacterString>27699-1601</gco:CharacterString>
+                                    </postalCode>
+                                    <country>
+                                        <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                    </country>
+                                    <electronicMailAddress>
+                                        <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                    </electronicMailAddress>
+                                </CI_Address>
+                            </address>
+                            <onlineResource>
+                                <CI_OnlineResource>
+                                    <linkage>
+                                        <URL>https://www.apnep.org</URL>
+                                    </linkage>
+                                    <name>
+                                        <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                    </name>
+                                    <function>
+                                        <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                    </function>
+                                </CI_OnlineResource>
+                            </onlineResource>
+                            <hoursOfService>
+                                <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                            </hoursOfService>
+                            <contactInstructions>
+                                <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                            </contactInstructions>
+                        </CI_Contact>
+                    </contactInfo>
+                    <role>
+                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                    </role>
+                </CI_ResponsibleParty>
+            </pointOfContact>
+            <resourceMaintenance>
+                <MD_MaintenanceInformation>
+                    <maintenanceAndUpdateFrequency>
+                        <MD_MaintenanceFrequencyCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_MaintenanceFrequencyCode" codeListValue="asNeeded" codeSpace="ISOTC211/19115">asNeeded</MD_MaintenanceFrequencyCode>
+                    </maintenanceAndUpdateFrequency>
+                    <contact>
+                        <CI_ResponsibleParty>
+                            <individualName>
+                                <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                            </individualName>
+                            <organisationName>
+                                <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                            </organisationName>
+                            <positionName>
+                                <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                            </positionName>
+                            <contactInfo>
+                                <CI_Contact>
+                                    <phone>
+                                        <CI_Telephone>
+                                            <voice>
+                                                <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                            </voice>
+                                        </CI_Telephone>
+                                    </phone>
+                                    <address>
+                                        <CI_Address>
+                                            <deliveryPoint>
+                                                <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                            </deliveryPoint>
+                                            <city>
+                                                <gco:CharacterString>Raleigh</gco:CharacterString>
+                                            </city>
+                                            <administrativeArea>
+                                                <gco:CharacterString>North Carolina</gco:CharacterString>
+                                            </administrativeArea>
+                                            <postalCode>
+                                                <gco:CharacterString>27699-1601</gco:CharacterString>
+                                            </postalCode>
+                                            <country>
+                                                <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                            </country>
+                                            <electronicMailAddress>
+                                                <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                            </electronicMailAddress>
+                                        </CI_Address>
+                                    </address>
+                                    <onlineResource>
+                                        <CI_OnlineResource>
+                                            <linkage>
+                                                <URL>https://www.apnep.org</URL>
+                                            </linkage>
+                                            <name>
+                                                <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                            </name>
+                                            <function>
+                                                <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                            </function>
+                                        </CI_OnlineResource>
+                                    </onlineResource>
+                                    <hoursOfService>
+                                        <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                                    </hoursOfService>
+                                    <contactInstructions>
+                                        <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                                    </contactInstructions>
+                                </CI_Contact>
+                            </contactInfo>
+                            <role>
+                                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                            </role>
+                        </CI_ResponsibleParty>
+                    </contact>
+                </MD_MaintenanceInformation>
+            </resourceMaintenance>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Virginia</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>coast</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Albemarle Sound</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Pamlico Sound</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="place" codeSpace="ISOTC211/19115">place</MD_KeywordTypeCode>
+                    </type>
+                    <thesaurusName>
+                        <CI_Citation>
+                            <title>
+                                <gco:CharacterString>William S. Powell, The North Carolina GAZETTEER, A Dictionary of Tar Heel Places, (Chapel Hill: University of North Carolina Press), August 1984.</gco:CharacterString>
+                            </title>
+                            <date>
+                                <CI_Date>
+                                    <date>
+                                        <gco:Date>1984-08-01</gco:Date>
+                                    </date>
+                                    <dateType>
+                                        <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="publication" codeSpace="ISOTC211/19115">publication</CI_DateTypeCode>
+                                    </dateType>
+                                </CI_Date>
+                            </date>
+                        </CI_Citation>
+                    </thesaurusName>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>submerged aquatic vegetation</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic plants</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>biota</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural ecosystem</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>natural community</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>seagrass</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>aquatic habitat</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuary</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>estuarine</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>fish habitat</gco:CharacterString>
+                    </keyword>
+                    <type>
+                        <MD_KeywordTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode" codeListValue="theme" codeSpace="ISOTC211/19115">theme</MD_KeywordTypeCode>
+                    </type>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>Downloadable Data</gco:CharacterString>
+                    </keyword>
+                    <thesaurusName uuidref="723f6998-058e-11dc-8314-0800200c9a66"/>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <resourceConstraints>
+                <MD_Constraints>
+                    <useLimitation>
+                        <gco:CharacterString>The North Carolina Department of Environmental Quality shall not be held liable for any errors in this metadata.  This includes errors of omission, commission, errors concerning the content of the data, and relative and positional accuracy of the data.  These data cannot be construed to be a legal document.  Primary sources from which these data were compiled must be consulted for verification of information contained in these data.</gco:CharacterString>
+                    </useLimitation>
+                </MD_Constraints>
+            </resourceConstraints>
+            <spatialRepresentationType>
+                <MD_SpatialRepresentationTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_SpatialRepresentationTypeCode" codeListValue="vector" codeSpace="ISOTC211/19115">vector</MD_SpatialRepresentationTypeCode>
+            </spatialRepresentationType>
+            <language>
+                <LanguageCode codeList="http://www.loc.gov/standards/iso639-2/php/code_list.php" codeListValue="eng" codeSpace="ISO639-2">eng</LanguageCode>
+            </language>
+            <characterSet>
+                <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8" codeSpace="ISOTC211/19115">utf8</MD_CharacterSetCode>
+            </characterSet>
+            <topicCategory>
+                <MD_TopicCategoryCode>biota</MD_TopicCategoryCode>
+            </topicCategory>
+            <topicCategory>
+                <MD_TopicCategoryCode>environment</MD_TopicCategoryCode>
+            </topicCategory>
+            <environmentDescription>
+                <gco:CharacterString>Version 6.2 (Build 9200) ; Esri ArcGIS 10.6.1.9270</gco:CharacterString>
+            </environmentDescription>
+            <extent>
+                <EX_Extent>
+                    <description>
+                        <gco:CharacterString>Visible SAV was mapped along the coast of North Carolina and northward into Back Bay, Virginia. This extent encompasses the coastal zone that lies within the APNEP regional boundary (Bogue Inlet north to Back Bay), as well as that which is outside of that boundary (Bogue Inlet south to Masonboro Inlet).</gco:CharacterString>
+                    </description>
+                    <geographicElement>
+                        <EX_GeographicBoundingBox>
+                            <extentTypeCode>
+                                <gco:Boolean>true</gco:Boolean>
+                            </extentTypeCode>
+                            <westBoundLongitude>
+                                <gco:Decimal>-77.883552</gco:Decimal>
+                            </westBoundLongitude>
+                            <eastBoundLongitude>
+                                <gco:Decimal>-75.419124</gco:Decimal>
+                            </eastBoundLongitude>
+                            <southBoundLatitude>
+                                <gco:Decimal>34.018903</gco:Decimal>
+                            </southBoundLatitude>
+                            <northBoundLatitude>
+                                <gco:Decimal>36.744054</gco:Decimal>
+                            </northBoundLatitude>
+                        </EX_GeographicBoundingBox>
+                    </geographicElement>
+                    <temporalElement>
+                        <EX_TemporalExtent>
+                            <extent>
+                                <gml:TimePeriod gml:id="N65850">
+                                    <gml:beginPosition>2006-05-31T00:00:00+00:00</gml:beginPosition>
+                                    <gml:endPosition>2008-06-08T00:00:00+00:00</gml:endPosition>
+                                </gml:TimePeriod>
+                            </extent>
+                        </EX_TemporalExtent>
+                    </temporalElement>
+                </EX_Extent>
+            </extent>
+            <supplementalInformation>
+                <gco:CharacterString>Mapping Extent: Visible SAV was mapped along the coast of North Carolina and northward into Back Bay, Virginia. This extent encompasses the coastal zone that lies within the APNEP regional boundary, as well as that which is outside of that boundary (Bogue Inlet south to Masonboro Inlet).</gco:CharacterString>
+            </supplementalInformation>
+        </MD_DataIdentification>
+    </identificationInfo>
+    <contentInfo>
+        <MD_FeatureCatalogueDescription>
+            <complianceCode>
+                <gco:Boolean>true</gco:Boolean>
+            </complianceCode>
+            <language>
+                <LanguageCode codeList="http://www.loc.gov/standards/iso639-2/php/code_list.php" codeListValue="eng" codeSpace="ISO639-2">eng</LanguageCode>
+            </language>
+            <includedWithDataset>
+                <gco:Boolean>true</gco:Boolean>
+            </includedWithDataset>
+            <featureCatalogueCitation gco:nilReason="missing"/>
+        </MD_FeatureCatalogueDescription>
+    </contentInfo>
+    <distributionInfo>
+        <MD_Distribution>
+            <distributionFormat>
+                <MD_Format>
+                    <name>
+                        <gco:CharacterString>Shapefile</gco:CharacterString>
+                    </name>
+                    <version gco:nilReason="missing"/>
+                </MD_Format>
+            </distributionFormat>
+            <transferOptions>
+                <MD_DigitalTransferOptions>
+                    <transferSize>
+                        <gco:Real>12.02</gco:Real>
+                    </transferSize>
+                </MD_DigitalTransferOptions>
+            </transferOptions>
+        </MD_Distribution>
+    </distributionInfo>
+    <dataQualityInfo>
+        <DQ_DataQuality>
+            <scope>
+                <DQ_Scope>
+                    <level>
+                        <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="service" codeSpace="ISOTC211/19115">service</MD_ScopeCode>
+                    </level>
+                    <levelDescription>
+                        <MD_ScopeDescription>
+                            <attributes uuidref="ArcGIS Online"/>
+                        </MD_ScopeDescription>
+                    </levelDescription>
+                </DQ_Scope>
+            </scope>
+            <report>
+                <DQ_ConceptualConsistency>
+                    <measureDescription>
+                        <gco:CharacterString>Data developed and verified by APNEP and its partners.</gco:CharacterString>
+                    </measureDescription>
+                    <result gco:nilReason="missing"/>
+                </DQ_ConceptualConsistency>
+            </report>
+            <report>
+                <DQ_CompletenessOmission>
+                    <measureDescription>
+                        <gco:CharacterString>These data represent the locations of visible SAV, as could be digitized from remotely-sensed imagery. A substantial portion of SAV beds remain invisible from remote sensing due to environmental factors above (e.g., haze and clouds), on (e.g., white caps), and below (e.g., turbidity) the water's surface.</gco:CharacterString>
+                    </measureDescription>
+                    <result gco:nilReason="missing"/>
+                </DQ_CompletenessOmission>
+            </report>
+            <report>
+                <DQ_QuantitativeAttributeAccuracy>
+                    <measureDescription>
+                        <gco:CharacterString>Approximately 1,200 field points were visited in years 2007 - 2008.  All of these points were used as training data to guide digitization of SAV habitats.  The points were randomly generated in GIS, based on areas where SAV were previously mapped or in water down to a depth of 2 m.  Points were located in small craft with the aid of Differential Global Positioning Systems (DGPS) or Wide Area Augmentation System (WAS) GPS accurate to approximately 5 m.  Areas were identified visually from the boat (or wading in shallow waters) or with the aid of rakes where the bottom could not be visualized.
+      It was hoped that up to one half of the total field points could be held out, not used at all by interpreters, and used in an accuracy assessment.  Unfortunately, due to less than ideal imagery quality in some locations and interpreters who did not have the opportunity to go out in the field, it was decided to forgo the accuracy assessment and use all the field points to aid interpretation.</gco:CharacterString>
+                    </measureDescription>
+                    <result gco:nilReason="missing"/>
+                </DQ_QuantitativeAttributeAccuracy>
+            </report>
+            <lineage>
+                <LI_Lineage>
+                    <processStep>
+                        <LI_ProcessStep>
+                            <description>
+                                <gco:CharacterString>All imagery was collected with Intergraphs Z/I Digital Mapping Camera (DMC).  The mainland and outer banks of Bogue Sound and Back Sound, and the mainland side of Core Sound north to Atlantic, North Carolina were collected on May 31 and June 1, 2006.  Aircraft height was 3,048 m for a final imagery product with a 0.3 m pixel size.  All other areas in the state were collected with an aircraft height of 6,096 m for a final imagery product with a 1.0 m pixel size.  Specifically, Pamlico River and Pungo River were collected on September 25 and 26, 2007 and all other areas except for Bogue Sound, Back Sound and Core Sound were collected on October 12, 14, and 15, 2007.  Additional imagery for Bogue Sound, Back Sound, and Core Sound were collected on May 26 and 27, 2008, and June 8, 2008.
+        The imagery was loaded into ArcGIS for manual on-screen digitizing using procedures described in Rohman and Monaco (2005).  Digitizing scale was typically set to 1:1,500 except when larger homogeneous areas required zooming out to a greater extent that was usually accomplished at approximately 1:6,000.  Habitat boundaries were delineated around benthic habitat features (e.g., areas with visually discernible differences in color and texture patterns).  The scanned images were occasionally manipulated in terms of brightness, contrast and color balance to enhance interpretability of subtle features and boundaries. The classification scheme consisted of three thematic classes: (1) continuous SAV, (2) patchy SAV and (3) unvegetated.  Continuous SAV was defined as areas covering 70% or greater of the substrate but may include unvegetated or sparsely vegetated areas that are smaller than the minimum mapping unit (MMU).  Patchy SAV was defined as discontinuous communities covering more than 5% but less than 70% of the substrate.  These areas were diffuse and irregular, consisting of isolated patches that are below the MMU.  Areas with less than 5% SAV are considered beyond the detection level for the imagery used and thus fell into the unvegetated category.
+        MMU is generally defined as the smallest feature (e.g., an individual SAV bed) or aggregate of features (e.g., SAV patches) that is delineated using a given source of imagery (Rohman and Monaco, 2005).  For this study the MMU was approximately 0.2 ha, or in general patches that were at least 15 m across on their longest axis.</gco:CharacterString>
+                            </description>
+                            <dateTime>
+                                <gco:DateTime>2008-12-31T00:00:00</gco:DateTime>
+                            </dateTime>
+                            <processor>
+                                <CI_ResponsibleParty>
+                                    <individualName>
+                                        <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                                    </individualName>
+                                    <organisationName>
+                                        <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                                    </organisationName>
+                                    <positionName>
+                                        <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                                    </positionName>
+                                    <contactInfo>
+                                        <CI_Contact>
+                                            <phone>
+                                                <CI_Telephone>
+                                                    <voice>
+                                                        <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                                    </voice>
+                                                </CI_Telephone>
+                                            </phone>
+                                            <address>
+                                                <CI_Address>
+                                                    <deliveryPoint>
+                                                        <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                                    </deliveryPoint>
+                                                    <city>
+                                                        <gco:CharacterString>Raleigh</gco:CharacterString>
+                                                    </city>
+                                                    <administrativeArea>
+                                                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                                                    </administrativeArea>
+                                                    <postalCode>
+                                                        <gco:CharacterString>27699-1601</gco:CharacterString>
+                                                    </postalCode>
+                                                    <country>
+                                                        <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                                    </country>
+                                                    <electronicMailAddress>
+                                                        <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                                    </electronicMailAddress>
+                                                </CI_Address>
+                                            </address>
+                                            <onlineResource>
+                                                <CI_OnlineResource>
+                                                    <linkage>
+                                                        <URL>https://www.apnep.org</URL>
+                                                    </linkage>
+                                                    <name>
+                                                        <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                                    </name>
+                                                    <function>
+                                                        <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                                    </function>
+                                                </CI_OnlineResource>
+                                            </onlineResource>
+                                            <hoursOfService>
+                                                <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                                            </hoursOfService>
+                                            <contactInstructions>
+                                                <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                                            </contactInstructions>
+                                        </CI_Contact>
+                                    </contactInfo>
+                                    <role>
+                                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                                    </role>
+                                </CI_ResponsibleParty>
+                            </processor>
+                        </LI_ProcessStep>
+                    </processStep>
+                    <processStep>
+                        <LI_ProcessStep>
+                            <description>
+                                <gco:CharacterString>An update to the 2006 - 2008 North Carolina SAV mapping project was completed by Atkins in 2010 - 2011 following the initial mapping done by NC-DMF staff and Dr. Don Field at NOAA-Beaufort.  The work done by Dr. Field, between Oregon Inlet and Bogue Sound, would remain in the dataset.  The work done by NC-DMF staff was determined to be insufficient for this mapping effort and was re-mapped by Atkins in the areas north of Oregon Inlet and south of Bogue Sound.  According to specifications given to Atkins by APNEP, SAV was mapped at a minimum map unit of 15 meters on the longest axis.  The digitizing scale was set between 1:2,000 and 1:2,500.
+        The SAV was mapped using lines to draw the boundaries and points to classify the SAV based on density.  All lines created by Atkins analysts were smoothed and then generalized using a maximum allowable offset of 0.01 meters and 0.5 meters, respectively.  The density of the SAV was classified as Continuous: 70-100% coverage, Patchy:  5-70% coverage or Absent: 0-5% coverage.  SAV was also mapped inside of waterfowl impoundments but was given an impounded modifier (CONTINUOUS_I or PATCHY_I) to distinguish it from other SAV.  Additionally, aquaculture vegetation was mapped and classified as such.</gco:CharacterString>
+                            </description>
+                            <dateTime>
+                                <gco:DateTime>2011-06-01T00:00:00</gco:DateTime>
+                            </dateTime>
+                            <processor>
+                                <CI_ResponsibleParty>
+                                    <individualName>
+                                        <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                                    </individualName>
+                                    <organisationName>
+                                        <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                                    </organisationName>
+                                    <positionName>
+                                        <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                                    </positionName>
+                                    <contactInfo>
+                                        <CI_Contact>
+                                            <phone>
+                                                <CI_Telephone>
+                                                    <voice>
+                                                        <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                                    </voice>
+                                                </CI_Telephone>
+                                            </phone>
+                                            <address>
+                                                <CI_Address>
+                                                    <deliveryPoint>
+                                                        <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                                    </deliveryPoint>
+                                                    <city>
+                                                        <gco:CharacterString>Raleigh</gco:CharacterString>
+                                                    </city>
+                                                    <administrativeArea>
+                                                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                                                    </administrativeArea>
+                                                    <postalCode>
+                                                        <gco:CharacterString>27699-1601</gco:CharacterString>
+                                                    </postalCode>
+                                                    <country>
+                                                        <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                                    </country>
+                                                    <electronicMailAddress>
+                                                        <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                                    </electronicMailAddress>
+                                                </CI_Address>
+                                            </address>
+                                            <onlineResource>
+                                                <CI_OnlineResource>
+                                                    <linkage>
+                                                        <URL>https://www.apnep.org</URL>
+                                                    </linkage>
+                                                    <name>
+                                                        <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                                    </name>
+                                                    <function>
+                                                        <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                                    </function>
+                                                </CI_OnlineResource>
+                                            </onlineResource>
+                                            <hoursOfService>
+                                                <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                                            </hoursOfService>
+                                            <contactInstructions>
+                                                <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                                            </contactInstructions>
+                                        </CI_Contact>
+                                    </contactInfo>
+                                    <role>
+                                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                                    </role>
+                                </CI_ResponsibleParty>
+                            </processor>
+                        </LI_ProcessStep>
+                    </processStep>
+                    <processStep>
+                        <LI_ProcessStep>
+                            <description>
+                                <gco:CharacterString>Using a third-party extension, Hawths Tools, the polygons and points were counted to ensure only one point existed inside of each polygon.  After any errors were corrected, the polygons classified as ABSENT were deleted from the dataset.  Using a modified version of the US-FWS National Wetland Inventory (NWI) Verification Tool, the dataset was checked to ensure that each polygon had an attribute that met the classification standard (CONTINUOUS, PATCHY,  CONTINUOUS_I, PATCHY_I, or AQUACULTURE).  All errors were corrected, and the dataset was then complete.</gco:CharacterString>
+                            </description>
+                            <dateTime>
+                                <gco:DateTime>2011-06-01T00:00:00</gco:DateTime>
+                            </dateTime>
+                            <processor>
+                                <CI_ResponsibleParty>
+                                    <individualName>
+                                        <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                                    </individualName>
+                                    <organisationName>
+                                        <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                                    </organisationName>
+                                    <positionName>
+                                        <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                                    </positionName>
+                                    <contactInfo>
+                                        <CI_Contact>
+                                            <phone>
+                                                <CI_Telephone>
+                                                    <voice>
+                                                        <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                                    </voice>
+                                                </CI_Telephone>
+                                            </phone>
+                                            <address>
+                                                <CI_Address>
+                                                    <deliveryPoint>
+                                                        <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                                    </deliveryPoint>
+                                                    <city>
+                                                        <gco:CharacterString>Raleigh</gco:CharacterString>
+                                                    </city>
+                                                    <administrativeArea>
+                                                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                                                    </administrativeArea>
+                                                    <postalCode>
+                                                        <gco:CharacterString>27699-1601</gco:CharacterString>
+                                                    </postalCode>
+                                                    <country>
+                                                        <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                                    </country>
+                                                    <electronicMailAddress>
+                                                        <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                                    </electronicMailAddress>
+                                                </CI_Address>
+                                            </address>
+                                            <onlineResource>
+                                                <CI_OnlineResource>
+                                                    <linkage>
+                                                        <URL>https://www.apnep.org</URL>
+                                                    </linkage>
+                                                    <name>
+                                                        <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                                    </name>
+                                                    <function>
+                                                        <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                                    </function>
+                                                </CI_OnlineResource>
+                                            </onlineResource>
+                                            <hoursOfService>
+                                                <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                                            </hoursOfService>
+                                            <contactInstructions>
+                                                <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                                            </contactInstructions>
+                                        </CI_Contact>
+                                    </contactInfo>
+                                    <role>
+                                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                                    </role>
+                                </CI_ResponsibleParty>
+                            </processor>
+                        </LI_ProcessStep>
+                    </processStep>
+                    <processStep>
+                        <LI_ProcessStep>
+                            <description>
+                                <gco:CharacterString>Delineation of 2013 imagery was completed for the high-salinity coastal zone that lies within the APNEP regional boundary (Hwy. 64 Bridge of Roanoke Sound south to Bogue Inlet) and this map is also publicly available.  Delineation of 2015 imagery for the high-salinity coastal zone in North Carolina south of Bogue Sound is underway.  New imagery acquisition for the entire high-salinity coastal zone of North Carolina was begun in Summer 2019.</gco:CharacterString>
+                            </description>
+                            <dateTime>
+                                <gco:DateTime>2019-01-01T00:00:00</gco:DateTime>
+                            </dateTime>
+                            <processor>
+                                <CI_ResponsibleParty>
+                                    <individualName>
+                                        <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                                    </individualName>
+                                    <organisationName>
+                                        <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                                    </organisationName>
+                                    <positionName>
+                                        <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                                    </positionName>
+                                    <contactInfo>
+                                        <CI_Contact>
+                                            <phone>
+                                                <CI_Telephone>
+                                                    <voice>
+                                                        <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                                    </voice>
+                                                </CI_Telephone>
+                                            </phone>
+                                            <address>
+                                                <CI_Address>
+                                                    <deliveryPoint>
+                                                        <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                                    </deliveryPoint>
+                                                    <city>
+                                                        <gco:CharacterString>Raleigh</gco:CharacterString>
+                                                    </city>
+                                                    <administrativeArea>
+                                                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                                                    </administrativeArea>
+                                                    <postalCode>
+                                                        <gco:CharacterString>27699-1601</gco:CharacterString>
+                                                    </postalCode>
+                                                    <country>
+                                                        <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                                    </country>
+                                                    <electronicMailAddress>
+                                                        <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                                    </electronicMailAddress>
+                                                </CI_Address>
+                                            </address>
+                                            <onlineResource>
+                                                <CI_OnlineResource>
+                                                    <linkage>
+                                                        <URL>https://www.apnep.org</URL>
+                                                    </linkage>
+                                                    <name>
+                                                        <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                                    </name>
+                                                    <function>
+                                                        <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                                    </function>
+                                                </CI_OnlineResource>
+                                            </onlineResource>
+                                            <hoursOfService>
+                                                <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                                            </hoursOfService>
+                                            <contactInstructions>
+                                                <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                                            </contactInstructions>
+                                        </CI_Contact>
+                                    </contactInfo>
+                                    <role>
+                                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                                    </role>
+                                </CI_ResponsibleParty>
+                            </processor>
+                        </LI_ProcessStep>
+                    </processStep>
+                </LI_Lineage>
+            </lineage>
+        </DQ_DataQuality>
+    </dataQualityInfo>
+    <metadataMaintenance>
+        <MD_MaintenanceInformation>
+            <maintenanceAndUpdateFrequency>
+                <MD_MaintenanceFrequencyCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_MaintenanceFrequencyCode" codeListValue="asNeeded" codeSpace="ISOTC211/19115">asNeeded</MD_MaintenanceFrequencyCode>
+            </maintenanceAndUpdateFrequency>
+            <contact>
+                <CI_ResponsibleParty>
+                    <individualName>
+                        <gco:CharacterString>Tim Ellis</gco:CharacterString>
+                    </individualName>
+                    <organisationName>
+                        <gco:CharacterString>NCDEQ - APNEP</gco:CharacterString>
+                    </organisationName>
+                    <positionName>
+                        <gco:CharacterString>Ecosystem Analyst</gco:CharacterString>
+                    </positionName>
+                    <contactInfo>
+                        <CI_Contact>
+                            <phone>
+                                <CI_Telephone>
+                                    <voice>
+                                        <gco:CharacterString>919-707-8106</gco:CharacterString>
+                                    </voice>
+                                </CI_Telephone>
+                            </phone>
+                            <address>
+                                <CI_Address>
+                                    <deliveryPoint>
+                                        <gco:CharacterString>1601 Mail Service Center</gco:CharacterString>
+                                    </deliveryPoint>
+                                    <city>
+                                        <gco:CharacterString>Raleigh</gco:CharacterString>
+                                    </city>
+                                    <administrativeArea>
+                                        <gco:CharacterString>North Carolina</gco:CharacterString>
+                                    </administrativeArea>
+                                    <postalCode>
+                                        <gco:CharacterString>27699-1601</gco:CharacterString>
+                                    </postalCode>
+                                    <country>
+                                        <Country codeList="http://www.iso.org/iso/country_codes/iso_3166_code_lists.htm" codeListValue="US" codeSpace="ISO3166-1">US</Country>
+                                    </country>
+                                    <electronicMailAddress>
+                                        <gco:CharacterString>tim.ellis@ncdenr.gov</gco:CharacterString>
+                                    </electronicMailAddress>
+                                </CI_Address>
+                            </address>
+                            <onlineResource>
+                                <CI_OnlineResource>
+                                    <linkage>
+                                        <URL>https://www.apnep.org</URL>
+                                    </linkage>
+                                    <name>
+                                        <gco:CharacterString>Albemarle-Pamlico National Estuary Partnership</gco:CharacterString>
+                                    </name>
+                                    <function>
+                                        <CI_OnLineFunctionCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode" codeListValue="information" codeSpace="ISOTC211/19115">information</CI_OnLineFunctionCode>
+                                    </function>
+                                </CI_OnlineResource>
+                            </onlineResource>
+                            <hoursOfService>
+                                <gco:CharacterString>9 AM - 5 PM</gco:CharacterString>
+                            </hoursOfService>
+                            <contactInstructions>
+                                <gco:CharacterString>Phone and electronic mail preferred</gco:CharacterString>
+                            </contactInstructions>
+                        </CI_Contact>
+                    </contactInfo>
+                    <role>
+                        <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+                    </role>
+                </CI_ResponsibleParty>
+            </contact>
+        </MD_MaintenanceInformation>
+    </metadataMaintenance>
+</MD_Metadata>
