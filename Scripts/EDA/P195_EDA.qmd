@@ -119,30 +119,38 @@ For seasonality, it does appear that there is enough data to look at these speci
 #### Length
 
 ```{r}
+#Explore
 p195_lengthfreq %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
-ggsave("~/Desktop/p195_length.png", width= 25, height= 25)
+#ggsave("~/Desktop/p195_length.png", width= 25, height= 25)
 
 p195_lengthfreq %>% drop_na(Length) %>% group_by(Speciescommonname, Season) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Season, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
-ggsave("~/Desktop/p195_length_season.png", width= 25, height= 25)
+#ggsave("~/Desktop/p195_length_season.png", width= 25, height= 25)
 
+#Form blue crab dataset and make sure each blue crab in the subsample has their own row
+P195_bc <- p195_lengthfreq %>% filter(Speciescommonname %in% "blue crab") %>% select(Eventname, Speciescommonname, Date, Location, Length, Numbermeasure, Totalnumber) #Important: Numbertotal isn't here- will have to, Totalnumber is the frequency, uncount this
 
+P195_bc_edt <- P195_bc %>% group_by(Eventname) %>% uncount(weights= Totalnumber, .remove= FALSE) %>% mutate(Totalnumber_new= 1) #this worked, don't need to group by Colnum and Length like in P120 
 
-colnames(p195_lengthfreq)
+#Bin length: define the breaks for the intervals
+values <- 1:300
+breaks <- seq(0, 300, by = 10)
+assigned_values <- seq(10, 300, by = 10)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
 
-length(unique(P120_bioledt$Control1))
-length(unique(P120_bioledt$Location))
-length(unique(P120_bioledt$Station))
+#Calculate proportion of juveniles and adults in each Eventname
+P195_bc_prop <- P195_bc_edt %>% left_join(df, by= "Length")
+P195_bc_prop$Age_class <- ifelse(P195_bc_prop$Assigned_length < 50, "juvenile blue crab", "adult blue crab") #assign juvenile if under 50 mm, 50.8 mm (2 inches) is harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
+P195_bc_prop_edt <- P195_bc_prop %>% group_by(Eventname, Age_class) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Eventname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% select(Eventname, Speciescommonname, Date, Age_class, Count, Total_sampled, Proportion)
 
-#Blue crab length
+p195_abund_bc <- p195_abund %>% select(Eventname, Numbertotal, Speciescommonname) %>% filter(Speciescommonname %in% "blue crab") #Select Numbertotal from blue crab abundance, length dataset didn't have Colnum so had to do this  
+P195_bc_prop_edt2 <- P195_bc_prop_edt %>% left_join(p195_abund_bc %>% select(-Speciescommonname), by= "Eventname")
 
-#50.8 cm (2 inches) is the harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
-
-P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% mutate("Ageclass"= ifelse(Length < 50.8, "juvenile", ifelse(Length >= 50.8, "adult", "NA"))) 
-P120_bc_juv <- P120_bc %>% filter(Ageclass %in% "juvenile") 
-P120_bc_juv_edt <- P120_bc_juv %>% group_by(Control1) %>% mutate(Colnum_juv= n()) #number of rows correspond to # captured of age class 
-
-P120_bc_adult <- P120_bc %>% filter(Ageclass %in% "adult") 
-P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n()) 
+which(P195_bc_prop_edt2$Total_sampled != P195_bc_prop_edt2$Numbertotal) #Why is total_sampled higher
+#Now apply proportion to Colnum 
+P195_bc_prop_edt2  <- P195_bc_prop_edt2 %>% mutate(Number= round(Numbertotal*Proportion,0))
+P120_bc_prop$Number[P120_bc_prop$Number==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
 
 ```
 
