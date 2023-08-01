@@ -18,7 +18,7 @@ Based on the dataset description, I am going to filter P120 to start after 1989.
 
 ```{r}
 ##Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "geosphere")
 
 invisible(lapply(packages, library, character.only= TRUE))
 
@@ -170,6 +170,7 @@ max(P120_bc$Length)
 ```
 
 #### Actually dealing with length
+
 ```{r}
 #Form blue crab dataset and make sure each blue crab in the subsample has their own row
 P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
@@ -185,30 +186,13 @@ df <- data.frame(Length = values, Assigned_length = result_numeric)
 
 #Calculate proportion of juveniles and adults in each Eventname
 P120_bc_prop <- P120_bc_edt %>% left_join(df, by= "Length")
-P120_bc_prop$Age_class <- ifelse(P120_bc_prop$Assigned_length < 50, "J", "A") #assign juvenile if under 50 cm (harvestable length, after 1 year)
+P120_bc_prop$Age_class <- ifelse(P120_bc_prop$Assigned_length < 50, "J", "A") #assign juvenile if under 50 mm, 50.8 mm (2 inches) is harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
 P120_bc_prop <- P120_bc_prop %>% group_by(Control1, Age_class, Colnum) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion)
 
 #Now apply proportion to Colnum 
 P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0))
-
-#Count how many of each age class, calculate how many were sampled for Control1 and Colnum, calculate proportion of each
-
-
-t<- P120_bc_prop %>% filter(Control1 == "9712836")
-colnames(P120_bc_edt)
-
-#Assign as juvenile or adult
-#50.8 mm (2 inches) is the harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
-
-summary(P120_bc$Assigned_length)
-#Proportion of each length bin for Colnum 
-
-
-
+P120_bc_prop$Number[P120_bc_prop$Number==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
 ```
-
-
-
 
 #For blue crabs in P120, each
 
@@ -233,7 +217,7 @@ diff_values <- setdiff(P120_bioledt$Control1, haul$Control1)
 
 ##Create dummy column for species of focus
 haul$Species=NA#create a dummy column first
-haul$Species=rep_along(haul$Species,c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden")) #this repeats these species common names for the entirety of the length of the haul df
+haul$Species=rep_along(haul$Species,c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab")) #this repeats these species common names for the entirety of the length of the haul df
 haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
 haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 9x (# of species) larger so it worked
 haul=haul_df %>%select(-Species) #drop dummy species common name from hauldf
@@ -241,17 +225,21 @@ haul=haul_df %>%select(-Species) #drop dummy species common name from hauldf
 #now can merge haul.all and haul to create a df with a row for species associated with each collection number
 haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
 
-sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(-Frequenc,-Length,-Sex,-Maturity,-Latitude, Longitude) %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame()
+sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% select(Control1,Date,Speciescommonname,Colnum) 
+P120_bc_tojoin <- P120_bc_prop %>% select(Control1, Date, -Speciescommonname, Age_class, Number)
+P120_bc_tojoin <- P120_bc_tojoin %>% mutate(Age_class= ifelse(Age_class %in% "J", "juv blue crab", "adult blue crab")) %>% rename("Speciescommonname"= "Age_class", "Colnum"= "Number")
+sel_spp_120join <- rbind(sel_spp_120, P120_bc_tojoin)
+sel_spp_120joinedt <- sel_spp_120join %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() #should always be 1 for juv. and adult blue crab b/c have distinct rows 
 
-colnames(P120_bioledt)
-sel_spp_120edt = sel_spp_120 %>% select(Control1,Date,Speciescommonname,Colnum)
-#Add in juveniles here 
+sel_spp_120joinedt = sel_spp_120joinedt %>% select(-id)
 haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
-haul_sel_spp <- left_join(haul_final, sel_spp_120edt) %>% as.data.frame()
+haul_sel_spp <- left_join(haul_final, sel_spp_120joinedt) %>% as.data.frame() #df is 74,480 rows, 9310 rows for each species (8 species)
 haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0
 
 names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
 p120_CPUE <- haul_sel_spp %>% left_join(names_join) %>% mutate(Sciname = ifelse(Speciescommonname == "brown shrimp", "F. aztecus", Sciname)) #brown shrimp went to NA for Sciname
+p120_CPUE$Sciname <- ifelse(p120_CPUE$Speciescommonname %in% "juv blue crab"|p120_CPUE$Speciescommonname %in% "adult blue crab", "C. sapidus", p120_CPUE$Sciname)
+
 p120_CPUE$doy <- yday(p120_CPUE$Date)
 p120_CPUE$Photoperiod <- daylength(lat= p120_CPUE$Latitude, doy= p120_CPUE$doy)
 p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
