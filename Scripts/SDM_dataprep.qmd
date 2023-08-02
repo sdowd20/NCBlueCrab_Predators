@@ -143,7 +143,7 @@ predictors_df$Longitude <- coords2[, "X"] #Add coordinates back in
 
 ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[1000:2000,], aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
 
-ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[100:200,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
+ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[1000:2000,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
 
 ##Join predictors, gridded, and CPUE datasets
 ###Predictors with gridID
@@ -163,33 +163,24 @@ ggplot(data = world) + geom_sf() + geom_sf(data =pred_gridd_geom, fill = NA) + c
 CPUE_dfs <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
 CPUE_dfs$lat_lon <- paste(CPUE_dfs$Latitude, CPUE_dfs$Longitude, sep = "_") 
 CPUE_dfs_gridded <- CPUE_dfs %>% left_join(pred_gridd_geom, by= "lat_lon") #49 gridIDs with NA are out of the study area (out of sound or Antartica)
-CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() #removed 49 rows
+CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% filter(!Wbd %in% "Tar River Reservoir-Tar River") #remove 66 rows (49 for NA in gridID and 17 for removing Tar River Wbd)
 
-write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
+#write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 ```
 
 #### Outlier analysis
 ```{r}
-predictors_gridded <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/fish_extract_2_2.csv")
+CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 
-
-
-globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
-
-
-
-
-
-
-#Outliers
-t<- p915_CPUEedt %>% identify_outliers(Latitude)
-t2 <-t[which(t$is.extreme %in% TRUE), ]
-
-lower_bound_SummerFlounder <- quantile(P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount, 0.01)
-upper_bound_SummerFlounder <- quantile(P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount, 0.99)
-outlier_ind_SummerFlounder <- which(P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount < lower_bound_SummerFlounder | P195JuneSDMDATAREDO_SummerFlounderF$SummerFlounderCount> upper_bound_SummerFlounder)
-View(P195JuneSDMDATAREDO_SummerFlounderF[outlier_ind_SummerFlounder, ])
+colnames(CPUE_dfs_gridded_final)
+cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "dist_inlets")
+t <- list()
+for(col in cn){
+t[[col]] <- CPUE_dfs_gridded_final %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
+}
 ```
+
+In general, there were not many extreme outliers throughout the datasets. There were no extreme outliers for year, month, day, ssal, bsal, stemp, btemp, sdo, and bdo columns. There were 3,410 extreme outliers for the Depth column. Keep in mind, at the time of this outlier analysis (08/02/23), the issues with P195 Depthend and Depthstart hadn't been resolved. The minimum depth was 0.1 and the maximum was 8.8 meters. The only watersheds that had water depth over 7 meters were New River, Pamlico River, and Pamlico Sound. Based on briefly examining the maxinimum depth for water bodies, I think this might be plausible. For Colnum, there were around 14,000 extreme outliers with a maximum Colnum of 9006. As the species with extreme outliers for this category are commonly caught in the estuary (atlantic croaker, black drum, blue crab, spot, etc.), I feel comfortable with retaining these outliers. Lastly, there were 17 rows of extreme outliers for distance to nearest inlet, all within the Tar River Reservoir-Tar River. I decided to remove these from the analysis (but this in above code) due to the distance from water bodies of focus. 
 
 #### CPUE calculation
 
