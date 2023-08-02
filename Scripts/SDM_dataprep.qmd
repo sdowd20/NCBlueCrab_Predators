@@ -92,7 +92,7 @@ unique(fish_extract_2_2edt$gridID)
 write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv") #updated on 08/01/23
 ```
 
-#### Predictor variables: coordinates
+#### Coords: Predictor variables
 
 ```{r}
 #Load predictor variable datasets
@@ -165,6 +165,7 @@ CPUE_dfs$lat_lon <- paste(CPUE_dfs$Latitude, CPUE_dfs$Longitude, sep = "_")
 CPUE_dfs_gridded <- CPUE_dfs %>% left_join(pred_gridd_geom, by= "lat_lon") #49 gridIDs with NA are out of the study area (out of sound or Antartica)
 CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% filter(!Wbd %in% "Tar River Reservoir-Tar River") #remove 66 rows (49 for NA in gridID and 17 for removing Tar River Wbd)
 
+
 #write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 ```
 
@@ -185,30 +186,37 @@ In general, there were not many extreme outliers throughout the datasets. There 
 #### CPUE calculation
 
 ```{r}
-#P120: 
-summary(p120_CPUE$Duration) #All tows are 1 minute speed in duration
-#Adjusted to cover 75 yards, headrope is 10.5 feet, so area covered in one tow is 0.02195 hectares
-p120_CPUEedt$Effort= 0.02195
-p120_CPUEedt$CPUE=p120_CPUEedt$Colnum/p120_CPUEedt$Effort
+CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 
-#P195 
-##Effort in p195_abund is 1.812, double rigged trawl, duration is 20 mins at a speed of 2.5 knots to cover 87,750 square feet.
-p195_CPUEedt$Effort = 1.812
-p195_CPUEedt$CPUE=p195_CPUEedt$Colnum/p195_CPUEedt$Effort
+#Effort by survey: this works 
+CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else 
 
-#P915
-p915_CPUEedt <- p915_CPUEedt %>% mutate("Soak_time" = ifelse(Area == 'CAPEF' & Month  %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Area == 'NEWR' & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))) #add in standard soak time, max is 12 hours, soak time 4 hours for CAPEF and NEWR b/w April and September
-p915_CPUEedt$CPUE= p915_CPUEedt$Colnum/p915_CPUEedt$Soak_time #calculate CPUE
-
-t <- p915_CPUEedt %>% filter(Area %in% "DARE2", Strata %in% "MANT2")
-
-
+#CPUE by row: since you assigned effort correctly, this will work as it should 
+CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort
+ggplot() + geom_histogram(data= CPUE_grid, aes(x= CPUE)) + standard_theme + facet_wrap(~Survey, scales= "free") #CPUEs from surveys don't seem that different (need to standardize)
 ```
 
-#### Predictor variables: grid
-
+#### Grid: Predictor variables
 ```{r}
-#visualize btmcomp and sedsize
+##Add grid geometry in to CPUE dataset 
+globe_grid_30edt <- globe_grid_30 %>% rename("gridID"= "ID", "geometry2" = "geometry")
+CPUE_grid_edt <- CPUE_grid %>% left_join(globe_grid_30edt, by= "gridID") %>% filter(Month == 6) %>% select(-geometry) %>% rename("geometry"= "geometry2")
+
+##For each year and gridID for the month of June, average all environmental variables (should do this by survey or have all information available in grid cell?)
+colnames(CPUE_grid_edt)
+
+
+CPUE_grid_avg <- CPUE_grid_edt %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth), avg_ssal= mean(Ssal), avg_)
+
+
+
+
+
+##For the month of June: average of all environmental variables for the gridcell, CPUE average for each species
+
+
+
+
 ```
 
 ```{r}
@@ -229,7 +237,7 @@ ggsave("Users/sallydowd/Desktop.savedIT.png")
 
 ```{r}
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-grid_t <- read.csv("Data/SDM.grids.csv")
+globe_grid_30
 
 
 
