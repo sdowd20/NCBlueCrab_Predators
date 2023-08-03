@@ -7,7 +7,7 @@ editor: visual
 #### Load packages, CPUE datasets, and filter them
 ```{r}
 #Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc")
 invisible(lapply(packages, library, character.only= TRUE))
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -165,9 +165,20 @@ CPUE_dfs$lat_lon <- paste(CPUE_dfs$Latitude, CPUE_dfs$Longitude, sep = "_")
 CPUE_dfs_gridded <- CPUE_dfs %>% left_join(pred_gridd_geom, by= "lat_lon") #49 gridIDs with NA are out of the study area (out of sound or Antartica)
 CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% filter(!Wbd %in% "Tar River Reservoir-Tar River") #remove 66 rows (49 for NA in gridID and 17 for removing Tar River Wbd)
 
-
 #write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 ```
+
+#### Overlap
+
+```{r}
+CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
+
+```
+
+
+
+
+
 
 #### Outlier analysis
 ```{r}
@@ -193,7 +204,14 @@ CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P12
 
 #CPUE by row: since you assigned effort correctly, this will work as it should 
 CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort
+CPUE_grid <- CPUE_grid %>% group_by(Survey) %>% mutate(CPUE_stdzd= normalize(CPUE, method= "range", range= c(0,1))) ##min-max scaling:
+
 ggplot() + geom_histogram(data= CPUE_grid, aes(x= CPUE)) + standard_theme + facet_wrap(~Survey, scales= "free") #CPUEs from surveys don't seem that different (need to standardize)
+
+abund_bc <- CPUE_grid %>% filter(Speciescommonname %in% "blue crab") %>% group_by(gridID, Survey) %>% mutate(mean_CPUE = mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd)) %>% distinct(mean_CPUE, .keep_all= TRUE)
+
+ggplot(data = world) + geom_sf() + geom_sf(data=pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = subset(abund_bc,Survey %in% "P120"), aes(x = Longitude, y = Latitude, color= mean_CPUE), size = 1) + facet_wrap(~Survey) + scale_color_viridis_c(option = "D")
+ggsave("/Users/sallydowd/Desktop/test.png")
 ```
 
 #### Grid: Predictor variables
@@ -203,18 +221,29 @@ globe_grid_30edt <- globe_grid_30 %>% rename("gridID"= "ID", "geometry2" = "geom
 CPUE_grid_edt <- CPUE_grid %>% left_join(globe_grid_30edt, by= "gridID") %>% filter(Month == 6) %>% select(-geometry) %>% rename("geometry"= "geometry2")
 
 ##For each year and gridID for the month of June, average all environmental variables (should do this by survey or have all information available in grid cell?)
-colnames(CPUE_grid_edt)
+CPUE_grid_avg <- CPUE_grid_edt %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth), avg_ssal= mean(Ssal), avg_bsal= mean(Bsal), avg_stemp= mean(Stemp), avg_btemp= mean(Btemp), avg_sdo= mean(Sdo), avg_bdo= mean(Bdo), avg_dist_inlets= mean(dist_inlets), avg_latitude= mean(Latitude), avg_longitude= mean(Longitude))
+CPUE_grid_avgsp <- CPUE_grid_avg %>% ungroup() %>% group_by(Speciescommonname, Year, gridID, Survey) %>% mutate(CPUE_avgspyrgrid_stdzd= mean(CPUE_stdzd)) %>% distinct(CPUE_avgspyrgrid_stdzd, .keep_all = TRUE)
 
+##Center of grid cell
+library(rgeos)
+centroids <- st_centroid(pred_gridd_geom) #centroid size is determined by nature of geometries you are working with 
+coords2 <- st_coordinates(centroids)
+centroids$Latitude <- coords2[, "Y"]
+centroids$Longitude <- coords2[, "X"]
 
-CPUE_grid_avg <- CPUE_grid_edt %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth), avg_ssal= mean(Ssal), avg_)
+ggplot(data= world) + geom_sf() + geom_sf(data=subset(pred_gridd_geom, gridID==288), fill = NA) + geom_sf(data= centroids, aes(x= Latitude, y= Longitude), color= "red") + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme 
 
+yep <- CPUE_grid_edt %>% group_by(gridID) %>% distinct(Wbd)
 
+length(unique(yep$gridID))
 
-
+?gCentroid()
+#Find waterbody and waterbodytype for grid cell 
+unique(CPUE_grid_avgsp$geometry)
 
 ##For the month of June: average of all environmental variables for the gridcell, CPUE average for each species
 
-
+help.search("centroid")
 
 
 ```
