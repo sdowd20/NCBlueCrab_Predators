@@ -109,6 +109,8 @@ inlet_coords <- st_transform(inlet_coords) #NC CRS
 Major_hydrography <- st_read("/Users/sallydowd/Desktop/Major_Hydrography/Major_Hydrography_(Waterbodies).shp")
 Major_hydrography <- st_transform(Major_hydrography, crs = 4326)
 
+NC_watersheds <- st_read("NC_watersheds/HUC_10.shp")
+NC_watersheds <- st_transform(NC_watersheds, crs = 4326)
 #SAV_08 <- st_read("SAV/SAV_2006_2008/SAV_2006-2008_Mapping_Revised.shp")
 #SAV_08 <- st_transform(SAV_08, crs = 4326) #it was already in WGS 84 
 #SAV_14 <- st_read("SAV/SAV_2012_2014/SAV_2012-2014_Mapping.shp")
@@ -127,10 +129,25 @@ dist_inlets <- as.numeric(dist_inlets)
 coords_surveysf <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
 
 ##Wbd 
-intersections2 <- st_intersection(coords_surveysf, Major_hydrography)
+intersections2 <- st_intersection(coords_surveysf, Major_hydrography) 
 intersections2_edt <- intersections2 %>% mutate(Wbd= ifelse(waterbody %in% "Pamlico River And Pamlico Sound", "Pamlico Sound", ifelse(waterbody %in% "Bogue Sound (Incl. Intracoastal Wa", "Bogue Sound", ifelse(waterbody %in% "Northeast Cape Fear River", "Cape Fear River", intersections2$waterbody))))
 
+#Intersections2 drops some coordinates, let's figure out which ones 
 predictors_df <- intersections2_edt %>% select(geometry, dist_inlets, Wbd)
+coords2 <- st_coordinates(predictors_df)
+predictors_df$Latitude <- coords2[, "Y"]
+predictors_df$Longitude <- coords2[, "X"] #Add coordinates back in
+predictors_df$lat_lon <- paste(predictors_df$Latitude, predictors_df$Longitude, sep = "_") 
+coords_surveysf$lat_lon <- paste(coords_surveysf$Latitude, coords_surveysf$Longitude, sep= "_")
+length(unique(coords_surveyedt$lat_lon)) #10,748
+length(unique(predictors_df$lat_lon)) #9,068
+column_diff <- setdiff(coords_surveyedt$lat_lon, predictors_df$lat_lon)
+
+diff_coords <- coords_surveysf %>% filter(lat_lon %in% column_diff)
+
+intersections_diff <- st_intersection(diff_coords, NC_watersheds) 
+
+ggplot(data= world) + geom_sf() + geom_point(data= intersections_diff, aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
 
 ##Wbd type
 predictors_df <- predictors_df %>% mutate(Wbd_type= ifelse(grepl("River", Wbd), "River", ifelse(grepl("Sound", Wbd), "Sound", predictors_df$Wbd)))
@@ -149,7 +166,7 @@ ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[1000:2000,], ae
 predictors_df$lat_lon <- paste(predictors_df$Latitude, predictors_df$Longitude, sep = "_") 
 predictors_df_edt <- st_drop_geometry(predictors_df)
 gridded_coords <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv")
-predictors_gridded <- predictors_df_edt %>% left_join(gridded_coords, by= "lat_lon") %>% select(lat_lon, gridID, dist_inlets, Wbd, Wbd_type)
+predictors_gridded <- predictors_df_edt %>% left_join(gridded_coords, by= "lat_lon") %>% select(lat_lon, gridID, dist_inlets)
 write.csv(predictors_gridded,"~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/predictors_gridded.csv") #updated on 08/03/23
 
 ###Predictors and gridID with gridID geometry
