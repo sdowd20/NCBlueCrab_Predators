@@ -12,6 +12,13 @@ packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnatura
 invisible(lapply(packages, library, character.only= TRUE))
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
@@ -91,7 +98,7 @@ fish_extract_2_2$gridID <- fish_extract_2_2$ID
 fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
 
 unique(fish_extract_2_2edt$gridID)
-write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv") #updated on 08/01/23
+#write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv") #updated on 08/01/23
 ```
 
 #### Coords: Predictor variables
@@ -128,29 +135,53 @@ dist_inlets = st_distance(coords_surveysf, inlet_coords[coords_inlet_nearest,], 
 dist_inlets <- as.numeric(dist_inlets)
 coords_surveysf <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
 
+coords_survey$lat_lon <- paste(coords_surveyedt$Latitude, coords_survey$Longitude, sep = "_") 
+
 ##Wbd 
 intersections2 <- st_intersection(coords_surveysf, Major_hydrography) 
 intersections2_edt <- intersections2 %>% mutate(Wbd= ifelse(waterbody %in% "Pamlico River And Pamlico Sound", "Pamlico Sound", ifelse(waterbody %in% "Bogue Sound (Incl. Intracoastal Wa", "Bogue Sound", ifelse(waterbody %in% "Northeast Cape Fear River", "Cape Fear River", intersections2$waterbody))))
 
-#Intersections2 drops some coordinates, let's figure out which ones 
+#Intersections2 drops some coordinates, let's figure out which ones, first shapefile retains all the points
 predictors_df <- intersections2_edt %>% select(geometry, dist_inlets, Wbd)
 coords2 <- st_coordinates(predictors_df)
 predictors_df$Latitude <- coords2[, "Y"]
 predictors_df$Longitude <- coords2[, "X"] #Add coordinates back in
 predictors_df$lat_lon <- paste(predictors_df$Latitude, predictors_df$Longitude, sep = "_") 
-coords_surveysf$lat_lon <- paste(coords_surveysf$Latitude, coords_surveysf$Longitude, sep= "_")
+coords2.2 <- st_coordinates(coords_surveysf)
+coords_surveyedt <- coords_surveysf
+coords_surveyedt$Latitude <- coords2.2[, "Y"]
+coords_surveyedt$Longitude <- coords2.2[, "X"] #Add coordinates back in
+coords_surveyedt$lat_lon <- paste(coords_surveyedt$Latitude, coords_surveyedt$Longitude, sep = "_") 
 length(unique(coords_surveyedt$lat_lon)) #10,748
 length(unique(predictors_df$lat_lon)) #9,068
 column_diff <- setdiff(coords_surveyedt$lat_lon, predictors_df$lat_lon)
 
-diff_coords <- coords_surveysf %>% filter(lat_lon %in% column_diff)
-
+diff_coords <- coords_surveyedt %>% filter(lat_lon %in% column_diff)
 intersections_diff <- st_intersection(diff_coords, NC_watersheds) 
 
-ggplot(data= world) + geom_sf() + geom_point(data= intersections_diff, aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
+ggplot(data= world) + geom_sf() + geom_point(data= intersections_diff %>% filter(HU_10_NAME %in% "New River Inlet"), aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE)
 
-##Wbd type
-predictors_df <- predictors_df %>% mutate(Wbd_type= ifelse(grepl("River", Wbd), "River", ifelse(grepl("Sound", Wbd), "Sound", predictors_df$Wbd)))
+unique(intersections2_edt$Wbd) #Names pungo Pamlico river (guess b/c main river)
+
+intersections_diff_edt <- intersections_diff %>% mutate(Wbd = ifelse(HU_10_NAME %in% "Brunswick River-Cape Fear River"|HU_10_NAME %in% "Goshen Swamp"|HU_10_NAME %in% "Liliput Creek-Cape Fear River"|HU_10_NAME %in% "Harrisons Creek-Northeast Cape Fear River", "Cape Fear River", ifelse(HU_10_NAME %in% "South Creek-Pamlico River"|HU_10_NAME %in% "Chocowinity Bay-Pamlico River", "Pamlico River", ifelse(HU_10_NAME %in% "Pantego Creek"|HU_10_NAME %in% "Headwaters Pungo River"| HU_10_NAME %in% "Intracoastal Waterway-Pungo River"| HU_10_NAME %in% "Outlet Pungo River", "Pamlico River", ifelse(HU_10_NAME %in% "Pamlico Sound-Ocracoke Inlet"|HU_10_NAME %in% "Pamlico Sound-Hatteras Inlet"|HU_10_NAME %in% "Neuse River-Pamlico Sound"|HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay"|HU_10_NAME %in% "Jones Bay-Bay River", "Pamlico Sound", ifelse(HU_10_NAME %in% "Headwaters New River"|HU_10_NAME %in% "New River Inlet", "New River", ifelse(HU_10_NAME %in% "Upper Broad Creek-Neuse River"|HU_10_NAME %in% "Cherry Point-Neuse River"|HU_10_NAME %in% "Town of Oriental-Neuse River", "Neuse River", ifelse(HU_10_NAME %in% "Oyster Creek-Jarrett Bay"|HU_10_NAME %in% "Cape Lookout Shoals-Core Banks", "Core Sound", ifelse(HU_10_NAME %in% "Bogue Banks-Shackleford Banks", "Bogue and Back Sound", ifelse(HU_10_NAME %in% "Albemarle Sound-Croatan Sound", "Croatan Sound", intersections_diff$HU_10_NAME)))))))))) %>% filter(!HU_10_NAME %in% c("Outlet Cashie River", "Shallotte River", "Tar River Reservoir-Tar River"))
+unique(intersections_diff$HU_10_NAME)
+unique(intersections_diff_edt$Wbd)
+unique(intersections2_edt$Wbd)
+
+#Removed Outlet Cashie River, Shallotte River, Tar River Reservoir-Tar River 
+#In main dataset, bogue and back go to Bogue and Back Sound
+#In this dataset, "Albemarle Sound-Croatan Sound" goes to Croatan Sound (eyed it on map)
+#New River Inlet--> Stump
+
+###Finish Wbd: bind datasets together 
+unique(intersections2_edt$Wbd) #Hmm back sound isn't in here but still change it 
+intersections2_edt <- intersections2 %>% mutate(Wbd= ifelse(waterbody %in% "Pamlico River And Pamlico Sound", "Pamlico Sound", ifelse(waterbody %in% "Bogue Sound (Incl. Intracoastal Wa", "Bogue and Back Sound", ifelse(waterbody %in% "Northeast Cape Fear River", "Cape Fear River", intersections2$waterbody)))) %>% select(Wbd, geometry, dist_inlets)
+intersections_diff_edt <- intersections_diff_edt %>% select(Wbd, geometry, dist_inlets)
+intersections_rbind <- rbind(intersections2_edt, intersections_diff_edt)
+
+unique(intersections_rbind$Wbd)
+##Wbd type: River to River, Sound, Inlet and Beach to Non-River
+predictors_df <- intersections_rbind %>% mutate(Wbd_type= ifelse(grepl("River", Wbd), "River", ifelse(grepl("Sound", Wbd)|grepl("Beach", Wbd)|grepl("Inlet", Wbd), "Sound", predictors_df$Wbd)))
 
 ##Check if it worked on a subset of data: it did!
 coords2 <- st_coordinates(predictors_df)
@@ -164,9 +195,10 @@ ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[1000:2000,], ae
 ##Join predictors, gridded, and CPUE datasets
 ###Predictors with gridID
 predictors_df$lat_lon <- paste(predictors_df$Latitude, predictors_df$Longitude, sep = "_") 
+
 predictors_df_edt <- st_drop_geometry(predictors_df)
 gridded_coords <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv")
-predictors_gridded <- predictors_df_edt %>% left_join(gridded_coords, by= "lat_lon") %>% select(lat_lon, gridID, dist_inlets)
+predictors_gridded <- predictors_df_edt %>% left_join(gridded_coords, by= "lat_lon") %>% select(lat_lon, gridID, dist_inlets, Wbd, Wbd_type)
 write.csv(predictors_gridded,"~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/predictors_gridded.csv") #updated on 08/03/23
 
 ###Predictors and gridID with gridID geometry
@@ -179,10 +211,11 @@ pred_gridd_geom <- st_as_sf(pred_gridd_geom)
 CPUE_dfs <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
 CPUE_dfs$lat_lon <- paste(CPUE_dfs$Latitude, CPUE_dfs$Longitude, sep = "_") 
 CPUE_dfs_gridded <- CPUE_dfs %>% left_join(pred_gridd_geom, by= "lat_lon")
+length(unique(CPUE_dfs$lat_lon))
+length(unique(pred_gridd_geom$lat_lon))
 CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% select(-geometry) #remove 66 rows (49 for NA in gridID and 17 for removing Tar River Wbd)
 
-length(unique(CPUE_dfs$lat_lon))
-
+#Redo this to the old one 
 
 #write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 ```
@@ -293,7 +326,7 @@ final_combo_n <- final_combo %>% group_by(Speciescommonname.x, Speciescommonname
 
 ```
 
-#### Outlier analysis
+#### Outlier analysis: changes here reflected in saved CPUE_dfs_gridded_final analysis
 
 ```{r}
 CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
@@ -313,6 +346,10 @@ In general, there were not many extreme outliers throughout the datasets. There 
 ```{r}
 CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 
+t <- CPUE_dfs_gridded_final %>% filter(Survey %in% "P915", Speciescommonname %in% "striped bass", Year== 2008, gridID== 46)
+#2008, 46
+
+
 #Effort by survey: this works 
 CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else 
 
@@ -324,8 +361,7 @@ ggplot() + geom_histogram(data= CPUE_grid, aes(x= CPUE)) + standard_theme + face
 
 abund_bc <- CPUE_grid %>% filter(Speciescommonname %in% "blue crab") %>% group_by(gridID, Survey) %>% mutate(mean_CPUE = mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd)) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
-ggplot(data = world) + geom_sf() + geom_sf(data=pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = subset(abund_bc,Survey %in% "P120"), aes(x = Longitude, y = Latitude, color= mean_CPUE), size = 1) + facet_wrap(~Survey) + scale_color_viridis_c(option = "D")
-ggsave("/Users/sallydowd/Desktop/test.png")
+#ggplot(data = world) + geom_sf() + geom_sf(data=pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + #geom_point(data = subset(abund_bc,Survey %in% "P120"), aes(x = Longitude, y = Latitude, color= mean_CPUE), size = 1) + facet_wrap(~Survey) + scale_color_viridis_c(option = "D")
 ```
 
 #### Grid: Predictor variables
@@ -333,11 +369,40 @@ ggsave("/Users/sallydowd/Desktop/test.png")
 ```{r}
 ##Add grid geometry in to CPUE dataset 
 globe_grid_30edt <- globe_grid_30 %>% rename("gridID"= "ID", "geometry2" = "geometry")
-CPUE_grid_edt <- CPUE_grid %>% left_join(globe_grid_30edt, by= "gridID") %>% filter(Month == 6) %>% select(-geometry) %>% rename("geometry"= "geometry2")
+CPUE_grid_edt <- CPUE_grid %>% left_join(globe_grid_30edt, by= "gridID") %>% filter(Month == 6) %>% rename("geometry"= "geometry2")
 
 ##For each year and gridID for the month of June, average all environmental variables (should do this by survey or have all information available in grid cell?)
-CPUE_grid_avg <- CPUE_grid_edt %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth), avg_ssal= mean(Ssal), avg_bsal= mean(Bsal), avg_stemp= mean(Stemp), avg_btemp= mean(Btemp), avg_sdo= mean(Sdo), avg_bdo= mean(Bdo), avg_dist_inlets= mean(dist_inlets), avg_latitude= mean(Latitude), avg_longitude= mean(Longitude))
-CPUE_grid_avgsp <- CPUE_grid_avg %>% ungroup() %>% group_by(Speciescommonname, Year, gridID, Survey) %>% mutate(CPUE_avgspyrgrid_stdzd= mean(CPUE_stdzd)) %>% distinct(CPUE_avgspyrgrid_stdzd, .keep_all = TRUE)
+library(dplyr)
+CPUE_grid_avg <- CPUE_grid_edt %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth), avg_ssal= mean(Ssal), avg_bsal= mean(Bsal), avg_stemp= mean(Stemp), avg_btemp= mean(Btemp), avg_sdo= mean(Sdo), avg_bdo= mean(Bdo), avg_dist_inlets= mean(dist_inlets), avg_latitude= mean(Latitude), avg_longitude= mean(Longitude), avg_photoperiod= mean(Photoperiod))
+
+summary(is.na(CPUE_grid_edt))
+
+
+CPUE_grid_avgsp <- CPUE_grid_avg %>% group_by(Speciescommonname, Year, gridID, Survey) %>% mutate(CPUE_avgspyrgrid_stdzd= mean(CPUE_stdzd)) %>% distinct(CPUE_avgspyrgrid_stdzd, .keep_all = TRUE) %>% group_by(Speciescommonname, Year, gridID, Survey) %>% distinct() 
+
+t <- nrow(CPUE_grid_avgsp %>% filter(Speciescommonname %in% "red drum", Survey %in% "P915"))
+length(unique(t$Control1))
+t2 <- nrow(CPUE_grid_avgsp %>% filter(Speciescommonname %in% "striped bass", Survey %in% "P915"))
+length(unique(t2$Control1))
+
+t <- CPUE_grid_avg %>% filter(Survey %in% "P915") %>%
+  group_by(Speciescommonname, Year, gridID) %>%
+  summarise(CPUE_avgspyrgrid_stdzd = mean(CPUE_stdzd)) %>%
+  spread(Speciescommonname, CPUE_avgspyrgrid_stdzd)
+
+#2008, 46
+
+
+
+
+t <- CPUE_grid_avgsp %>% filter(Speciescommonname %in% "red drum", Survey %in% "P915")
+length(unique(t$Control1))
+t2 <- CPUE_grid_avgsp %>% filter(Survey %in% "P915")
+length(unique(t2$Speciescommonname))
+
+
+
+
 
 ##Center of grid cell
 library(rgeos)
@@ -363,29 +428,27 @@ help.search("centroid")
 
 ```
 
-```{r}
-globe_bb <- matrix(c(-78.900147,33.802938,
-                      -78.900147,36.672128,
-                      -75.263672,36.672128,
-                     -75.263672, 33.802938,
-                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-
-globe_grid_20 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #0.13 degrees
-
-degrees_per_km = 1/111.0 #1 degree is 111 km 
-degress <- 14.4*degrees_per_km #0.129
-
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = coords_survey, aes(x = Longitude, y = Latitude, color= Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE)
-ggsave("Users/sallydowd/Desktop.savedIT.png")
-```
+##TEST GAMs
 
 ```{r}
-setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-globe_grid_30
+#
+CB_df <- read.csv("/Users/sallydowd/Desktop/P120Counts1972PresentStandardizedSimplified.csv")
+
+CPUE_to_run <- CPUE_grid_avgsp %>% select(-Day, -Sciname, -Effort, -CPUE, -Depth, -Ssal, -Bsal, -Stemp, -Btemp, -Sdo, -Bdo, -Colnum, -Month, -Control1, -Depthzone, -Season, -Latitude, -Longitude, -"Strata/station", -Location, -Date, -Ym_date, -Photoperiod, -geometry, -CPUE_stdzd)
 
 
 
-Btm_test <- rbind(p915_CPUEedt %>% select(Btmcomp_new, Sedsize_new, Latitude, Longitude) %>% mutate(Survey= "P915"), p195_CPUEedt %>% select(Btmcomp_new, Sedsize_new, Latitude, Longitude) %>% mutate(Survey= "P195"))
 
-ggplot(data= world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = Btm_test, aes(x = Longitude, y = Latitude, colour = Survey), size = .2)
+
+t <- CPUE_to_run %>% pivot_longer(names_to = "Speciescommonname", values_to = "CPUE_avgspyrgrid_stdzd", cols= everything())
+pivot_wider
+colnames(CPUE_to_run)
+
+
+t <- CPUE_to_run %>% filter(Survey %in% "P915") %>% pivot_wider(names_from = "Speciescommonname", values_from = "CPUE_avgspyrgrid_stdzd")
+
+%>% pivot_wider(names_from = "CPUE_avgspyrgrid_stdzd", values_from = "Speciescommonname")
+
+
+
 ```
