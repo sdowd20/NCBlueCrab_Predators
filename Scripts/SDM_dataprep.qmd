@@ -29,7 +29,7 @@ p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 ##Filter datasets: to note- add back in Sedsize and Btmcomp once this is fixed! and add back in secchi, don't know if Depthstart is actual depth but called it this in P195 
-p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Sedsize_new, -Btmcomp_new, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data) 
+p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Sedsize_new, -Btmcomp_new, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass", "bonnethead hammerhead", "sheepshead")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
 p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Secchi) %>% filter(Year >= 2008) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
 p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Sedsize_new, -Btmcomp_new) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal_new", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(Year >= 2008)
 p195_CPUEedt$Depthzone[p195_CPUEedt$Depthzone %in% NA] <- "Constant"
@@ -346,10 +346,6 @@ In general, there were not many extreme outliers throughout the datasets. There 
 ```{r}
 CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 
-t <- CPUE_dfs_gridded_final %>% filter(Survey %in% "P915", Speciescommonname %in% "striped bass", Year== 2008, gridID== 46)
-#2008, 46
-
-
 #Effort by survey: this works 
 CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else 
 
@@ -362,6 +358,19 @@ ggplot() + geom_histogram(data= CPUE_grid, aes(x= CPUE)) + standard_theme + face
 abund_bc <- CPUE_grid %>% filter(Speciescommonname %in% "blue crab") %>% group_by(gridID, Survey) %>% mutate(mean_CPUE = mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd)) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
 #ggplot(data = world) + geom_sf() + geom_sf(data=pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + #geom_point(data = subset(abund_bc,Survey %in% "P120"), aes(x = Longitude, y = Latitude, color= mean_CPUE), size = 1) + facet_wrap(~Survey) + scale_color_viridis_c(option = "D")
+
+#Number of observations for species of interest: to note- when I redid this (08/06/23), I included bonnethead hammerhead and blue catfish just to look at the #s
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel")
+
+p195_nums <- p195_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P195") 
+
+p120_nums <- p120_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month == 5| Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
+
+p915_nums <- p915_CPUEedt %>% filter(Year > 2008, Month == 5| Month==6| Month==9) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
+
+combo <- rbind(p195_nums, p120_nums, p915_nums)
+combo <- combo %>% arrange(Speciescommonname, Month)
+write.csv(combo, "~/Desktop/seasonality.csv")
 ```
 
 #### Grid: Predictor variables

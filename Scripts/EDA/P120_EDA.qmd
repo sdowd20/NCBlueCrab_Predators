@@ -29,7 +29,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 ##Load and edit data set
 setwd("~/Desktop")
 P120_bioledt <- read_csv("p120_biol_new.csv")
- 
+
 coords_captured <- function(species){
 ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_CPUEold$Species %in% species & as.numeric(p915_CPUEold$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
 }
@@ -136,37 +136,6 @@ ggsave("~/Desktop/p120_length.png", width= 25, height= 25)
 
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp,Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname, Month) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Month, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p120_length.month.png", width= 25, height= 25)
-
-length(unique(P120_bioledt$Control1))
-length(unique(P120_bioledt$Location))
-length(unique(P120_bioledt$Station))
-
-#Blue crab length
-
-
-
- #%>% mutate("Ageclass"= ifelse(Length < 50.8, "juvenile", ifelse(Length >= 50.8, "adult", "NA"))) 
-
-
-#P120_bc_juv <- P120_bc %>% filter(Ageclass %in% "juvenile") 
-#P120_bc_juv_edt <- P120_bc_juv %>% group_by(Control1) %>% mutate(Colnum_juv= n()) #number of rows correspond to # captured of age class 
-
-P120_bc_adult <- P120_bc %>% filter(Ageclass %in% "adult") 
-P120_bc_adult <- P120_bc_adult %>% group_by(Control1) %>% mutate(Colnum_adult= n()) 
-P120_bc_test <- P120_bc %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #63690 to 63680 when drop_na
-
- #Make sure each crab sampling has an individual row 
-#uncount: opposite direction of count, weights (Frequenc) specifies the number of times a row should be repeated 
-#Subnum: # of individuals sampling in unit 
-
-min(P120_bc$Length) #min is 1, max is 266 mm
-max(P120_bc$Length)
-
-
-
-
-
-
 ```
 
 #### Actually dealing with length
@@ -208,6 +177,7 @@ select_spp <- c("brown shrimp", "atlantic croaker", "southern flounder", "spot",
 ##Form a haul dataset where every row is one haul 
 summary(is.na(P120_bioledt$Sciname)) #28 NAs for Sciname
 P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
+P120_bioledt$Speciescommonname[P120_bioledt$Speciescommonname == "northern brown shrimp"] <- "brown shrimp"
 length(unique(P120_bioledt$Control1)) #full dataset has more unique control1 than haul, 9641 vs. 9330, doesn't have to do with just selecting cores 
 haul <- P120_bioledt %>% group_by(Date, Location) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (9310 variables whereas Lela had 8099), for all species
 length(unique(haul$Control1))

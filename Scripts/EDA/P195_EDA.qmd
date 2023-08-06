@@ -6,21 +6,17 @@ editor: visual
 
 #### Overall data set description
 
-P195 is a stratified-random trawl survey that has collected both biotic and abiotic information since 1987 in both June and September in Pamlico Sound and its tributaries. In 1990, all sampling in the Albemarle Sound and the March and December sampling in Pamlico Sound was elmiinated. The survey uses two 30-foot head rope demersal mongoose trawls to sample waters within Pamlico Sound as well as the Pamlico, Neuse, and Pungo rivers (4 areas). As there are both deep (depth > 3.7 m) and shallow sampling sites (1.8-3.7 m) for the two locations in Pamlico Sound, the survey area is divided into seven strata. Since the survey is stratified-random, 54 are selected at random from the seven strata for June and September. The fishing effort is kept consistent with 20 minute tows at a speed of 2.5 knots to cover 87,750 square feet. The catch from the two nets are combined to form a single sample. However, the dataset doesn't already have the catch from the nets combined. I did this for the CPUE dataset.
+P195 is a stratified-random trawl survey that has collected both biotic and abiotic information since 1987 in both June and September in Pamlico Sound and its tributaries. In 1990, all sampling in the Albemarle Sound and the March and December sampling in Pamlico Sound was elmiinated. The survey uses two 30-foot head rope demersal mongoose trawls to sample waters within Pamlico Sound as well as the Pamlico, Neuse, and Pungo rivers (4 areas). As there are both deep (depth \> 3.7 m) and shallow sampling sites (1.8-3.7 m) for the two locations in Pamlico Sound, the survey area is divided into seven strata. Since the survey is stratified-random, 54 are selected at random from the seven strata for June and September. The fishing effort is kept consistent with 20 minute tows at a speed of 2.5 knots to cover 87,750 square feet. The catch from the two nets are combined to form a single sample. However, the dataset doesn't already have the catch from the nets combined. I did this for the CPUE dataset.
 
-The survey collects total abundance and weight for each species found, environmental information at the site, and additional length data for target species. A total number and weight is recorded for each species. For target species, at least 30 individuals are measured and total weights are recorded. If there are diseased individuals in the sample, there are separated from the rest (might have two rows for same Eventname and Speciescommonname). Water clarity started to be recorded in 2008 with a Secchi disk and shoreline and sediment data started to be recorded in 2009. Covid-19 impacted the sampling design. Instead of overnight trips, only day trips were able to occur in 2020 and only sites accessible from a nearby port were sampled (28 stations in June, 35 stations in September). The pandemic impacted sampling into 2021 due to staffing issues. 35 stations were towed in June and 33 stations were towed in September. 
+The survey collects total abundance and weight for each species found, environmental information at the site, and additional length data for target species. A total number and weight is recorded for each species. For target species, at least 30 individuals are measured and total weights are recorded. If there are diseased individuals in the sample, there are separated from the rest (might have two rows for same Eventname and Speciescommonname). Water clarity started to be recorded in 2008 with a Secchi disk and shoreline and sediment data started to be recorded in 2009. Covid-19 impacted the sampling design. Instead of overnight trips, only day trips were able to occur in 2020 and only sites accessible from a nearby port were sampled (28 stations in June, 35 stations in September). The pandemic impacted sampling into 2021 due to staffing issues. 35 stations were towed in June and 33 stations were towed in September.
 
 On 07/07/23, I downloaded Abundance and Biomass & Event Information from the SEAMAP website for the Pamlico Sound Survey and processed it in Toclean.R. The downloaded files had all years available, all locations, latitudes, were for Summer (June, July, and August) as well as Fall (September, October, and November), and contained all species. Although I had downloaded it in April to use it for BIOL 562 project, I decided it would be better to redownload for the purpose of this study.
 
 #### Length dataset description:
-This is the subsample protocol for species in general: 
-  1) If species are present in low #s (< 30 individuals) with one or multiple size classes, all individuals are processed as one sample. If a target species, all individuals are measured.
-  2) For species present in low numbers with multiple size classes (< 30 individuals per size class but more than 30 overall), each size class is processed as a separate sample
-  3) For species present in moderate numbers (< 100 individuals) with one size class, all individuals are processed as one samples. If a species is on the target species list, a sub-sample of 30-60 individuals is measured. 
-  4) For species in moderate #s with multiple size classes (< 100 individuals per size class), each size class is processed separately. 
-  5 and 6) ""
-  
-There are separate subsampling protocols for blue crabs. Males and divided up from females. If interested in sex/maturity, look into this more. 
+
+This is the subsample protocol for species in general: 1) If species are present in low #s (\< 30 individuals) with one or multiple size classes, all individuals are processed as one sample. If a target species, all individuals are measured. 2) For species present in low numbers with multiple size classes (\< 30 individuals per size class but more than 30 overall), each size class is processed as a separate sample 3) For species present in moderate numbers (\< 100 individuals) with one size class, all individuals are processed as one samples. If a species is on the target species list, a sub-sample of 30-60 individuals is measured. 4) For species in moderate #s with multiple size classes (\< 100 individuals per size class), each size class is processed separately. 5 and 6) ""
+
+There are separate subsampling protocols for blue crabs. Males and divided up from females. If interested in sex/maturity, look into this more.
 
 ```{r}
 ##Load packages and functions 
@@ -114,17 +110,6 @@ ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count
 #Seasonally: 
 #Fall: atlantic croaker, atlantic menhaden, black drum? blue crab, bluefish, brown shrimp, cownose ray, gizzard shad, southern flounder, spot, summer flounder, southern kingfish
 #Spring: atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, gizzard shad? southern flounder, spot, summer flounder, southern kingfish
-
-##Number of observations for species of interest
-p195_nums <- fine %>% filter(Year > 2008) %>% group_by(Speciescommonname, Month) %>% drop_na(Numbertotal) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P195") #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, southern kingfish, spot, and summer flounder have the most data
-
-p120_nums <- P120_bioledt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month == 5| Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
-
-p915_nums <- p915_bioln %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month == 5| Month==6| Month==9) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
-
-combo <- rbind(p195_nums, p120_nums, p915_nums)
-combo <- combo %>% arrange(Speciescommonname, Month)
-write.csv(combo, "~/Desktop/seasonality.csv")
 ```
 
 For seasonality, it does appear that there is enough data to look at these species in June and September: Atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, southern flounder, spot, summer flounder, southern kingfish. Refer to the seasonality.csv file in EDA folder in the Blue Crab google drive.
