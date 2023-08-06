@@ -52,16 +52,7 @@ colnames(p915_biolnew2) <- str_to_title(colnames(p915_biolnew2))
 p915_biolnew2 <- type.convert(p915_biolnew2, as.is = TRUE) #converts data to appropriate type, when false it converts character vectors to factors
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2) #number of rows is 146079 (75496 from biolnew1 + 70583 from biolnew2), before type.convert it cut off at year 2008 
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
-
-p915_bioln <- p915_bioln %>% filter(!Area %in% "miss", Speciescommonname %in% "bonnethead hammerhead")
-
-
-p915_nums <- p915_bioln %>% filter(Year > 2008, Month == 5| Month==6| Month==9) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
-
-
-
-unique(p915_CPUE$Speciescommonname)
-      p915_bioln %>% filter(Speciescommonname %in% "bluefish")      
+p915_bioln <- p915_bioln %>% filter(!Area %in% "miss")
 ```
 
 ##### General
