@@ -35,9 +35,6 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
 
 p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
-
-colnames(p195_lengthfreq)
-t23<- p195_lengthfreq %>% filter(Speciescommonname %in% "blue crab") %>% select(Sex)
 ```
 
 #### General
@@ -118,10 +115,10 @@ For seasonality, it does appear that there is enough data to look at these speci
 
 ```{r}
 #Explore
-p195_lengthfreq %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+#p195_lengthfreq %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
 #ggsave("~/Desktop/p195_length.png", width= 25, height= 25)
 
-p195_lengthfreq %>% drop_na(Length) %>% group_by(Speciescommonname, Season) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Season, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+#p195_lengthfreq %>% drop_na(Length) %>% group_by(Speciescommonname, Season) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Season, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
 #ggsave("~/Desktop/p195_length_season.png", width= 25, height= 25)
 
 #Form blue crab dataset and make sure each blue crab in the subsample has their own row
@@ -139,7 +136,7 @@ df <- data.frame(Length = values, Assigned_length = result_numeric)
 
 #Calculate proportion of juveniles and adults in each Eventname
 P195_bc_prop <- P195_bc_edt %>% left_join(df, by= "Length")
-P195_bc_prop$Age_class <- ifelse(P195_bc_prop$Assigned_length < 50, "juvenile blue crab", "adult blue crab") #assign juvenile if under 50 mm, 50.8 mm (2 inches) is harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
+P195_bc_prop$Age_class <- ifelse(P195_bc_prop$Assigned_length < 50, "juv blue crab", "adult blue crab") #assign juvenile if under 50 mm, 50.8 mm (2 inches) is harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
 P195_bc_prop_edt <- P195_bc_prop %>% group_by(Eventname, Age_class) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Eventname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% select(Eventname, Speciescommonname, Date, Age_class, Count, Total_sampled, Proportion)
 
 p195_abund_bc <- p195_abund %>% select(Eventname, Numbertotal, Speciescommonname, Date) %>% filter(Speciescommonname %in% "blue crab") #Select Numbertotal from blue crab abundance, length dataset didn't have Colnum so had to do this  
@@ -163,10 +160,10 @@ Length data pulled: DataType: Length Frequency AreaLocation: NEUSE RIVER;PAMLICO
 p195_abundedt <- p195_abund %>% drop_na(Sciname) #1 NA for Sciname
 length(unique(p195_abundedt$Eventname)) #2012
 haul <- p195_abundedt %>% group_by(Date, Stationcode) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (2012 hauls), same as unique eventname 
-select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden")
+select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "southern kingfish")
 
 haul$Species=NA#create a dummy column first
-haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab"))
+haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab", "southern kingfish"))
 
 haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Photoperiod, Wbdytype, Season, Ym_date, Wbd, Depthzone, Species)
 
@@ -178,16 +175,17 @@ sel_spp_195 <- p195_abundedt %>% filter(Speciescommonname %in% select_spp) %>% s
 P195_bc_tojoin <- P195_bc_prop_edt2 %>% select(Eventname,Date, Age_class, Number) 
 P195_bc_tojoin <- P195_bc_tojoin %>% rename("Speciescommonname"= "Age_class", "Numbertotal"= "Number")
 sel_spp_195join <- rbind(sel_spp_195, P195_bc_tojoin)
-sel_spp_195joinedt <- sel_spp_195join %>% group_by(Speciescommonname, Eventname) %>% mutate(Numbertotal_new = sum(Numbertotal)) %>% distinct(Numbertotal_new, .keep_all= TRUE) #There are some duplicates for atlantic menhaden and brown shrimp and one for spot for Eventnames, Dan said perhaps because of separating into diseased vs. not, goes from 11806 to 11620 rows (there were 186 rows w/ id= 2)
-sel_spp_195joinedt2 <- sel_spp_195joinedt %>% group_by(Speciescommonname, Eventname) %>% mutate(id= row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() %>% select(Eventname,Date,Speciescommonname, Numbertotal_new) 
+#To note: there are some Species that have multiple values for Numbertotal for same Control1 (diseased individuals), need to take the larger value, 12903 to 12713 values
+sel_spp_195joinedt <- sel_spp_195join %>% group_by(Speciescommonname, Eventname) %>% group_by(Speciescommonname, Eventname) %>% filter(Numbertotal== max(Numbertotal)) %>% distinct(Numbertotal, .keep_all= TRUE) #max takes larger value but it could be same value, need to do distinct
+sel_spp_195joinedt2 <- sel_spp_195joinedt %>% group_by(Speciescommonname, Eventname) %>% mutate(id= row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() %>% select(Eventname,Date,Speciescommonname, Numbertotal) #all id's are 1 before filtering 
 
 haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
 haul_sel_spp <- left_join(haul_final, sel_spp_195joinedt2) %>% as.data.frame()
-haul_sel_spp$Numbertotal_new[haul_sel_spp$Numbertotal_new %in% NA] <- 0
+haul_sel_spp$Numbertotal[haul_sel_spp$Numbertotal %in% NA] <- 0
 
 spp_names <- p195_abundedt %>% select(Speciescommonname, Speciesscientificname, Sciname) %>% distinct(Speciescommonname, .keep_all= TRUE)
 p195_CPUE <- haul_sel_spp %>% left_join(spp_names) #NA for juv and adult blue crab
 p195_CPUE$Sciname <- ifelse(p195_CPUE$Speciescommonname %in% "juv blue crab"|p195_CPUE$Speciescommonname %in% "adult blue crab", "C. sapidus", p195_CPUE$Sciname)
 p195_CPUE$Speciesscientificname <- ifelse(p195_CPUE$Speciescommonname %in% "juv blue crab"|p195_CPUE$Speciescommonname %in% "adult blue crab", "callinectes sapidus", p195_CPUE$Speciesscientificname)
-write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
+#write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```

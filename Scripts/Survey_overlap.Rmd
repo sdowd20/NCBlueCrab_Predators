@@ -244,16 +244,11 @@ ss_survey_vis("southern kingfish")
 ss_survey_vis("striped bass")
 ss_survey_vis("brown shrimp") #species-name issues are resolved here: species found in trawls are represented here
 
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = total_edt %>% filter(gridID %in% NA), aes(x = Longitude, y = Latitude, colour = gridID), size = .2) + facet_wrap(~Survey) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
 
-
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = total_edt %>% filter(gridID %in% NA), aes(x = Longitude, y = Latitude, colour = gridID), size = .2) + facet_wrap(~Survey) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+ggplot() + geom_sf(data = world) + geom_point(data = subset(total_edt, total_edt$Species %in% "bonnethead hammerhead" & Colnum > 0 & Survey %in% "P915"), aes(x = Longitude, y = Latitude), colour= "light green") + geom_point(data = subset(total_edt, total_edt$Species %in% "blue crab" & Colnum > 0 & Survey %in% "P195"), aes(x = Longitude, y = Latitude), colour= "dark green") + geom_point(data = subset(total_edt, total_edt$Species %in% "blue crab" & Colnum > 0 & Survey %in% "P120"), aes(x = Longitude, y = Latitude), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
 
 
 
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_20, fill = NA) + geom_point(data = subset(total_edt, total_edt$Species %in% "blue catfish" & Colnum > 0), aes(x = Longitude, y = Latitude, fill= gridID)) + scale_size_area() + facet_wrap(~Survey) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
-
-test3 <- match_df[[4]]
 
 ```
 

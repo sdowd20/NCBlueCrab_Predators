@@ -28,6 +28,7 @@ p915_CPUE <- read_csv("Data/P915/Finalized/p915_CPUE.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
+unique(p195_CPUE$Speciescommonname)
 ##Filter datasets: to note- add back in Sedsize and Btmcomp once this is fixed! and add back in secchi, don't know if Depthstart is actual depth but called it this in P195 
 p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Sedsize_new, -Btmcomp_new, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass", "bonnethead hammerhead", "sheepshead")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
 p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Secchi) %>% filter(Year >= 2008) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
@@ -220,7 +221,7 @@ CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% select(-geometry) #
 #write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 ```
 
-#### Overlap
+#### Overlap: grids 
 
 ```{r}
 CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv", sep= ",")
@@ -264,25 +265,6 @@ match_data2 %>% filter(Month== 6) %>% ggplot() + geom_histogram(aes(x= Year)) + 
 
 
 spp_names_trawl <- unique(subset(overlap_t, Survey %in% "P120")$Speciescommonname)
-
-P915_total_spp <- list()
-P915_total_gridID <- list()
-P120_total_spp <- list()
-P120_total_gridID <- list()
-match_df <- list()
-library(plyr)
-library(dplyr)
-for(i in spp_names){
-P915_total_spp[[i]] <- overlap_t %>% filter(Survey %in% "P915", Speciescommonname %in% i, Colnum > 0) %>% drop_na(Colnum)
-P915_total_gridID[[i]] <- P915_total_spp[[i]] %>% dplyr::select(gridID, Month, Speciescommonname, Year) %>% group_by(Month, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
-match_df <- list
-for(j in spp_names_trawl){
-P120_total_spp[[j]] <- overlap_t %>% filter(Survey %in% "P120", Speciescommonname %in% j, Colnum > 0) %>% drop_na(Colnum)
-P120_total_gridID[[j]] <- P120_total_spp[[j]] %>% dplyr::select(gridID, Month, Speciescommonname, Year) %>% group_by(Month, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
- match_df[[i]][[j]] <- inner_join(P915_total_gridID[[i]], P120_total_gridID[[j]], by = c("gridID", "Month", "Year")) %>%
-      dplyr::select(Speciescommonname.y, everything())
-}
-}
 
 P915_total_spp <- list()
 P915_total_gridID <- list()
@@ -371,6 +353,57 @@ p915_nums <- p915_CPUEedt %>% filter(Year > 2008, Month == 5| Month==6| Month==9
 combo <- rbind(p195_nums, p120_nums, p915_nums)
 combo <- combo %>% arrange(Speciescommonname, Month)
 write.csv(combo, "~/Desktop/seasonality.csv")
+```
+
+#### CPUE visualization
+```{r}
+ss_survey_vis <- function(test, species, test2, species2, test3, species3){
+ggplot() + geom_sf(data = world) + geom_point(data = subset(abund, abund$Survey %in% test & abund$Speciescommonname %in% species & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "dark green") + geom_point(data = subset(abund, abund$Survey %in% test2 & abund$Speciescommonname %in% species2 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "light green") + geom_point(data = subset(abund, abund$Survey %in% test3 & abund$Speciescommonname %in% species3 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + scale_colour_discrete(name = "Species") + labs(size= "Average std. CPUE")
+}
+
+ss_survey_vis("P915", "atlantic croaker", "P120", "blue crab", "P195", "blue crab")   
+ggsave("/Users/sallydowd/Desktop/atlantic.croaker.jpeg", width= 7, height= 5)
+
+ss_survey_vis("P915", "striped bass", "P120", "adult blue crab", "P195", "adult blue crab")    
+ss_survey_vis("P915", "striped bass", "P120", "blue crab", "P195", "blue crab") 
+ss_survey_vis("P915", "striped bass", "P120", "atlantic menhaden", "P195", "atlantic menhaden") #striped bass: associated w/ atlantic menhaden and blue crab
+
+ss_survey_vis("P915", "black drum", "P120", "adult blue crab", "P195", "adult blue crab")    
+ss_survey_vis("P915", "black drum", "P120", "blue crab", "P195", "blue crab") 
+ss_survey_vis("P915", "black drum", "P120", "atlantic menhaden", "P195", "brown shrimp")
+
+ss_survey_vis("P915", "red drum", "P120", "adult blue crab", "P195", "adult blue crab")    
+ss_survey_vis("P915", "red drum", "P120", "blue crab", "P195", "blue crab") 
+ss_survey_vis("P915", "red drum", "P120", "atlantic menhaden", "P195", "atlantic menhaden") #hypothesis from Plumlee's work
+
+ss_survey_vis("P915", "southern flounder", "P120", "adult blue crab", "P195", "adult blue crab")    
+ss_survey_vis("P915", "southern flounder", "P120", "blue crab", "P195", "blue crab")   
+ss_survey_vis("P915", "southern flounder", "P120", "spot", "P195", "spot")
+ggsave("/Users/sallydowd/Desktop/southern.flounder.spot.jpeg", width= 7, height=5)
+ss_survey_vis("P915", "southern flounder", "P120", "atlantic croaker", "P195", "atlantic croaker") #associated w/ spot and atlantic croaker 
+
+
+ss_survey_vis("P915", "southern kingfish", "P120", "blue crab", "P195", "blue crab")    
+ggsave("/Users/sallydowd/Desktop/southern.kingfish.jpeg", width= 7, height= 5)
+ss_survey_vis("P915", "southern kingfish", "P120", "southern kingfish", "P195", "southern kingfish")   
+
+ss_survey_vis("P915", "sheepshead", "P120", "adult blue crab", "P195", "adult blue crab")    
+ss_survey_vis("P915", "sheepshead", "P120", "blue crab", "P195", "blue crab")   
+
+#bonnetheads: include figure in Survey_overlap
+
+unique(abund$Speciescommonname)
+
+
+abund <- CPUE_grid %>% group_by(gridID, Survey, Speciescommonname) %>% mutate(mean_CPUE = mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd)) %>% distinct(mean_CPUE, .keep_all= TRUE)
+
+#ggplot(data = world) + geom_sf() + geom_sf(data=pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + #geom_point(data = subset(abund_bc,Survey %in% "P120"), aes(x = Longitude, y = Latitude, color= mean_CPUE), size = 1) + facet_wrap(~Survey) + scale_color_viridis_c(option = "D")
+
+
+p195_CPUEedt
+
+
+
 ```
 
 #### Grid: Predictor variables
