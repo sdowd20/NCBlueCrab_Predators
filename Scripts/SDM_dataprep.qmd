@@ -137,9 +137,7 @@ coords_survey_tojoin <- coords_survey %>% select(-Survey) %>% left_join(coords_s
 ggplot(data= world) + geom_sf() + geom_point(data= coords_survey_tojoin[1000:2000,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
 
 ##Distance to SAV: go to QGIS with coords_survey_tojoin! 
-write.csv(coords_survey_tojoin, "coords_survey_tojoin.csv")
-
-
+write.csv(coords_survey_tojoin, "~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/predictors_gridded.csv")
 
 ##Join predictors, gridded, and CPUE datasets
 ###Predictors with gridID
