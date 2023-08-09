@@ -32,7 +32,7 @@ unique(p195_CPUE$Speciescommonname)
 ##Filter datasets: to note- add back in Sedsize and Btmcomp once this is fixed! and add back in secchi, don't know if Depthstart is actual depth but called it this in P195 
 p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Sedsize_new, -Btmcomp_new, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass", "bonnethead hammerhead", "sheepshead")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
 p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Secchi) %>% filter(Year >= 2008) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
-p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Sedsize_new, -Btmcomp_new) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal_new", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(Year >= 2008)
+p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Sedsize_new, -Btmcomp_new) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(Year >= 2008)
 p195_CPUEedt$Depthzone[p195_CPUEedt$Depthzone %in% NA] <- "Constant"
 
 colnames(p915_CPUEedt)
@@ -113,90 +113,37 @@ inlet_coords$Latitude <- coords2[, "Y"]
 inlet_coords$Longitude <- coords2[, "X"]
 inlet_coords <- inlet_coords %>% select(-Description)
 inlet_coords <- st_transform(inlet_coords) #NC CRS
-
-Major_hydrography <- st_read("/Users/sallydowd/Desktop/Major_Hydrography/Major_Hydrography_(Waterbodies).shp")
-Major_hydrography <- st_transform(Major_hydrography, crs = 4326)
-
-NC_watersheds <- st_read("NC_watersheds/HUC_10.shp")
-NC_watersheds <- st_transform(NC_watersheds, crs = 4326)
-#SAV_08 <- st_read("SAV/SAV_2006_2008/SAV_2006-2008_Mapping_Revised.shp")
-#SAV_08 <- st_transform(SAV_08, crs = 4326) #it was already in WGS 84 
-#SAV_14 <- st_read("SAV/SAV_2012_2014/SAV_2012-2014_Mapping.shp")
-#SAV_14 <- st_transform(SAV_14, crs = 4326)
-#SAV_20 <- st_read("SAV/SAV_2019_2020/SAV_2019_2020_Mapping.shp")
-#SAV_20 <- st_transform(SAV_20, crs = 4326)
+st_crs(inlet_coords)
+SAV_08 <- st_read("SAV/SAV_2006_2008/SAV_2006-2008_Mapping_Revised.shp") #WGS 84/ Pseudo-Mercator
+st_crs(SAV_08) #Web Mercator: standard for Web mapping applications, EPSG: 3857, uses spherical over ellipsoidal, projection is slightly non-conformal (angles b/w lines on surface aren't drawn to same angles in map), not normally used for maps of local areas so accuracy of positions needed for splitting is less than angular deviation caused by using spherical formulas 
 
 #Add in other metrics to coordinates
 ##Distance to inlet 
-coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey), p120_CPUEedt %>% select(Latitude, Longitude, Survey), p195_CPUEedt %>% select(Latitude, Longitude, Survey))
-coords_surveyedt <- coords_survey %>% distinct(Latitude, Longitude, .keep_all= TRUE) %>% select(-Survey)
+coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey, Year), p120_CPUEedt %>% select(Latitude, Longitude, Survey, Year), p195_CPUEedt %>% select(Latitude, Longitude, Survey, Year))
+coords_surveyedt <- coords_survey %>% select(-Survey, -Year) %>% distinct(Latitude, Longitude, .keep_all= TRUE) 
 coords_surveysf <- st_as_sf(coords_surveyedt, coords= c("Longitude", "Latitude"), crs= 4326)
 coords_inlet_nearest <- st_nearest_feature(coords_surveysf, inlet_coords)
 dist_inlets = st_distance(coords_surveysf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
 dist_inlets <- as.numeric(dist_inlets)
-coords_surveysf <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
+coords_surveysf_edt <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
 
-coords_survey$lat_lon <- paste(coords_surveyedt$Latitude, coords_survey$Longitude, sep = "_") 
+coords2 <- st_coordinates(coords_surveysf)
+coords_surveysf_edt$Latitude <- coords2[, "Y"]
+coords_surveysf_edt$Longitude <- coords2[, "X"]
+coords_surveysf_edt$lat_lon <- paste(coords_surveysf_edt$Latitude,coords_surveysf_edt$Longitude, sep = "_") 
+coords_survey$lat_lon <- coords_survey$lat_lon <- paste(coords_survey$Latitude, coords_survey$Longitude, sep = "_") 
+coords_survey_tojoin <- coords_survey %>% select(-Survey) %>% left_join(coords_surveysf_edt %>% select(lat_lon, dist_inlets), by= "lat_lon") %>% select(-geometry)
 
-##Wbd 
-intersections2 <- st_intersection(coords_surveysf, Major_hydrography) 
-intersections2_edt <- intersections2 %>% mutate(Wbd= ifelse(waterbody %in% "Pamlico River And Pamlico Sound", "Pamlico Sound", ifelse(waterbody %in% "Bogue Sound (Incl. Intracoastal Wa", "Bogue Sound", ifelse(waterbody %in% "Northeast Cape Fear River", "Cape Fear River", intersections2$waterbody))))
+ggplot(data= world) + geom_sf() + geom_point(data= coords_survey_tojoin[1000:2000,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
 
-#Intersections2 drops some coordinates, let's figure out which ones, first shapefile retains all the points
-predictors_df <- intersections2_edt %>% select(geometry, dist_inlets, Wbd)
-coords2 <- st_coordinates(predictors_df)
-predictors_df$Latitude <- coords2[, "Y"]
-predictors_df$Longitude <- coords2[, "X"] #Add coordinates back in
-predictors_df$lat_lon <- paste(predictors_df$Latitude, predictors_df$Longitude, sep = "_") 
-coords2.2 <- st_coordinates(coords_surveysf)
-coords_surveyedt <- coords_surveysf
-coords_surveyedt$Latitude <- coords2.2[, "Y"]
-coords_surveyedt$Longitude <- coords2.2[, "X"] #Add coordinates back in
-coords_surveyedt$lat_lon <- paste(coords_surveyedt$Latitude, coords_surveyedt$Longitude, sep = "_") 
-length(unique(coords_surveyedt$lat_lon)) #10,748
-length(unique(predictors_df$lat_lon)) #9,068
-column_diff <- setdiff(coords_surveyedt$lat_lon, predictors_df$lat_lon)
+##Distance to SAV: go to QGIS with coords_survey_tojoin! 
+write.csv(coords_survey_tojoin, "coords_survey_tojoin.csv")
 
-diff_coords <- coords_surveyedt %>% filter(lat_lon %in% column_diff)
-intersections_diff <- st_intersection(diff_coords, NC_watersheds) 
 
-ggplot(data= world) + geom_sf() + geom_point(data= intersections_diff %>% filter(HU_10_NAME %in% "New River Inlet"), aes(x= Longitude, y= Latitude, color= HU_10_NAME)) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE)
-
-unique(intersections2_edt$Wbd) #Names pungo Pamlico river (guess b/c main river)
-
-intersections_diff_edt <- intersections_diff %>% mutate(Wbd = ifelse(HU_10_NAME %in% "Brunswick River-Cape Fear River"|HU_10_NAME %in% "Goshen Swamp"|HU_10_NAME %in% "Liliput Creek-Cape Fear River"|HU_10_NAME %in% "Harrisons Creek-Northeast Cape Fear River", "Cape Fear River", ifelse(HU_10_NAME %in% "South Creek-Pamlico River"|HU_10_NAME %in% "Chocowinity Bay-Pamlico River", "Pamlico River", ifelse(HU_10_NAME %in% "Pantego Creek"|HU_10_NAME %in% "Headwaters Pungo River"| HU_10_NAME %in% "Intracoastal Waterway-Pungo River"| HU_10_NAME %in% "Outlet Pungo River", "Pamlico River", ifelse(HU_10_NAME %in% "Pamlico Sound-Ocracoke Inlet"|HU_10_NAME %in% "Pamlico Sound-Hatteras Inlet"|HU_10_NAME %in% "Neuse River-Pamlico Sound"|HU_10_NAME %in% "Lake Mattamuskeet-Rose Bay"|HU_10_NAME %in% "Jones Bay-Bay River", "Pamlico Sound", ifelse(HU_10_NAME %in% "Headwaters New River"|HU_10_NAME %in% "New River Inlet", "New River", ifelse(HU_10_NAME %in% "Upper Broad Creek-Neuse River"|HU_10_NAME %in% "Cherry Point-Neuse River"|HU_10_NAME %in% "Town of Oriental-Neuse River", "Neuse River", ifelse(HU_10_NAME %in% "Oyster Creek-Jarrett Bay"|HU_10_NAME %in% "Cape Lookout Shoals-Core Banks", "Core Sound", ifelse(HU_10_NAME %in% "Bogue Banks-Shackleford Banks", "Bogue and Back Sound", ifelse(HU_10_NAME %in% "Albemarle Sound-Croatan Sound", "Croatan Sound", intersections_diff$HU_10_NAME)))))))))) %>% filter(!HU_10_NAME %in% c("Outlet Cashie River", "Shallotte River", "Tar River Reservoir-Tar River"))
-unique(intersections_diff$HU_10_NAME)
-unique(intersections_diff_edt$Wbd)
-unique(intersections2_edt$Wbd)
-
-#Removed Outlet Cashie River, Shallotte River, Tar River Reservoir-Tar River 
-#In main dataset, bogue and back go to Bogue and Back Sound
-#In this dataset, "Albemarle Sound-Croatan Sound" goes to Croatan Sound (eyed it on map)
-#New River Inlet--> Stump
-
-###Finish Wbd: bind datasets together 
-unique(intersections2_edt$Wbd) #Hmm back sound isn't in here but still change it 
-intersections2_edt <- intersections2 %>% mutate(Wbd= ifelse(waterbody %in% "Pamlico River And Pamlico Sound", "Pamlico Sound", ifelse(waterbody %in% "Bogue Sound (Incl. Intracoastal Wa", "Bogue and Back Sound", ifelse(waterbody %in% "Northeast Cape Fear River", "Cape Fear River", intersections2$waterbody)))) %>% select(Wbd, geometry, dist_inlets)
-intersections_diff_edt <- intersections_diff_edt %>% select(Wbd, geometry, dist_inlets)
-intersections_rbind <- rbind(intersections2_edt, intersections_diff_edt)
-
-unique(intersections_rbind$Wbd)
-##Wbd type: River to River, Sound, Inlet and Beach to Non-River
-predictors_df <- intersections_rbind %>% mutate(Wbd_type= ifelse(grepl("River", Wbd), "River", ifelse(grepl("Sound", Wbd)|grepl("Beach", Wbd)|grepl("Inlet", Wbd), "Sound", predictors_df$Wbd)))
-
-##Check if it worked on a subset of data: it did!
-coords2 <- st_coordinates(predictors_df)
-predictors_df$Latitude <- coords2[, "Y"]
-predictors_df$Longitude <- coords2[, "X"] #Add coordinates back in
-
-ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[5000:7000,], aes(x= Longitude, y= Latitude, color= Wbd)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") #it works! just need to do it with less data
-
-ggplot(data= world) + geom_sf() + geom_point(data= predictors_df[1000:2000,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
 
 ##Join predictors, gridded, and CPUE datasets
 ###Predictors with gridID
 predictors_df$lat_lon <- paste(predictors_df$Latitude, predictors_df$Longitude, sep = "_") 
-
 predictors_df_edt <- st_drop_geometry(predictors_df)
 gridded_coords <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.csv")
 predictors_gridded <- predictors_df_edt %>% left_join(gridded_coords, by= "lat_lon") %>% select(lat_lon, gridID, dist_inlets, Wbd, Wbd_type)
@@ -221,7 +168,7 @@ CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% select(-geometry) #
 #write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
 ```
 
-#### Overlap: grids 
+#### Overlap: grids
 
 ```{r}
 CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv", sep= ",")
@@ -356,6 +303,7 @@ write.csv(combo, "~/Desktop/seasonality.csv")
 ```
 
 #### CPUE visualization
+
 ```{r}
 ss_survey_vis <- function(test, species, test2, species2, test3, species3){
 ggplot() + geom_sf(data = world) + geom_point(data = subset(abund, abund$Survey %in% test & abund$Speciescommonname %in% species & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "dark green") + geom_point(data = subset(abund, abund$Survey %in% test2 & abund$Speciescommonname %in% species2 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "light green") + geom_point(data = subset(abund, abund$Survey %in% test3 & abund$Speciescommonname %in% species3 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + scale_colour_discrete(name = "Species") + labs(size= "Average std. CPUE")
