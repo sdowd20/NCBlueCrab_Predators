@@ -91,10 +91,9 @@ merged$Ym_date <- format(merged$Date, "%Y-%m")
 #Make Sedsize and Btmcomp consistent: 
 unique(merged$Sedsize)
 unique(merged$Btmcomp)
-merged <- merged %>% mutate(Sedsize_new = ifelse(merged$Sedsize %in% "Mud", 9, ifelse(merged$Sedsize %in% "Sandy mud", 7, ifelse(merged$Sedsize %in% "Sand", 8, ifelse(merged$Sedsize %in% "Muddy sand", 6, ifelse(merged$Sedsize %in% "Soft mud", 2, 
-ifelse(merged$Sedsize %in% "Hard sand", 1, ifelse(merged$Sedsize %in% "Clay", 4, ifelse(merged$Sedsize %in% "Hard mud", 3, ifelse(merged$Sedsize %in% "Silt", 5, ifelse(merged$Sedsize %in% "Cemented hard bottom or rock", 0, ifelse(!merged$Sedsize %in% c(NA, "***ERROR***", "Coarse sand: Coarse silt", "I"), merged$Sedsize, NA)))))))))))) #keep the rest of the values the same 
-nrow(merged %>% filter(Year> 2008, Sedsize_new %in% NA)) #only 7,320 NAs, this is correct! 
-#Removed 25 rows where Sedsize was equal to I 
+merged <- merged %>% mutate(Sedsize_new = ifelse(merged$Sedsize %in% "Mud", 9, ifelse(merged$Sedsize %in% "Sandy mud", 7, ifelse(merged$Sedsize %in% "Sand", 8, ifelse(merged$Sedsize %in% "Muddy sand"|merged$Sedsize %in% "I"| merged$Sedsize %in% "Coarse sand: Coarse silt", 6, 
+ifelse(merged$Sedsize %in% "Soft mud", 2, ifelse(merged$Sedsize %in% "Hard sand", 1, ifelse(merged$Sedsize %in% "Clay", 4, ifelse(merged$Sedsize %in% "Hard mud", 3, ifelse(merged$Sedsize %in% "Silt", 5, ifelse(merged$Sedsize %in% "Cemented hard bottom or rock", 0, ifelse(!merged$Sedsize %in% c(NA, "***ERROR***"), merged$Sedsize, NA)))))))))))) #keep the rest of the values the same 
+nrow(merged %>% filter(Year> 2008, Sedsize_new %in% NA)) #7300 NA's, this worked 
 #Rock, shell, algae isn't on there so classified as rock, shell
 #no grass meant no structure (O) prior to 2008 
 merged<- merged %>% mutate(Btmcomp_new = ifelse(merged$Btmcomp %in% "Grass", "B", ifelse(merged$Btmcomp %in% "No Grass", "O", ifelse(merged$Btmcomp %in% "Bryozoan", "Q", ifelse(merged$Btmcomp %in% "Grass, Algae", "H", ifelse(merged$Btmcomp %in% "Tunicate", "P",
@@ -119,7 +118,8 @@ P915_CPUE <- P915_CPUE %>% mutate_at(vars(c(10:17, 25, 26)), as.numeric)
 P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
-
+getwd()
+#write.csv(P915_CPUE, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
 ##P915 NEW: Biological data 
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
