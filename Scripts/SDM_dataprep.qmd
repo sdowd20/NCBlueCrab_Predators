@@ -30,9 +30,9 @@ p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 unique(p195_CPUE$Speciescommonname)
 ##Filter datasets: to note- add back in Sedsize and Btmcomp once this is fixed! and add back in secchi, don't know if Depthstart is actual depth but called it this in P195 
-p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Sedsize_new, -Btmcomp_new, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass", "bonnethead hammerhead", "sheepshead")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
+p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass", "bonnethead hammerhead", "sheepshead")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
 p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Secchi) %>% filter(Year >= 2008) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
-p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Sedsize_new, -Btmcomp_new) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(Year >= 2008)
+p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(Year >= 2008)
 p195_CPUEedt$Depthzone[p195_CPUEedt$Depthzone %in% NA] <- "Constant"
 
 colnames(p915_CPUEedt)
@@ -62,16 +62,17 @@ p915_latlon <- p915_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon =
 p120_latlon <- p120_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
 p195_latlon <- p195_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
 
+lat_lon_combo2 <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey), p120_CPUEedt %>% select(Latitude, Longitude, Survey), p195_CPUEedt %>% select(Latitude, Longitude, Survey))
 lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
 lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE) 
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 # make an object the size and shape of the output you want
 globe_bb <- matrix(c(-78.900147,33.802938,
-                      -78.900147,36.672128,
-                      -75.263672,36.672128,
+                      -78.900147,36.222128,
+                      -75.263672,36.222128,
                      -75.263672, 33.802938,
-                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326) #08/13/23: moved latitude down a bit to help w/ grid cells 
 
 globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
 
@@ -80,7 +81,7 @@ degress <- 14.4*degrees_per_km #0.129
 distance_km <- 14.4
 degrees <- distance_km * 111
 
-#ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 
 fish_spat <- as.data.frame(lat_lon_combo)
 fish_spat$rowID <- 1:nrow(fish_spat)

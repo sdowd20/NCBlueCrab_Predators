@@ -141,6 +141,9 @@ ggsave("~/Desktop/p120_length.month.png", width= 25, height= 25)
 #### Actually dealing with length
 
 ```{r}
+#After EDA, we know we want a dataset with only Core stations and in May and June
+P120_bioledt <- P120_bioledt %>% filter(Core== 1|Core==2, Month==5|Month==6) #only want cores sampled year around
+
 #Form blue crab dataset and make sure each blue crab in the subsample has their own row
 P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
 P120_bc_edt <- P120_bc %>% group_by(Control1, Colnum, Length) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1)
@@ -176,13 +179,9 @@ select_spp <- c("brown shrimp", "atlantic croaker", "southern flounder", "spot",
 summary(is.na(P120_bioledt$Sciname)) #28 NAs for Sciname
 P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
 P120_bioledt$Speciescommonname[P120_bioledt$Speciescommonname == "northern brown shrimp"] <- "brown shrimp"
-haul <- P120_bioledt %>% group_by(Date, Location, Station) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul: Dan suggested grouping by Date, Location and Station b/c location is waterbody at large and some stations have the same name (need Location)
-length(unique(haul$Control1)) #9663
-length(unique(P120_bioledt$Control1)) #9668
-#Let's look at which values are different: after 2008, there is only 1 Control1 and station that is different (38 rows)
-diff_values <- setdiff(P120_bioledt$Control1, haul$Control1)
-P120_bioledt %>% filter(Control1 %in% diff_values)
-
+haul <- P120_bioledt %>% group_by(Date, Location, Station, Control1) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul: Dan suggested grouping by Date, Location, Control1 Station b/c location is waterbody at large and some stations have the same name (need Location), needed to exclude any non-core sampling, had to group by Control1, SPB1 was pulled twice on 11/9/2021
+length(unique(haul$Control1)) #7053
+length(unique(P120_bioledt$Control1)) #7053
 ##Create dummy column for species of focus
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species,c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab")) #this repeats these species common names for the entirety of the length of the haul df
@@ -201,7 +200,7 @@ sel_spp_120joinedt <- sel_spp_120join %>% group_by(Speciescommonname,Control1)%>
 
 sel_spp_120joinedt = sel_spp_120joinedt %>% select(-id)
 haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
-haul_sel_spp <- left_join(haul_final, sel_spp_120joinedt) %>% as.data.frame() #df is 74,480 rows, 9310 rows for each species (8 species)
+haul_sel_spp <- left_join(haul_final, sel_spp_120joinedt) %>% as.data.frame() #df is 56,424 rows, 7053 rows for each species (8 species)
 haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0
 
 names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
@@ -213,5 +212,5 @@ p120_CPUE$Photoperiod <- daylength(lat= p120_CPUE$Latitude, doy= p120_CPUE$doy)
 p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
 p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 
-#write.csv(p120_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
+write.csv(p120_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
 ```

@@ -18,6 +18,11 @@ However, the Control \# is representative of an individual sampling event with a
 
 As of now (05/06/23), the sample IDs for the river systems (only Neuse and Pamlico) have an error. Cara Kowalchyk is planning to send me the updated CPUE data by the end of June. Right now, I can left_join by sample ID for the old CPUE and new biological dataset excluding the Neuse and Pamlico River systems.
 
+An update about the datasets (correspondence with Cara Kowalchyk on 08/07/23): Different Control1s can be for the same sampling event because of samples split between half and whole mesh sizes (when data began). For example, 0111796 and 0111797 were the same set of deep nets but didn't merge correctly. They should be merged under sample= 11011HYDE220. If you see a sample ID that contains the control1, you can delete it off the end and it would merge properly, maybe. If you have trouble with that, Cara offered to repull the data. I propose to group_by Speciescommonname, Area, Quad, and Strata and sum the Colnum. 
+
+However, this isn't going to be an issue because the Control1s only vary for the early data. When I did this command, p915_CPUE %>% filter(Year >= 2001) %>% group_by(Control1, Speciescommonname) %>% summarize(count = n()) and then unique(t$count), there was only 1 value for count. This means that each species only has one row for each Control1
+
+
 ##### Biological dataset
 
 The raw data (biological) doesn't have a variable for no catch (0) sets. It only has data from when a species was encountered and its corresponding environmental data. The raw data is primarily used in reports for length-frequency analysis.
@@ -53,6 +58,8 @@ p915_biolnew2 <- type.convert(p915_biolnew2, as.is = TRUE) #converts data to app
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2) #number of rows is 146079 (75496 from biolnew1 + 70583 from biolnew2), before type.convert it cut off at year 2008 
 p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 p915_bioln <- p915_bioln %>% filter(!Area %in% "miss")
+
+t <- p915_CPUE %>% filter(Control1 %in% "111797"|Control1 %in% "111796")
 ```
 
 ##### General
@@ -122,6 +129,18 @@ ggplot(data = world) + geom_sf() + geom_point(data= t, aes(x= Longitude, y= Lati
 ##### CPUE
 
 ```{r}
+#Fixing the dataset mistake 
+colnames(p915_CPUE)
+
+
+
+t <- p915_CPUE %>% select(-X, -Obs, -Sedsize, -Btmcomp, -Weather, -Windspd, -Winddir, -Sciname, -Season, -Ym_date, -Photoperiod, -Wbd, -Wbdytype) %>% filter(Year > 2008) %>% group_by(Speciescommonname, Date, Area, Quad, Strata) %>% mutate(count= n()) %>% filter(Speciescommonname %in% "red drum")
+write.csv(t, "/Users/sallydowd/Desktop/example.csv")
+#count=2: some rows have the same environmental data and just different Colnum, others have slightly differing ones
+
+
+#Some rows are straight up duplicates: count= 4, first two rows are exact same and second two are exact same, count= 3: 
+
 #Total number of species caught 
 p915_totalnum <- p915_CPUE %>% filter(Year > 2008, Month== 6, Colnum > 0) %>% group_by(Speciescommonname) %>% summarise(sum_total= sum(Colnum)) 
 

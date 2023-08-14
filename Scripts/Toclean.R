@@ -120,103 +120,6 @@ P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
 
-##Waterbody
-NC_wb <- st_read("~/Desktop/NC_watersheds/HUC_10.shp")
-P915_CPUE$lat_lon <- paste(P915_CPUE$Latitude, P915_CPUE$Longitude, sep = "_")
-P915_sf <- P915_CPUE %>% drop_na(Latitude, Longitude) %>% select(Latitude, Longitude, lat_lon)
-P915_sf <- st_as_sf(P915_sf, coords = c("Longitude", "Latitude"), crs = "NAD83") #needs to match waterbody CRS
-#intersected_points <- st_intersection(NC_wb, P915_sf)
-
-
-
-st_crs(P915_sf)
-#distance to inlet:
-
-P915_CPUE_edt <- P915_CPUE %>% drop_na(Latitude, Longitude) 
-P915_CPUE_sf <- st_as_sf(P915_CPUE_edt, coords = c("Longitude", "Latitude"), crs= 4326) 
-
-coords_inlet_nearest <- st_nearest_feature(P915_CPUE_sf, inlet_coords)
-dist_inlets = st_distance(P915_CPUE_sf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
-dist_inlets <- as.numeric(dist_inlets)
-
-ggplot(data= world) + geom_sf() + geom_point(data= P915_CPUE_edt, aes(x= Longitude, y= Latitude, color= inlets_dist)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis()
-
-library(viridis)
-geom_segment(
-  data = distance_df,
-  aes(x = your_data[distance_df$from, "longitude_column"],
-      y = your_data[distance_df$from, "latitude_column"],
-      xend = your_data[distance_df$to, "longitude_column"],
-      yend = your_data[distance_df$to, "latitude_column"]),
-  color = "blue"  # You can customize the line color here
-) +
-
-library(tidyr)
-
-coords_shore_nearest <- st_nearest_feature(lat_longs_sf, shape) #find nearest coastline
-dist_shore = st_distance(lat_longs_sf, shape[coords_shore_nearest,], by_element = TRUE) #find shortest distance to nearest coastline 
-dist_shore <- as.numeric(dist_shore)
-lat_longs_filled <- lat_longs_filled %>% mutate(shore_dist_m = dist_shore)
-ggmap(myMap) + geom_point(lat_longs_filled, mapping = aes(x = lon, y = lat, color = shore_dist_m)) + xlab("Longitude") + ylab("Latitude") + labs(color = "Distance to shore (m)") + theme_Publication() +  theme(legend.position = "right", legend.direction = "vertical")
-
-
-
-
-
-
-
-dist_inlets <- as.numeric(dist_inlets)
-P915_CPUE_edt <- P915_CPUE_edt %>% mutate(inlet_dist_m = dist_inlets) 
-#P915_CPUE_edt$port_dist_m <- as.numeric(as.character(P915_CPUE_edt$port_dist_m))
-
-ggmap(myMap) + geom_point(P915_CPUE_edt, mapping = aes(x = Longitude, y = Latitude, fill = inlets_dist)) + geom_point(inlet_coords, mapping= aes(x= Longitude, y= Latitude), col= "orange") + standard_theme + xlab("Longitude") + ylab("Latitude") + labs(color = "Distance to inlet (m)") + theme(legend.position = "right", legend.direction = "vertical")  
-
-
-ggplot(data = world) + geom_sf() + geom_point(P915_CPUE_edt, mapping = aes(x = Longitude, y = Latitude, fill = inlet_dist_m)) + geom_point(inlet_coords, mapping= aes(x= Longitude, y= Latitude), col= "orange") + standard_theme + xlab("Longitude") + ylab("Latitude") + labs(color = "Distance to inlet (m)") + theme(legend.position = "right", legend.direction = "vertical")  + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude")
-
-ggmap(myMap) +
-  geom_point(data = P915_CPUE_edt, mapping = aes(x = Longitude, y = Latitude, fill = inlet_dist_m)) +
-  geom_point(inlet_coords, mapping = aes(x = Longitude, y = Latitude), col = "orange") +
-  standard_theme +
-  xlab("Longitude") +
-  ylab("Latitude") +
-  labs(color = "Distance to inlet (m)") +
-  theme(legend.position = "right", legend.direction = "vertical") +
-  scale_fill_gradient(low = "blue", high = "red")
-
-str(P915_CPUE_edt$inlet_dist_m)
-
-unique(P915_CPUE_edt$inlet_dist_m)
-
-write.csv(P915_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
-
-  
-  
-  
-  #Calculate distance to nearest port for lat_longs_filled dataset
-  ##Load and manipulate datasets 
-  ports_US <- ports_global %>% filter(Country.Code %in% "United States", World.Water.Body %in% "North Atlantic Ocean") #select US East coast 
-lat_longs_sf <- st_as_sf(lat_longs_filled, coords = c("lon", "lat"), crs= 4326) #make into spatial dataset, standard CRS
-ports_US_sf <- st_as_sf(ports_US, coords = c("Longitude", "Latitude"), crs= 4326)
-
-##Find nearest distance and add it as a column to lat_longs_sf 
-coords_ports_nearest <- st_nearest_feature(lat_longs_sf, ports_US_sf) #features in x of class sfc compared to y of class sfc, output is row number of nearest feature in b to each feature in a 
-dist_ports = st_distance(lat_longs_sf, ports_US_sf[coords_ports_nearest,], by_element=TRUE) #compute distance b/w geometry pairs,
-dist_ports <- as.numeric(dist_ports)
-lat_longs_filled <- lat_longs_filled %>% mutate(port_dist_m = dist_ports) 
-ggmap(myMap) + geom_point(lat_longs_filled, mapping = aes(x = lon, y = lat, color = port_dist_m)) + geom_point(ports_US, mapping= aes(x= Longitude, y= Latitude), col= "orange") + theme_Publication() + xlab("Longitude") + ylab("Latitude") + labs(color = "Distance to port (m)") + theme(legend.position = "right", legend.direction = "vertical")  
-  
-  
-  
-  
-  
-  
-  
-
-
-
-  
-  
 ##P915 NEW: Biological data 
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
@@ -316,6 +219,13 @@ fulld2_edt$Location <- as.numeric(fulld2_edt$Location) #remove leading 0s, make 
 ##Add in other predictor variables 
 fulld2_edt$doy <- yday(fulld2_edt$Date)
 fulld2_edt$Photoperiod <- daylength(lat= fulld2_edt$Latitude, doy= fulld2_edt$doy)
+
+#Make Sedsize and Btmcomp consistent: 
+unique(fulld2_edt$Btmcomp) #Z isn't in P120 but is other in P915
+fulld2_edt <- fulld2_edt %>% mutate(Btmcomp_new = Btmcomp) #removes only 53 entries after 2008 from two sampling days
+unique(fulld2_edt$Sedsize) #0 to 9 is normal, 76% of all data is this, stations in Wilmington are the ones maybe using secondary codes
+#367 that are "" (NA) and 285 that are NA after 2007 #367 after 2007 
+fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize %in% "S"|fulld2_edt$Sedsize %in% "N"|fulld2_edt$Sedsize %in% "X"|fulld2_edt$Sedsize %in% "Y", 7, ifelse(fulld2_edt$Sedsize %in% "T"|fulld2_edt$Sedsize %in% "P", 3, ifelse(fulld2_edt$Sedsize %in% "U", 4, ifelse(fulld2_edt$Sedsize %in% "O"|fulld2_edt$Sedsize %in% "I", 6, ifelse(fulld2_edt$Sedsize %in% "B", 1, fulld2_edt$Sedsize)))))) #Same amount of NAs as before 
 
 #write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
