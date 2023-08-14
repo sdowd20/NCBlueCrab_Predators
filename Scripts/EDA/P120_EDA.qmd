@@ -132,7 +132,7 @@ coords_captured("pink shrimp")
 coords_captured("periwinkles")
 coords_captured("white shrimp")
 coords_captured("cephalopod mullusc")
-``` 
+```
 
 #### Exploring length
 
@@ -195,7 +195,7 @@ length(unique(P120_bioledt$Control1)) #7053
 ##Create dummy column for species of focus
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species, c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "white shrimp", "periwinkles", "pink shrimp", "american shad", "cephalopod mullusc", "juv blue crab", "adult blue crab")) #this repeats these species common names for the entirety of the length of the haul df
-haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
+haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Btmcomp, Sedsize_new, Btmcomp_new, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
 haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 13x (# of species) larger so it worked
 haul=haul_df %>%select(-Species) #drop dummy species common name from hauldf
 

@@ -28,29 +28,27 @@ p915_CPUE <- read_csv("Data/P915/Finalized/p915_CPUE.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-unique(p195_CPUE$Speciescommonname)
-##Filter datasets: to note- add back in Sedsize and Btmcomp once this is fixed! and add back in secchi, don't know if Depthstart is actual depth but called it this in P195 
+##Filter datasets: Add back in Secchi size once get P195 data
 p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Winddir, -Windspd, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Secchi) %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "southern flounder", "southern kingfish", "striped bass", "bonnethead hammerhead", "sheepshead")) %>% filter(Year >= 2008) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Secchi) %>% filter(Year >= 2008) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% filter(Year >= 2008) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
 p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(Year >= 2008)
 p195_CPUEedt$Depthzone[p195_CPUEedt$Depthzone %in% NA] <- "Constant"
 
+#All same column names! 
 colnames(p915_CPUEedt)
-colnames(p120_CPUEedt) #only difference: Sedsize vs. Sedsize_new and BtmComp vs. Btmcomp_new
+colnames(p120_CPUEedt)
 colnames(p195_CPUEedt)
 
-column_diff <- setdiff(names(p120_CPUEedt), names(p195_CPUEedt))
-
 ##Get rid of NAs
-summary(is.na(p915_CPUEedt)) #No NAs where it doesn't make sense
-summary(is.na(p120_CPUEedt)) #Almost no NAs in general
-summary(is.na(p195_CPUEedt)) #A good amount of NAs for Sedsize_new and Btmcomp_new b/c isn't greater than 2008 
+summary(is.na(p915_CPUEedt)) #A good amount of NAs for Sedsize_new (3248) and Btmcomp_new (2714)
+summary(is.na(p120_CPUEedt)) #Almost no NAs in general, Sedsize_new: 130
+summary(is.na(p195_CPUEedt)) #A good amount of NAs for Sedsize_new (1170) and Btmcomp_new (1080)
 
-p915_CPUEedt <- p915_CPUEedt %>% drop_na() #drops 6914 data points
+p915_CPUEedt <- p915_CPUEedt %>% drop_na() #drops 6699 data points (8%)
 p915_CPUEedt$Survey <- "P915"
-p120_CPUEedt <- p120_CPUEedt %>% drop_na() #drops 564 data points 
+p120_CPUEedt <- p120_CPUEedt %>% drop_na() #drops 871 data points (3%)
 p120_CPUEedt$Survey <- "P120"
-p195_CPUEedt <- p195_CPUEedt %>% drop_na() #drops 1137 data points 
+p195_CPUEedt <- p195_CPUEedt %>% drop_na() #drops 1650 data points (13%)
 p195_CPUEedt$Survey <- "P195"
 ```
 
