@@ -122,7 +122,17 @@ ggplot() + geom_histogram(data = subset(fine, fine$Colnum > 0), stat="count", ae
 
 #Number of observations for species of interest
 test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(sum_colnum= sum(Colnum)) #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, spot, and summer flounder have the most data 
-```
+
+#08/14/23: explore crustaceans, only including if have count > 100 (some have a lot of observations but few capture instances ), looked at Colnum after 2007 and in June to narrow down 
+crust_count <- P120_bioledt %>% filter(Speciescommonname %in% c("periwinkles", "cephalopod molluscs", "mud snails", "pink shrimp", "sevenspine bay shrimp", "flatback mud crab", "oppossum shrimps", "isopods", "atlantic mud crab", "lesser blue crab", "hermit crabs", "mantis shrimp", "snapping shrimps", "hippolyte shrimps", "crayfishes", "florida stone crab", "iridescent swimming crab", "harris mud crab", "white shrimp", "cephalopod mullusc")) %>% group_by(Speciescommonname) %>% mutate(count= n()) %>% distinct(count)
+
+P120_bioledt %>% filter(Speciescommonname %in% "cephalopod mullusc", Year > 2007, Month== 6) %>% drop_na(Colnum) %>% summarise(sum_Colnum= sum(Colnum))
+
+coords_captured("pink shrimp") 
+coords_captured("periwinkles")
+coords_captured("white shrimp")
+coords_captured("cephalopod mullusc")
+``` 
 
 #### Exploring length
 
@@ -171,9 +181,9 @@ P120_bc_prop$Number[P120_bc_prop$Number==0] <- 0.5 #Will have to check over this
 ```{r}
 #Combining datasets
 ##Explore species counts 
-speciescount <- P120_bioledt %>% filter(Year>=2008) %>% group_by(Speciescommonname, Date, Location) %>% drop_na(Colnum) %>% distinct(Colnum) %>% ungroup() %>% group_by(Speciescommonname) %>% summarise(sum_colnum= sum(Colnum)) %>% filter(Speciescommonname %in% c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "atlantic thread herring", "cownose ray", "blue crab"))
+speciescount <- P120_bioledt %>% filter(Year>=2008, Month== 6) %>% group_by(Speciescommonname, Date, Location) %>% drop_na(Colnum) %>% distinct(Colnum) %>% ungroup() %>% group_by(Speciescommonname) %>% summarise(sum_colnum= sum(Colnum)) %>% filter(Speciescommonname %in% c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "atlantic thread herring", "cownose ray", "blue crab", "pink shrimp", "periwinkles", "white shrimp", "cephalopod mullusc", "spot", "brown shrimp", "atlantic menhaden"))
 #Remove cownose ray, Atlantic thread herring, and black drum b/c n < 100, gizzard shad is only high due to one outlier, remove 
-select_spp <- c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden")
+select_spp <- c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "white shrimp", "periwinkles", "pink shrimp", "american shad", "cephalopod mullusc")
 
 ##Form a haul dataset where every row is one haul 
 summary(is.na(P120_bioledt$Sciname)) #28 NAs for Sciname
@@ -184,9 +194,9 @@ length(unique(haul$Control1)) #7053
 length(unique(P120_bioledt$Control1)) #7053
 ##Create dummy column for species of focus
 haul$Species=NA#create a dummy column first
-haul$Species=rep_along(haul$Species,c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab")) #this repeats these species common names for the entirety of the length of the haul df
+haul$Species=rep_along(haul$Species, c("brown shrimp", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "white shrimp", "periwinkles", "pink shrimp", "american shad", "cephalopod mullusc", "juv blue crab", "adult blue crab")) #this repeats these species common names for the entirety of the length of the haul df
 haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
-haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 9x (# of species) larger so it worked
+haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 13x (# of species) larger so it worked
 haul=haul_df %>%select(-Species) #drop dummy species common name from hauldf
 
 #now can merge haul.all and haul to create a df with a row for species associated with each collection number
@@ -212,5 +222,5 @@ p120_CPUE$Photoperiod <- daylength(lat= p120_CPUE$Latitude, doy= p120_CPUE$doy)
 p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
 p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 
-write.csv(p120_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
+#write.csv(p120_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE.csv")
 ```
