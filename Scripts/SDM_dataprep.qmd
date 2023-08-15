@@ -138,7 +138,7 @@ ggplot(data= world) + geom_sf() + geom_point(data= coords_survey_tojoin[1000:200
 
 ##Distance to SAV: go to QGIS with coords_survey_tojoin! Will need to redo this: just did to SAV in 2019/2020 to check importance
 coords_survey_SAV <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/coords_survey_tojoin_qgis.csv")
-  
+
 ##Join predictors, gridded, and CPUE datasets
 ###Predictors with gridID
 predictors_df <- coords_survey_SAV %>% select(lat_lon, dist_inlets, HubDist) %>% rename("SAV_distkm"= "HubDist") %>% distinct(lat_lon, .keep_all = TRUE)
@@ -163,6 +163,29 @@ CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% select(-geometry) #
 ggplot(data = world) + geom_sf() + geom_sf(data =pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_dfs_gridded_final, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
 
 #write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv") #updated on 08/09/23
+```
+
+#### Grids: Predictors
+```{r}
+CPUE_grid_QGIS8 <- read.csv("~/Documents/QGIS/NC_Predictors/CPUE_grid_QGIS8.csv")
+subset_cols <- c("STP_a", "TDP_a", "GPP_a", "DPA_open_p")
+CPUE_grid_QGIS8_edt <- CPUE_grid_QGIS8 %>% mutate(STP_a= WB_p - STP_p, STP_a= ifelse(STP_a < 0, 0, STP_a), TDP_a= WB_p - TDP_p, TDP_a= ifelse(TDP_a < 0, 0, TDP_a), GPP_a= WB_p - GPP_p, GPP_a= ifelse(GPP_a < 0, 0, GPP_a), FishA_num= rowSums(CPUE_grid_QGIS8_edt[c("STP_a", "TDP_a", "GPP_a", "DPA_open_p")] > 0), NoFishRest= WB_p- Restricted)
+
+#Shrimp trawling allowed: some values negative (max -2.0%) b/c of NC shapefile, made them 0
+
+ifelse(df[[1]] < 0, 0, df[[1]])
+
+colnames(CPUE_grid_QGIS8)
+
+#Calculations to make: 
+ ##Shrimp trawling prohibited → allowed 
+ ##Trawling Dredging prohibited → allowed 
+ ##Gillnet Pound Net Prohibited → allowed 
+ ##0 for no fishing allowed at all or 1 for fishing allowed → at least one kind of fishing allowed everywhere, don't use this 
+ ##Number of different kinds of fishing
+ ##Total restricted area, restricted area 
+ ##Total unrestricted area (all fishing activities allowed, no fishing restrictions)
+
 ```
 
 #### Overlap: grids
