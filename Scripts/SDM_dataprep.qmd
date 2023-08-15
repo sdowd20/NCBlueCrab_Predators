@@ -187,7 +187,7 @@ colnames(CPUE_grid_QGIS8)
  ##Total unrestricted area (all fishing activities allowed, no fishing restrictions)
 
 ```
-
+getwd()
 #### Overlap: grids
 
 ```{r}
