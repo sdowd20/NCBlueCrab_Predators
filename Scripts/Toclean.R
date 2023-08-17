@@ -335,7 +335,7 @@ nrow(P195_bind_edt %>% filter(Year> 2008, Btmcomp_new %in% NA)) #0 NAs after 200
 #Add in Secchi depth 
 secchi_depth <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Raw/P195_secchi_Dowd_20230815.csv")
 secchi_depth$Date <- as.Date(secchi_depth$Date, format= "%m/%d/%Y")
-secchi_depth <- secchi_depth %>% select(Date, Grid, Location, Secchi.Depth..cm.) %>% rename("Secchi_depthcm"= "Secchi.Depth..cm.", "Stationcode"= "Grid")
+secchi_depth <- secchi_depth %>% select(Date, Grid, Secchi.Depth..cm.) %>% rename("Secchi_depthcm"= "Secchi.Depth..cm.", "Stationcode"= "Grid")
 P195_bind_edt <- P195_bind_edt %>% left_join(secchi_depth, by= c("Date", "Stationcode"))
 write.csv(P195_bind_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
 
