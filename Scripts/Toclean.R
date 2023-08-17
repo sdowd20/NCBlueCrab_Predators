@@ -143,6 +143,10 @@ merged <- merged %>% mutate_at(vars(11:18), as.numeric)
 merged <- merged %>% mutate(Sedsize = ifelse(merged$Sedsize %in% "coarse sand:coarse silt", "muddy sand", merged$Sedsize))
 
 #Scientific name, just do species names!
+p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/p915_sppnames.csv")
+
+test <- read.csv("/users/sallydowd/Desktop/p915_sppnames.csv")
+
 P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species")
 
 P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
