@@ -122,6 +122,7 @@ getwd()
 ##P915 NEW: Biological data 
 
 #P915 CPUE NEW #2 
+setwd("/Users/sallydowd/Desktop/CPUE/CPUE_new")
 filenames <- list.files("/Users/sallydowd/Desktop/CPUE/CPUE_new", pattern= '*.csv')  
 all <- lapply(filenames, readr::read_csv)
 merged <- do.call(rbind, all)
@@ -144,20 +145,14 @@ merged <- merged %>% mutate(Sedsize = ifelse(merged$Sedsize %in% "coarse sand:co
 
 #Scientific name, just do species names!
 p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/p915_sppnames.csv")
-
-test <- read.csv("/users/sallydowd/Desktop/p915_sppnames.csv")
-
-P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species")
-
-P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
+P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species") %>% left_join(p915_sppnames, by= "Speciescommonname")
 
 ##Add in other predictor variables
 P915_CPUE$doy <- yday(P915_CPUE$Date)
 P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
-getwd()
-
+write.csv(P915_CPUE, "/Users/sallydowd/Desktop/p915_CPUE_new.csv")
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
 #write.csv(p915_biol1, "Data/P915/Raw/p915_biol1new.csv")

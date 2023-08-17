@@ -23,8 +23,8 @@ globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'pol
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
 #Load CPUE datasets
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-p915_CPUE <- read_csv("Data/P915/Finalized/p915_CPUE.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
@@ -166,6 +166,7 @@ ggplot(data = world) + geom_sf() + geom_sf(data =pred_gridd_geom, fill = NA) + c
 ```
 
 #### Grids: Predictors
+
 ```{r}
 CPUE_grid_QGIS8 <- read.csv("~/Documents/QGIS/NC_Predictors/CPUE_grid_QGIS8.csv")
 subset_cols <- c("STP_a", "TDP_a", "GPP_a", "DPA_open_p")
@@ -187,8 +188,8 @@ colnames(CPUE_grid_QGIS8)
  ##Total unrestricted area (all fishing activities allowed, no fishing restrictions)
 
 ```
-getwd()
-#### Overlap: grids
+
+getwd() \#### Overlap: grids
 
 ```{r}
 CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv", sep= ",")
