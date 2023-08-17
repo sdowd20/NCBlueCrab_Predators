@@ -16,14 +16,6 @@ library(geosphere)
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-inlet_coords <- st_read("~/Desktop/Inlet.points.kml")
-coords <- st_coordinates(inlet_coords)
-inlet_coords$Latitude <- coords[, "Y"]
-inlet_coords$Longitude <- coords[, "X"]
-inlet_coords <- inlet_coords %>% select(-Description)
-
-ggplot(data= world) + geom_sf() + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude, color= Name)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + theme(legend.position="none")
-
 #######SPEICES NAMES########
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 P120_speciesnms <- read_csv("Data/P120/P120_speciesnms.csv")
@@ -44,7 +36,14 @@ sppcommonnmsc[17,2] <- "blue catfish"
 sppcommonnmsc[18,2] <- "angel shark"
 sppcommonnmsc[20,2] <- "scallop hammerhead"
 sppcommonnmsc[3,2] <- "striped bass" #northern kingfish doesn't exist in dataset, has same abbreviated name 
+sppcommonnmsc[21,1] <- "A. pseudoharengus"
+sppcommonnmsc[21,2] <- "A. pseudoharengus"
+sppcommonnmsc[21,1] <- "A. sapidissima"
 
+unique(merged$Species)
+
+t <- merged %>% select(Species) %>% distinct(Species)
+write.csv(t, "/Users/sallydowd/Desktop/t.csv")
 #write.csv(sppcommonnmsc, "Data/sppcommonnmsc.csv")
 
 spp_list <- read.csv("Data/sppcommonnmsc.csv")
@@ -121,6 +120,40 @@ P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2
 getwd()
 #write.csv(P915_CPUE, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
 ##P915 NEW: Biological data 
+
+#P915 CPUE NEW #2 
+filenames <- list.files("/Users/sallydowd/Desktop/CPUE/CPUE_new", pattern= '*.csv')  
+all <- lapply(filenames, readr::read_csv)
+merged <- do.call(rbind, all)
+colnames(merged) <- str_to_title(colnames(merged))
+merged$Species <- tolower(merged$Species)
+merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Spring", ifelse(merged$Month==9 |merged$Month==10 | merged$Month==11 | merged$Month==12, "Fall", ifelse(merged$Month==7 |merged$Month==8, "Summer", "Winter")))
+merged$Date <- as.Date(paste(merged$Month, merged$Day, merged$Year, sep= "-"), "%m-%d-%Y")
+merged$Ym_date <- format(merged$Date, "%Y-%m")
+
+##Remove dots 
+columns <- c(11:18, 22)
+for (col in columns) {
+  merged[[col]][is.na(merged[[col]]) | merged[[col]] == "."] <- NA
+} #some values only have a dot or maybe it is an NA that R generated, replace these with NA instead, I checked with Depth and Ssal and it worked! 
+
+merged <- merged %>% mutate_at(vars(11:18), as.numeric)
+
+##Make Sedsize and Btmcomp consistent: No issues here except coarse sand:silt 
+merged <- merged %>% mutate(Sedsize = ifelse(merged$Sedsize %in% "coarse sand:coarse silt", "muddy sand", merged$Sedsize))
+
+#Scientific name, just do species names!
+P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species")
+
+P915_CPUE <- P915_CPUE %>% left_join(sppcommonnmsc, by= "Sciname") #No NAs for species name, same row #
+
+##Add in other predictor variables
+P915_CPUE$doy <- yday(P915_CPUE$Date)
+P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
+P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
+P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
+getwd()
+
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
 #write.csv(p915_biol1, "Data/P915/Raw/p915_biol1new.csv")
