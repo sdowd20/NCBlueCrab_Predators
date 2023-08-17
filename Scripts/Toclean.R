@@ -327,13 +327,16 @@ P195_bind_edt <- P195_bind_edt %>% mutate(Sedsize_new = ifelse(P195_bind_edt$Sed
 ifelse(P195_bind_edt$Sedsize %in% "Hard Sand", 1, ifelse(P195_bind_edt$Sedsize %in% "Clay", 4, ifelse(P195_bind_edt$Sedsize %in% "Hard Mud", 3, ifelse(P195_bind_edt$Sedsize %in% "Silt", 5,  NA)))))))))) #keep the rest of the values the same 
 nrow(P195_bind_edt %>% filter(Year> 2008, Sedsize_new %in% NA)) #221 NAs before and after Sedsize 
 
-unique(P195_bind_edt$Btmcomp)
-
 P195_bind_edt<- P195_bind_edt %>% mutate(Btmcomp_new = ifelse(P195_bind_edt$Btmcomp %in% "Grass", "B", ifelse(P195_bind_edt$Btmcomp %in% "No Grass", "O", ifelse(P195_bind_edt$Btmcomp %in% "Byozoan", "Q", ifelse(P195_bind_edt$Btmcomp %in% "Grass Algae", "H", ifelse(P195_bind_edt$Btmcomp %in% "Tunicate", "P",
 ifelse(P195_bind_edt$Btmcomp %in% "Algae", "C", ifelse(P195_bind_edt$Btmcomp %in% "Shellgrass Algae", "I", ifelse(P195_bind_edt$Btmcomp %in% "Shell Detritus", "M", ifelse(P195_bind_edt$Btmcomp %in% "Shell", "A", ifelse(P195_bind_edt$Btmcomp %in% "Shell Grass", "G", ifelse(P195_bind_edt$Btmcomp %in% "Detritus", "C",
 ifelse(P195_bind_edt$Btmcomp %in% "Rock Shell", "S", NA)))))))))))))
 nrow(P195_bind_edt %>% filter(Year> 2008, Btmcomp_new %in% NA)) #0 NAs after 2008, this is correct 
 
+#Add in Secchi depth 
+secchi_depth <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Raw/P195_secchi_Dowd_20230815.csv")
+secchi_depth$Date <- as.Date(secchi_depth$Date, format= "%m/%d/%Y")
+secchi_depth <- secchi_depth %>% select(Date, Grid, Location, Secchi.Depth..cm.) %>% rename("Secchi_depthcm"= "Secchi.Depth..cm.", "Stationcode"= "Grid")
+P195_bind_edt <- P195_bind_edt %>% left_join(secchi_depth, by= c("Date", "Stationcode"))
 write.csv(P195_bind_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
 
 #P195: Length frequency
