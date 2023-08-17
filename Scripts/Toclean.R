@@ -142,6 +142,7 @@ merged <- merged %>% mutate_at(vars(11:18), as.numeric)
 
 ##Make Sedsize and Btmcomp consistent: No issues here except coarse sand:silt 
 merged <- merged %>% mutate(Sedsize = ifelse(merged$Sedsize %in% "coarse sand:coarse silt", "muddy sand", merged$Sedsize))
+merged <- merged %>% mutate(Sedsize_new = ifelse(merged$Sedsize %in% "soft mud"|merged$Sedsize %in% "sandy mud"|merged$Sedsize %in% "mud"|merged$Sedsize %in% "hard mud"|merged$Sedsize %in% "clay"|merged$Sedsize %in% "silt", "Mud", ifelse(merged$Sedsize %in% "muddy sand"|merged$Sedsize %in% "sand"|merged$Sedsize %in% "hard sand", "Sand", ifelse(merged$Sedsize %in% "cemented hard bottom or rock", "Hard bottom", NA))))
 
 #Scientific name, just do species names!
 p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/p915_sppnames.csv")
@@ -257,7 +258,9 @@ unique(fulld2_edt$Btmcomp) #Z isn't in P120 but is other in P915
 fulld2_edt <- fulld2_edt %>% mutate(Btmcomp_new = Btmcomp) #removes only 53 entries after 2008 from two sampling days
 unique(fulld2_edt$Sedsize) #0 to 9 is normal, 76% of all data is this, stations in Wilmington are the ones maybe using secondary codes
 #367 that are "" (NA) and 285 that are NA after 2007 #367 after 2007 
-fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize %in% "S"|fulld2_edt$Sedsize %in% "N"|fulld2_edt$Sedsize %in% "X"|fulld2_edt$Sedsize %in% "Y", 7, ifelse(fulld2_edt$Sedsize %in% "T"|fulld2_edt$Sedsize %in% "P", 3, ifelse(fulld2_edt$Sedsize %in% "U", 4, ifelse(fulld2_edt$Sedsize %in% "O"|fulld2_edt$Sedsize %in% "I", 6, ifelse(fulld2_edt$Sedsize %in% "B", 1, fulld2_edt$Sedsize)))))) #Same amount of NAs as before 
+fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize %in% "S"|fulld2_edt$Sedsize %in% "X"|fulld2_edt$Sedsize %in% "Y", 7, ifelse(fulld2_edt$Sedsize %in% "T"|fulld2_edt$Sedsize %in% "P", 3, ifelse(fulld2_edt$Sedsize %in% "U", 4, ifelse(fulld2_edt$Sedsize %in% "O"|fulld2_edt$Sedsize %in% "I"|fulld2_edt$Sedsize %in% "N", 6, ifelse(fulld2_edt$Sedsize %in% "B", 1, fulld2_edt$Sedsize)))))) #Same amount of NAs as before 
+#08/17/23: reclassify sediment size 
+fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize_new == 1|fulld2_edt$Sedsize_new == 6|fulld2_edt$Sedsize_new == 8, "Sand", ifelse(fulld2_edt$Sedsize_new== 2|fulld2_edt$Sedsize_new== 3|fulld2_edt$Sedsize_new== 4| fulld2_edt$Sedsize_new== 5| fulld2_edt$Sedsize_new== 7| fulld2_edt$Sedsize_new== 9, "Mud", ifelse(fulld2_edt$Sedsize_new== 0, "Hard bottom", fulld2_edt$Sedsize_new))))
 
 #write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
@@ -326,6 +329,8 @@ unique(P195_bind_edt$Sedsize)
 P195_bind_edt <- P195_bind_edt %>% mutate(Sedsize_new = ifelse(P195_bind_edt$Sedsize %in% "Mud", 9, ifelse(P195_bind_edt$Sedsize %in% "Sandy Mud", 7, ifelse(P195_bind_edt$Sedsize %in% "Sand", 8, ifelse(P195_bind_edt$Sedsize %in% "Muddy Sand", 6, ifelse(P195_bind_edt$Sedsize %in% "Soft Mud", 2, 
 ifelse(P195_bind_edt$Sedsize %in% "Hard Sand", 1, ifelse(P195_bind_edt$Sedsize %in% "Clay", 4, ifelse(P195_bind_edt$Sedsize %in% "Hard Mud", 3, ifelse(P195_bind_edt$Sedsize %in% "Silt", 5,  NA)))))))))) #keep the rest of the values the same 
 nrow(P195_bind_edt %>% filter(Year> 2008, Sedsize_new %in% NA)) #221 NAs before and after Sedsize 
+#08/17/23: reclassify sediment size 
+P195_bind_edt <- P195_bind_edt %>% mutate(Sedsize_new= ifelse(P195_bind_edt$Sedsize_new == 1|P195_bind_edt$Sedsize_new == 6|P195_bind_edt$Sedsize_new == 8, "Sand", ifelse(P195_bind_edt$Sedsize_new== 2|P195_bind_edt$Sedsize_new== 3|P195_bind_edt$Sedsize_new== 4|P195_bind_edt$Sedsize_new== 5| P195_bind_edt$Sedsize_new== 7| P195_bind_edt$Sedsize_new== 9, "Mud", ifelse(P195_bind_edt$Sedsize_new== 0, "Hard bottom", P195_bind_edt$Sedsize_new))))
 
 P195_bind_edt<- P195_bind_edt %>% mutate(Btmcomp_new = ifelse(P195_bind_edt$Btmcomp %in% "Grass", "B", ifelse(P195_bind_edt$Btmcomp %in% "No Grass", "O", ifelse(P195_bind_edt$Btmcomp %in% "Byozoan", "Q", ifelse(P195_bind_edt$Btmcomp %in% "Grass Algae", "H", ifelse(P195_bind_edt$Btmcomp %in% "Tunicate", "P",
 ifelse(P195_bind_edt$Btmcomp %in% "Algae", "C", ifelse(P195_bind_edt$Btmcomp %in% "Shellgrass Algae", "I", ifelse(P195_bind_edt$Btmcomp %in% "Shell Detritus", "M", ifelse(P195_bind_edt$Btmcomp %in% "Shell", "A", ifelse(P195_bind_edt$Btmcomp %in% "Shell Grass", "G", ifelse(P195_bind_edt$Btmcomp %in% "Detritus", "C",
