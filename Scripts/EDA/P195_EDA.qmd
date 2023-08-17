@@ -165,7 +165,7 @@ select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flound
 haul$Species=NA#create a dummy column first
 haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab", "southern kingfish"))
 
-haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Photoperiod, Wbdytype, Season, Ym_date, Wbd, Depthzone, Species)
+haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Secchi_depthcm, Photoperiod, Wbdytype, Season, Ym_date, Wbd, Depthzone, Species)
 
 haul_df_all <- haul_df %>% tidyr::expand(Species,Eventname)
 haul=haul_df %>%select(-Species)
@@ -187,5 +187,5 @@ spp_names <- p195_abundedt %>% select(Speciescommonname, Speciesscientificname, 
 p195_CPUE <- haul_sel_spp %>% left_join(spp_names) #NA for juv and adult blue crab
 p195_CPUE$Sciname <- ifelse(p195_CPUE$Speciescommonname %in% "juv blue crab"|p195_CPUE$Speciescommonname %in% "adult blue crab", "C. sapidus", p195_CPUE$Sciname)
 p195_CPUE$Speciesscientificname <- ifelse(p195_CPUE$Speciescommonname %in% "juv blue crab"|p195_CPUE$Speciescommonname %in% "adult blue crab", "callinectes sapidus", p195_CPUE$Speciesscientificname)
-#write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
+write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```
