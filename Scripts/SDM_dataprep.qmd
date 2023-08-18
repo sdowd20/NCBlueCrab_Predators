@@ -11,15 +11,6 @@ editor: visual
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc")
 invisible(lapply(packages, library, character.only= TRUE))
 
-world <- ne_countries(scale = "medium", returnclass = "sf")
-globe_bb <- matrix(c(-78.900147,33.802938,
-                      -78.900147,36.672128,
-                      -75.263672,36.672128,
-                     -75.263672, 33.802938,
-                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-
-globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
-
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
 #Load CPUE datasets
@@ -55,53 +46,77 @@ p195_CPUEedt$Survey <- "P195"
 #### Grid coordinates:
 
 ```{r}
-#Add grid cells in 
 p915_latlon <- p915_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
 p120_latlon <- p120_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
 p195_latlon <- p195_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
-
-lat_lon_combo2 <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey), p120_CPUEedt %>% select(Latitude, Longitude, Survey), p195_CPUEedt %>% select(Latitude, Longitude, Survey))
 lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
 lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE) 
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 # make an object the size and shape of the output you want
 globe_bb <- matrix(c(-78.900147,33.802938,
-                      -78.900147,36.222128,
-                      -75.263672,36.222128,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
                      -75.263672, 33.802938,
-                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326) #08/13/23: moved latitude down a bit to help w/ grid cells 
-
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
 globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
 
-degrees_per_km = 1/111.0 #1 degree is 111 km 
-degress <- 14.4*degrees_per_km #0.129
-distance_km <- 14.4
-degrees <- distance_km * 111
+#degrees_per_km = 1/111.0 #1 degree is 111 km 
+#degress <- 14.4*degrees_per_km #0.129
+#distance_km <- 14.4
+#degrees <- distance_km * 111
 
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = lat_lon_combo, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 
 fish_spat <- as.data.frame(lat_lon_combo)
 fish_spat$rowID <- 1:nrow(fish_spat)
-
 coordinates(fish_spat) <- ~ Longitude + Latitude
 fish_spat <- st_as_sf(fish_spat)
 fish_spat <- st_set_crs(fish_spat, 4326)
 grid <- globe_grid_30
-
 fish_extract <- st_intersection(fish_spat, grid)
 fish_extract_2 <- as.data.frame(fish_extract)
 
 #Group to get rid of duplicates (there are times when a point is overlapping two grid cells)
 fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
+
 fish_extract_2_2$gridID <- fish_extract_2_2$ID
 fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
+write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_08.18.23.csv") #updated on 08/08/23
 
-unique(fish_extract_2_2edt$gridID)
-write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.new.csv") #updated on 08/18/23
+unique(fish_extract_2_2$gridID)
 
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_2_2, fill = NA) + geom_sf(data= fish_spat) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) 
 ```
+
+#### Grid: Predictor variables
+```{r}
+#Read in gridded coordinates dataset: each lat and lon has a grid 
+gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_08.18.23.csv")
+gridded_coords <- gridded_coords %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% select(-...1)
+
+##Did this work? Make sure the joined work and data lines up, 08/16/23 it does! 
+selected_grids <- unique(gridded_coords$gridID)
+globe_grid_30_test <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID %in% selected_grids)
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_test, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+
+#Join grid geometry to gridded dataset 
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
+gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
+write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.18.23.csv")
+#st_write(gridded_coords_geom, "/Users/sallydowd/desktop/pls_work.shp")
+
+##Did this work? Yes! 
+gridded_coords_geom <- st_as_sf(gridded_coords_geom)
+ggplot(data = world) + geom_sf() + geom_sf(data = gridded_coords_geom, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+```
+
+
+
+
+
+
 
 #### Coords: Predictor variables
 
@@ -182,9 +197,22 @@ values_not_in_df2 <- t %>%
 
 unique(oh_no$gridID)
 unique(t$gridID)
+
 ###Figuring out Btmcomp and Sedsize 
 
+Btm_points <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
+Btm_points <- Btm_points %>% filter(Month==6) %>% select(Latitude, Longitude, Survey, Btmcomp_new, Control1) 
+Btm_points$lat_lon <- paste(Btm_points$Latitude, Btm_points$Longitude, sep= "_")
+Btm_points <- Btm_points %>% group_by(lat_lon, Control1, Survey) %>% distinct(lat_lon, .keep_all = TRUE)
+write.csv(Btm_points, "/users/sallydowd/Desktop/Btm_points.csv")
 
+Sedsize <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
+Sedsize <- Sedsize %>% filter(Month==6) %>% select(Latitude, Longitude, Survey, Sedsize_new, Control1) 
+Sedsize$lat_lon <- paste(Sedsize$Latitude, Sedsize$Longitude, sep= "_")
+Sedsize <- Sedsize %>% group_by(lat_lon, Control1, Survey) %>% distinct(lat_lon, .keep_all = TRUE)
+write.csv(Sedsize, "/users/sallydowd/Desktop/Sedsize.csv")
+
+#Bottom composition: for each unique lat_lon for each survey and control1 (month= 6), we have these points
 
 
 CPUE_grid_QGIS8 <- read.csv("~/Documents/QGIS/NC_Predictors/CPUE_grid_QGIS8.csv")
