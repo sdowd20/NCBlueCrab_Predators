@@ -156,6 +156,7 @@ P915_CPUE$doy <- yday(P915_CPUE$Date)
 P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
+P915_CPUE <- P915_CPUE %>% rename("Secchi"= "Depthend")
 write.csv(P915_CPUE, "/Users/sallydowd/Desktop/p915_CPUE_new.csv")
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
