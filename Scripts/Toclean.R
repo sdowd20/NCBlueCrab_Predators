@@ -143,6 +143,9 @@ merged <- merged %>% mutate_at(vars(11:18), as.numeric)
 ##Make Sedsize and Btmcomp consistent: No issues here except coarse sand:silt 
 merged <- merged %>% mutate(Sedsize = ifelse(merged$Sedsize %in% "coarse sand:coarse silt", "muddy sand", merged$Sedsize))
 merged <- merged %>% mutate(Sedsize_new = ifelse(merged$Sedsize %in% "soft mud"|merged$Sedsize %in% "sandy mud"|merged$Sedsize %in% "mud"|merged$Sedsize %in% "hard mud"|merged$Sedsize %in% "clay"|merged$Sedsize %in% "silt", "Mud", ifelse(merged$Sedsize %in% "muddy sand"|merged$Sedsize %in% "sand"|merged$Sedsize %in% "hard sand", "Sand", ifelse(merged$Sedsize %in% "cemented hard bottom or rock", "Hard bottom", NA))))
+unique(merged$Btmcomp) 
+merged <- merged %>% mutate(Btmcomp_new = ifelse(merged$Btmcomp %in% "shell"|merged$Btmcomp %in% "rock, shell"|merged$Btmcomp %in% "Rock"|merged$Btmcomp %in% "Bryozoan", "Shell", ifelse(merged$Btmcomp %in% "grass, algae, detritus"|merged$Btmcomp %in% "algae"|merged$Btmcomp %in% "detritus"|merged$Btmcomp %in% "grass, algae"|merged$Btmcomp %in% "grass"|merged$Btmcomp %in% "grass, detritus", "Vegetated", ifelse(merged$Btmcomp %in% "shell, algae"|merged$Btmcomp %in% "shell, detritus"|merged$Btmcomp %in% "shell, grass"|merged$Btmcomp %in% "shell, grass, algae"|merged$Btmcomp %in% "rock, shell, algae"|merged$Btmcomp %in% "rock, shell, grass, algae"|merged$Btmcomp %in% "rock, algae"|merged$Btmcomp %in% "rock, grass", "Vegetated-Shell", ifelse(merged$Btmcomp %in% "no grass"|merged$Btmcomp %in% "Tunicate", "Unstructured", ifelse(merged$Btmcomp %in% "Other"|merged$Btmcomp %in% "cinder", "Unnatural", ifelse(merged$Btmcomp %in% "Tow relocated due to Grass(1993)", NA, merged$Btmcomp)))))))
+summary(is.na(merged$Btmcomp_new)) #it worked, more NAs from the tow 
 
 #Scientific name, just do species names!
 p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/p915_sppnames.csv")
@@ -255,13 +258,13 @@ fulld2_edt$Photoperiod <- daylength(lat= fulld2_edt$Latitude, doy= fulld2_edt$do
 
 #Make Sedsize and Btmcomp consistent: 
 unique(fulld2_edt$Btmcomp) #Z isn't in P120 but is other in P915
-fulld2_edt <- fulld2_edt %>% mutate(Btmcomp_new = Btmcomp) #removes only 53 entries after 2008 from two sampling days
+#removes only 53 entries after 2008 from two sampling days
 unique(fulld2_edt$Sedsize) #0 to 9 is normal, 76% of all data is this, stations in Wilmington are the ones maybe using secondary codes
 #367 that are "" (NA) and 285 that are NA after 2007 #367 after 2007 
 fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize %in% "S"|fulld2_edt$Sedsize %in% "X"|fulld2_edt$Sedsize %in% "Y", 7, ifelse(fulld2_edt$Sedsize %in% "T"|fulld2_edt$Sedsize %in% "P", 3, ifelse(fulld2_edt$Sedsize %in% "U", 4, ifelse(fulld2_edt$Sedsize %in% "O"|fulld2_edt$Sedsize %in% "I"|fulld2_edt$Sedsize %in% "N", 6, ifelse(fulld2_edt$Sedsize %in% "B", 1, fulld2_edt$Sedsize)))))) #Same amount of NAs as before 
 #08/17/23: reclassify sediment size 
 fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize_new == 1|fulld2_edt$Sedsize_new == 6|fulld2_edt$Sedsize_new == 8, "Sand", ifelse(fulld2_edt$Sedsize_new== 2|fulld2_edt$Sedsize_new== 3|fulld2_edt$Sedsize_new== 4| fulld2_edt$Sedsize_new== 5| fulld2_edt$Sedsize_new== 7| fulld2_edt$Sedsize_new== 9, "Mud", ifelse(fulld2_edt$Sedsize_new== 0, "Hard bottom", fulld2_edt$Sedsize_new))))
-
+fulld2_edt <- fulld2_edt %>% mutate(Btmcomp_new = ifelse(fulld2_edt$Btmcomp %in% "A"|fulld2_edt$Btmcomp %in% "Q", "Shell", ifelse(fulld2_edt$Btmcomp %in% "L"|fulld2_edt$Btmcomp %in% "H"|fulld2_edt$Btmcomp %in% "C"|fulld2_edt$Btmcomp %in% "B"|fulld2_edt$Btmcomp %in% "K"|fulld2_edt$Btmcomp %in% "D", "Vegetated", ifelse(fulld2_edt$Btmcomp %in% "I"|fulld2_edt$Btmcomp %in% "G"|fulld2_edt$Btmcomp %in% "M", "Vegetated-Shell", ifelse(fulld2_edt$Btmcomp %in% "P"|fulld2_edt$Btmcomp %in% "O"|fulld2_edt$Btmcomp %in% "E", "Unstructured", ifelse(fulld2_edt$Btmcomp %in% "Z", "Unnatural", ifelse(fulld2_edt$Btmcomp %in% "X", NA, fulld2_edt$Btmcomp)))))))
 #write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
 write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
 
@@ -335,7 +338,7 @@ P195_bind_edt <- P195_bind_edt %>% mutate(Sedsize_new= ifelse(P195_bind_edt$Seds
 P195_bind_edt<- P195_bind_edt %>% mutate(Btmcomp_new = ifelse(P195_bind_edt$Btmcomp %in% "Grass", "B", ifelse(P195_bind_edt$Btmcomp %in% "No Grass", "O", ifelse(P195_bind_edt$Btmcomp %in% "Byozoan", "Q", ifelse(P195_bind_edt$Btmcomp %in% "Grass Algae", "H", ifelse(P195_bind_edt$Btmcomp %in% "Tunicate", "P",
 ifelse(P195_bind_edt$Btmcomp %in% "Algae", "C", ifelse(P195_bind_edt$Btmcomp %in% "Shellgrass Algae", "I", ifelse(P195_bind_edt$Btmcomp %in% "Shell Detritus", "M", ifelse(P195_bind_edt$Btmcomp %in% "Shell", "A", ifelse(P195_bind_edt$Btmcomp %in% "Shell Grass", "G", ifelse(P195_bind_edt$Btmcomp %in% "Detritus", "C",
 ifelse(P195_bind_edt$Btmcomp %in% "Rock Shell", "S", NA)))))))))))))
-nrow(P195_bind_edt %>% filter(Year> 2008, Btmcomp_new %in% NA)) #0 NAs after 2008, this is correct 
+P195_bind_edt <- P195_bind_edt %>% mutate(Btmcomp_new = ifelse(P195_bind_edt$Btmcomp %in% "A"|P195_bind_edt$Btmcomp %in% "Q"|P195_bind_edt$Btmcomp %in% "S", "Shell", ifelse(P195_bind_edt$Btmcomp %in% "L"|P195_bind_edt$Btmcomp %in% "H"|P195_bind_edt$Btmcomp %in% "C"|P195_bind_edt$Btmcomp %in% "B"|P195_bind_edt$Btmcomp %in% "K"|P195_bind_edt$Btmcomp %in% "D", "Vegetated", ifelse(P195_bind_edt$Btmcomp %in% "I"|P195_bind_edt$Btmcomp %in% "G"|P195_bind_edt$Btmcomp %in% "M", "Vegetated-Shell", ifelse(P195_bind_edt$Btmcomp %in% "P"|P195_bind_edt$Btmcomp %in% "O"|P195_bind_edt$Btmcomp %in% "E", "Unstructured", ifelse(P195_bind_edt$Btmcomp %in% "Z", "Unnatural", ifelse(P195_bind_edt$Btmcomp %in% "X", NA, P195_bind_edt$Btmcomp)))))))
 
 #Add in Secchi depth 
 secchi_depth <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Raw/P195_secchi_Dowd_20230815.csv")
