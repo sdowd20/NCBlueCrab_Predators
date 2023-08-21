@@ -111,25 +111,44 @@ write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gri
 ##Did this work? Yes! 
 ggplot(data = world) + geom_sf() + geom_sf(data = gridded_coords_geom, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 
-#Extract Sedsize_new for QGIS
-dataset_bind <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
-datasets_Sedsize <- dataset_bind %>% select(Latitude, Longitude, Sedsize_new) %>% drop_na(Sedsize_new)
-
 #Save shapefiles for QGIS
 st_write(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.21.23.shp")
 st_write(globe_grid_30_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/globe_grid_30_edt.08.21.23.shp")
-st_write(datasets_Sedsize, "~/Desktop/datasets_Sedsize_sf.csv")
-
 #--> TO QGIS for processing 
 ```
 
-#### Grid: Calculating predictor variables 
-```{r}
-Overall_grid8 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Overall_grid8.csv")
-Centroids4 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Centroids4.csv")
+#### Grid: Calculating predictor variables
 
-#Overall_grid8.csv
-#Centroids4.csv
+```{r}
+#Organize data
+Overall_grid9 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Overall_grid9.csv")
+Overall_grid9[Overall_grid9 == ''] <- NA
+Centroids4 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Centroids4.csv")
+selected_grids <- gridded_coords_geom_edt$gridID 
+  
+Grid_predictors <- Overall_grid9 %>% left_join(Centroids4, by= "gridID") %>% rename("gridArea_km"= "area_km2","ShrimpTrawl_p"= "ShrimpT_p", "TrawlDredge_p" ="TrawlDredg", "GillPoundNet_p"= "GillPound_", "ShorelineType"= "ShorelineT", "InletDist_km"= "InletDist_", "ShorelineDist_km"= "ShorelineD", "WaterbodyCover"= "WaterbodyC") %>% filter(gridID %in% selected_grids) %>% select(-Waterbody)
+
+#Calculate fishing predictors: there are no negatives from waterbody
+subset_cols <- c("ShrimpTrawl_p", "TrawlDredge_p", "GillPoundNet_p", "DPA_a")
+Grid_predictors_edt <- Grid_predictors %>% mutate(ShrimpTrawl_a= WaterbodyCover - ShrimpTrawl_p, TrawlDredge_a= WaterbodyCover - TrawlDredge_p, GillPoundNet_a= WaterbodyCover - GillPoundNet_p)
+colnames(Grid_predictors_edt) 
+Grid_predictors_edt2 <- Grid_predictors_edt %>% mutate(FishingAll_num= rowSums(Grid_predictors_edt[c("ShrimpTrawl_a", "TrawlDredge_a", "GillPoundNet_a", "DPA_a")] > 0), NoFishRest= WaterbodyCover- Restricted)
+
+#Remove gridIDs outside of study area (determined by QGIS)
+Grid_predictors_edt2 <- Grid_predictors_edt2 %>% filter(!gridID %in% c(398, 543, 668, 678, 679, 707, 895, 173, 199, 388))
+
+#Calculate most common Sedsize_new in a grid cell
+dataset_bind <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
+datasets_Sedsize <- dataset_bind %>% select(Latitude, Longitude, Sedsize_new) %>% drop_na(Sedsize_new)
+datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
+gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
+datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% select(gridID, lat_lon), by= "lat_lon")
+Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID)
+
+#Finish predicators 
+Grid_predictors_edt2final <- Grid_predictors_edt2 %>% left_join(Sedsize_common, by= "gridID")
+
+write.csv(Grid_predictors_edt2final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_predictors_final.csv")
 ```
 
 #### Coords: Predictor variables
