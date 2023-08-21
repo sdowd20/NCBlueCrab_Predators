@@ -89,7 +89,8 @@ unique(fish_extract_2_2$gridID)
 ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_2_2, fill = NA) + geom_sf(data= fish_spat) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) 
 ```
 
-#### Grid: Predictor variables
+#### Grid: Structuring predictor variables
+
 ```{r}
 #Read in gridded coordinates dataset: each lat and lon has a grid 
 gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_08.18.23.csv")
@@ -104,19 +105,32 @@ ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_test, fill = NA)
 #Join grid geometry to gridded dataset 
 globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
 gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
+gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, geometry)
 write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.18.23.csv")
-#st_write(gridded_coords_geom, "/Users/sallydowd/desktop/pls_work.shp")
 
 ##Did this work? Yes! 
-gridded_coords_geom <- st_as_sf(gridded_coords_geom)
 ggplot(data = world) + geom_sf() + geom_sf(data = gridded_coords_geom, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+
+#Extract Sedsize_new for QGIS
+dataset_bind <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
+datasets_Sedsize <- dataset_bind %>% select(Latitude, Longitude, Sedsize_new) %>% drop_na(Sedsize_new)
+
+#Save shapefiles for QGIS
+st_write(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.21.23.shp")
+st_write(globe_grid_30_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/globe_grid_30_edt.08.21.23.shp")
+st_write(datasets_Sedsize, "~/Desktop/datasets_Sedsize_sf.csv")
+
+#--> TO QGIS for processing 
 ```
 
+#### Grid: Calculating predictor variables 
+```{r}
+Overall_grid8 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Overall_grid8.csv")
+Centroids4 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Centroids4.csv")
 
-
-
-
-
+#Overall_grid8.csv
+#Centroids4.csv
+```
 
 #### Coords: Predictor variables
 
@@ -237,6 +251,7 @@ colnames(CPUE_grid_QGIS8)
 ```
 
 #### Overlap
+
 ```{r}
 CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv", sep= ",")
 overlap_t <- CPUE_dfs_gridded_final
