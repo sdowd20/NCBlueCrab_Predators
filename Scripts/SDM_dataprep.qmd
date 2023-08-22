@@ -19,16 +19,15 @@ setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-##Filter datasets: Add back in Secchi size once get P195 data
-p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph) %>% filter(Year >= 2001) %>% rename("Location" = "Area", "Strata/station"= "Strata", "Depthzone"= "Quad") #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp) %>% filter(Year >= 2001) %>% rename("Strata/station"= "Station") %>% mutate(Depthzone= "Constant") #still don't have btmcomp or sedsize 
-p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart", "Secchi"= "Secchi_depthcm") %>% filter(Year >= 2001)
-p195_CPUEedt$Depthzone[p195_CPUEedt$Depthzone %in% NA] <- "Constant"
+#Filter datasets: Add back in Secchi size once get P195 data
+p915_CPUEedt <- p915_CPUE %>% select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad) %>% filter(Year >= 2001) %>% rename("Location" = "Area", "Strata/station"= "Strata") #added in species of focus for now (still waiting on data)
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp) %>% filter(Year >= 2001) %>% rename("Strata/station"= "Station")
+p195_CPUEedt <- p195_CPUE %>% select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart", "Secchi"= "Secchi_depthcm") %>% filter(Year >= 2001)
 
-#All same column names! 
+##All same column names! 
 colnames(p915_CPUEedt)
 colnames(p120_CPUEedt)
-colnames(p195_CPUEedt)
+colnames(p195_CPUEedt) #not using depthzone right now, might be hard w/ averaging 
 
 ##Get rid of NAs outside of environmental variables!
 summary(is.na(p915_CPUEedt)) #A good amount of NAs for Sedsize_new (3248) and Btmcomp_new (2714)
@@ -41,6 +40,9 @@ p120_CPUEedt <- p120_CPUEedt  %>% drop_na(Latitude, Longitude)
 p120_CPUEedt$Survey <- "P120"
 p195_CPUEedt <- p195_CPUEedt  %>% drop_na(Latitude, Longitude)
 p195_CPUEedt$Survey <- "P195"
+
+CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
+CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
 #### Grid coordinates:
@@ -100,7 +102,7 @@ gridded_coords <- gridded_coords %>% separate(lat_lon, into = c("Latitude", "Lon
 selected_grids <- unique(gridded_coords$gridID)
 globe_grid_30_test <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID %in% selected_grids)
 
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_test, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+#ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_test, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 
 #Join grid geometry to gridded dataset 
 globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
@@ -109,11 +111,11 @@ gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= T
 write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.18.23.csv")
 
 ##Did this work? Yes! 
-ggplot(data = world) + geom_sf() + geom_sf(data = gridded_coords_geom, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+#ggplot(data = world) + geom_sf() + geom_sf(data = gridded_coords_geom, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 
 #Save shapefiles for QGIS
-st_write(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.21.23.shp")
-st_write(globe_grid_30_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/globe_grid_30_edt.08.21.23.shp")
+#st_write(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.21.23.shp")
+#st_write(globe_grid_30_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/globe_grid_30_edt.08.21.23.shp")
 #--> TO QGIS for processing 
 ```
 
@@ -124,13 +126,15 @@ st_write(globe_grid_30_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/globe_
 Overall_grid9 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Overall_grid9.csv")
 Overall_grid9[Overall_grid9 == ''] <- NA
 Centroids4 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Centroids4.csv")
+Centroids4 <- Centroids4 %>% rename("ShorelineType"= "ShorelineT", "InletDist_km"= "InletDist_", "ShorelineDist_km"= "ShorelineD") %>% select(gridID, ShorelineType, InletDist_km, SAVDist_km)
+
 selected_grids <- gridded_coords_geom_edt$gridID 
   
-Grid_predictors <- Overall_grid9 %>% left_join(Centroids4, by= "gridID") %>% rename("gridArea_km"= "area_km2","ShrimpTrawl_p"= "ShrimpT_p", "TrawlDredge_p" ="TrawlDredg", "GillPoundNet_p"= "GillPound_", "ShorelineType"= "ShorelineT", "InletDist_km"= "InletDist_", "ShorelineDist_km"= "ShorelineD", "WaterbodyCover"= "WaterbodyC") %>% filter(gridID %in% selected_grids) %>% select(-Waterbody)
+Grid_predictors <- Overall_grid9 %>% left_join(Centroids4, by= "gridID") %>% rename("gridArea_km"= "area_km2","ShrimpTrawl_p"= "ShrimpT_p", "TrawlDredge_p" ="TrawlDredg", "GillPoundNet_p"= "GillPound_", "WaterbodyCover"= "WaterbodyC") %>% filter(gridID %in% selected_grids) %>% select(-Waterbody)
 
 #Calculate fishing predictors: there are no negatives from waterbody
 subset_cols <- c("ShrimpTrawl_p", "TrawlDredge_p", "GillPoundNet_p", "DPA_a")
-Grid_predictors_edt <- Grid_predictors %>% mutate(ShrimpTrawl_a= WaterbodyCover - ShrimpTrawl_p, TrawlDredge_a= WaterbodyCover - TrawlDredge_p, GillPoundNet_a= WaterbodyCover - GillPoundNet_p)
+Grid_predictors_edt <- Grid_predictors %>% mutate(ShrimpTrawl_a= WaterbodyCover - ShrimpTrawl_p, TrawlDredge_a= WaterbodyCover - TrawlDredge_p, GillPoundNet_a= WaterbodyCover - GillPoundNet_p) 
 colnames(Grid_predictors_edt) 
 Grid_predictors_edt2 <- Grid_predictors_edt %>% mutate(FishingAll_num= rowSums(Grid_predictors_edt[c("ShrimpTrawl_a", "TrawlDredge_a", "GillPoundNet_a", "DPA_a")] > 0), NoFishRest= WaterbodyCover- Restricted)
 
@@ -147,126 +151,37 @@ Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_co
 
 #Finish predicators 
 Grid_predictors_edt2final <- Grid_predictors_edt2 %>% left_join(Sedsize_common, by= "gridID")
-
-write.csv(Grid_predictors_edt2final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_predictors_final.csv")
+write.csv(Grid_predictors_edt2final, "~/Desktop/gridded_predictors_final.csv")
 ```
 
-#### Coords: Predictor variables
+#### Final CPUE dataset
 
 ```{r}
-#Load predictor variable datasets
-setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables")
-inlet_coords <- st_read("Inlet.points.kml")
-coords2 <- st_coordinates(inlet_coords)
-inlet_coords$Latitude <- coords2[, "Y"]
-inlet_coords$Longitude <- coords2[, "X"]
-inlet_coords <- inlet_coords %>% select(-Description)
-inlet_coords <- st_transform(inlet_coords) #NC CRS
-st_crs(inlet_coords)
-SAV_08 <- st_read("SAV/SAV_2006_2008/SAV_2006-2008_Mapping_Revised.shp") #WGS 84/ Pseudo-Mercator
-st_crs(SAV_08) #Web Mercator: standard for Web mapping applications, EPSG: 3857, uses spherical over ellipsoidal, projection is slightly non-conformal (angles b/w lines on surface aren't drawn to same angles in map), not normally used for maps of local areas so accuracy of positions needed for splitting is less than angular deviation caused by using spherical formulas 
+#Combining datasets
+predictors_df <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_predictors_final.csv")
+predictors_df <- predictors_df[,-1]
 
-#Add in other metrics to coordinates
-##Distance to inlet 
-coords_survey <- rbind(p915_CPUEedt %>% select(Latitude, Longitude, Survey, Year), p120_CPUEedt %>% select(Latitude, Longitude, Survey, Year), p195_CPUEedt %>% select(Latitude, Longitude, Survey, Year))
-coords_surveyedt <- coords_survey %>% select(-Survey, -Year) %>% distinct(Latitude, Longitude, .keep_all= TRUE) 
-coords_surveysf <- st_as_sf(coords_surveyedt, coords= c("Longitude", "Latitude"), crs= 4326)
-coords_inlet_nearest <- st_nearest_feature(coords_surveysf, inlet_coords)
-dist_inlets = st_distance(coords_surveysf, inlet_coords[coords_inlet_nearest,], by_element=TRUE)
-dist_inlets <- as.numeric(dist_inlets)
-coords_surveysf_edt <- coords_surveysf %>% mutate(dist_inlets= dist_inlets)
+##Join predictors with lat_lon
+gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_08.18.23.csv")
+gridded_coords <- gridded_coords[,-1]
+gridpred_lat_lon <- gridded_coords %>% left_join(predictors_df, by= "gridID")
 
-coords2 <- st_coordinates(coords_surveysf)
-coords_surveysf_edt$Latitude <- coords2[, "Y"]
-coords_surveysf_edt$Longitude <- coords2[, "X"]
-coords_surveysf_edt$lat_lon <- paste(coords_surveysf_edt$Latitude,coords_surveysf_edt$Longitude, sep = "_") 
-coords_survey$lat_lon <- coords_survey$lat_lon <- paste(coords_survey$Latitude, coords_survey$Longitude, sep = "_") 
-coords_survey_tojoin <- coords_survey %>% select(-Survey) %>% left_join(coords_surveysf_edt %>% select(lat_lon, dist_inlets), by= "lat_lon") %>% select(-geometry)
-write.csv(coords_survey_tojoin, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/predictors_gridded.csv")
+##Join lat_lon from predictors gridded to CPUE!! 143 rows with NA for gridID, 7 latitude and longitude points, all P915
+CPUE_all_grid_pred <- CPUE_all %>% left_join(gridpred_lat_lon, by= "lat_lon") %>% select(lat_lon, everything())
+CPUE_all_grid_pred <- CPUE_all_grid_pred %>% drop_na(gridID)
+CPUE_all_grid_pred <- CPUE_all_grid_pred %>% separate(lat_lon, into= c("Latitude", "Longitude"), sep = "_", convert= TRUE, remove=FALSE) %>% filter(!gridID %in% c(398, 543, 668, 678, 679, 707, 895, 173, 199, 388)) #get rid of grid cells that are outliers, gets rid of 323 rows 
 
-ggplot(data= world) + geom_sf() + geom_point(data= coords_survey_tojoin[1000:2000,], aes(x= Longitude, y= Latitude, color= dist_inlets)) + geom_point(data= inlet_coords, aes(x= Longitude, y= Latitude)) + coord_sf(xlim=c(-78, -75), ylim=c(33,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + scale_color_viridis() #it works! just need to do it with less data 
+ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30_test, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_all_grid_pred, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
 
-##Join predictors, gridded, and CPUE datasets
-###Predictors with gridID
-predictors_df <- coords_survey_tojoin %>% distinct(lat_lon, .keep_all = TRUE)
-gridded_coords <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/SDM.grids.new.csv")
-predictors_gridded <- predictors_df %>% left_join(gridded_coords, by= "lat_lon") %>% select(lat_lon, gridID, dist_inlets) #only 5 NA for gridID
-write.csv(predictors_gridded,"~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/predictors_gridded.csv") #updated on 08/09/23
+#Outlier analysis: there are some is.extreme outliers here and there but I've decided not to remove any (e.g: outlier for CPUE makes sense)
+colnames(CPUE_all_grid_pred)
+cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "GillPoundNet_a", "InletDist_km", "SAVDist_km", "Latitude", "Longitude")
+t <- list()
+for(col in cn){
+t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
+}
 
-###Predictors and gridID with gridID geometry
-pred_gridd_geom <- predictors_gridded %>% left_join(globe_grid_30 %>% rename("gridID"= "ID"), by= "gridID")
-pred_gridd_geom <- st_as_sf(pred_gridd_geom)
-#ggplot(data = world) + geom_sf() + geom_sf(data =pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = lat_lon_combo2, aes(x = Longitude, y = Latitude, color= Survey), size = .2) 
-
-###Predictors with CPUE data
-CPUE_dfs <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
-CPUE_dfs$lat_lon <- paste(CPUE_dfs$Latitude, CPUE_dfs$Longitude, sep = "_") 
-CPUE_dfs_gridded <- CPUE_dfs %>% left_join(pred_gridd_geom, by= "lat_lon")
-length(unique(CPUE_dfs$lat_lon))
-length(unique(pred_gridd_geom$lat_lon))
-summary(is.na(CPUE_dfs_gridded))
-CPUE_dfs_gridded_final <- CPUE_dfs_gridded %>% drop_na() %>% select(-geometry) #Removes 33 rows, 33 NA for gridID)
-
-ggplot(data = world) + geom_sf() + geom_sf(data =pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_dfs_gridded_final, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
-
-write.csv(CPUE_dfs_gridded_final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv") #updated on 08/09/23
-```
-
-#### Grids: Predictors
-
-```{r}
-t <- pred_gridd_geom %>% distinct(gridID, .keep_all=TRUE) %>% select(-lat_lon)
-write_sf(t, "/Users/sallydowd/Desktop/CPUE_new.shp")
-
-oh_no <- read_csv("/Users/sallydowd/Desktop/oh_no.csv")
-
-values_not_in_df2 <- set_diff(oh_no$gridID, t$gridID)
-
-values_not_in_df2 <- t %>%
-  filter(!gridID %in% oh_no$gridID) %>%
-  select(gridID)
-
-
-
-unique(oh_no$gridID)
-unique(t$gridID)
-
-###Figuring out Btmcomp and Sedsize 
-
-Btm_points <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
-Btm_points <- Btm_points %>% filter(Month==6) %>% select(Latitude, Longitude, Survey, Btmcomp_new, Control1) 
-Btm_points$lat_lon <- paste(Btm_points$Latitude, Btm_points$Longitude, sep= "_")
-Btm_points <- Btm_points %>% group_by(lat_lon, Control1, Survey) %>% distinct(lat_lon, .keep_all = TRUE)
-write.csv(Btm_points, "/users/sallydowd/Desktop/Btm_points.csv")
-
-Sedsize <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
-Sedsize <- Sedsize %>% filter(Month==6) %>% select(Latitude, Longitude, Survey, Sedsize_new, Control1) 
-Sedsize$lat_lon <- paste(Sedsize$Latitude, Sedsize$Longitude, sep= "_")
-Sedsize <- Sedsize %>% group_by(lat_lon, Control1, Survey) %>% distinct(lat_lon, .keep_all = TRUE)
-write.csv(Sedsize, "/users/sallydowd/Desktop/Sedsize.csv")
-
-#Bottom composition: for each unique lat_lon for each survey and control1 (month= 6), we have these points
-
-
-CPUE_grid_QGIS8 <- read.csv("~/Documents/QGIS/NC_Predictors/CPUE_grid_QGIS8.csv")
-subset_cols <- c("STP_a", "TDP_a", "GPP_a", "DPA_open_p")
-CPUE_grid_QGIS8_edt <- CPUE_grid_QGIS8 %>% mutate(STP_a= WB_p - STP_p, STP_a= ifelse(STP_a < 0, 0, STP_a), TDP_a= WB_p - TDP_p, TDP_a= ifelse(TDP_a < 0, 0, TDP_a), GPP_a= WB_p - GPP_p, GPP_a= ifelse(GPP_a < 0, 0, GPP_a), FishA_num= rowSums(CPUE_grid_QGIS8_edt[c("STP_a", "TDP_a", "GPP_a", "DPA_open_p")] > 0), NoFishRest= WB_p- Restricted)
-
-#Shrimp trawling allowed: some values negative (max -2.0%) b/c of NC shapefile, made them 0
-
-ifelse(df[[1]] < 0, 0, df[[1]])
-
-colnames(CPUE_grid_QGIS8)
-
-#Calculations to make: 
- ##Shrimp trawling prohibited → allowed 
- ##Trawling Dredging prohibited → allowed 
- ##Gillnet Pound Net Prohibited → allowed 
- ##0 for no fishing allowed at all or 1 for fishing allowed → at least one kind of fishing allowed everywhere, don't use this 
- ##Number of different kinds of fishing
- ##Total restricted area, restricted area 
- ##Total unrestricted area (all fishing activities allowed, no fishing restrictions)
-
+#write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_all_grid_pred.csv") #updated on 08/22/23
 ```
 
 #### Overlap
@@ -356,20 +271,94 @@ final_combo_n <- final_combo %>% group_by(Speciescommonname.x, Speciescommonname
 
 ```
 
-#### Outlier analysis: changes here reflected in saved CPUE_dfs_gridded_final analysis
+
+In general, there were not many extreme outliers throughout the datasets. There were no extreme outliers for year, month, day, ssal, bsal, stemp, btemp, sdo, and bdo columns. There were some extreme outliers for the Depth column. The minimum depth was 0.0 and the maximum was 8.8 meters. The only watersheds that had water depth over 7 meters were New River, Pamlico River, Neuse River, and Pamlico Sound. Based on briefly examining the maxinimum depth for water bodies, I think this might be plausible. For Colnum, there were around 102,398 extreme outliers with a maximum Colnum of 9006. As the species with extreme outliers for this category are commonly caught in the estuary (atlantic croaker, black drum, blue crab, spot, etc.), I feel comfortable with retaining these outliers. Lastly, there were some rows of extreme outliers for distance to nearest inlet and SAV. 
+#### Overlap
 
 ```{r}
-CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
+CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv", sep= ",")
+overlap_t <- CPUE_dfs_gridded_final
 
-colnames(CPUE_dfs_gridded_final)
-cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "dist_inlets")
-t <- list()
-for(col in cn){
-t[[col]] <- CPUE_dfs_gridded_final %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
+#Overlapping grid IDs
+##In general
+gridID_count <- overlap_t %>% filter(Colnum > 0) %>% group_by(Survey, gridID) %>% summarize(count = n()) 
+
+p915_overlap_gridID <- overlap_t %>% select(gridID, Survey, Year) %>% filter(Survey %in% "P915") %>% group_by(Year) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Year)
+p120_overlap_gridID <- overlap_t %>% select(gridID, Survey, Year) %>% filter(Survey %in% "P120") %>% group_by(Year) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Year)
+p195_overlap_gridID <- overlap_t %>% select(gridID, Survey, Year) %>% filter(Survey %in% "P195") %>% group_by(Year) %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, Year)
+
+library(plyr)
+match_df(p915_overlap_gridID, p120_overlap_gridID, on = NULL)
+match_df(p915_overlap_gridID, p195_overlap_gridID, on = NULL)
+match_df(p195_overlap_gridID, p120_overlap_gridID, on = NULL) 
+
+##Positive, positive
+spp_names <- unique(subset(overlap_t, Survey %in% "P915")$Speciescommonname)
+P915_total_spp <- list()
+P915_total_gridID <- list()
+P120_total_gridID <- list()
+match_df <- list()
+library(plyr)
+library(dplyr)
+for(i in spp_names) {
+P915_total_spp[[i]] <- overlap_t %>% filter(Survey %in% "P915", Speciescommonname %in% i, Colnum > 0)
+P915_total_gridID[[i]] <- P915_total_spp[[i]] %>% dplyr::select(gridID, Month, Speciescommonname, Year) %>% group_by(Month, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
+P120_bc <- overlap_t %>% filter(Survey %in% "P120", Speciescommonname %in% "blue crab", Colnum > 0)
+P120_bc_gridID <- P120_bc %>% dplyr::select(gridID, Month, Speciescommonname, Year) %>% group_by(Month, Year, Speciescommonname) %>% distinct(gridID, .keep_all= TRUE)
+match_df[[i]] <- match_df(P915_total_gridID[[i]], P120_bc_gridID, on = c("gridID", "Month", "Year")) 
 }
-```
 
-In general, there were not many extreme outliers throughout the datasets. There were no extreme outliers for year, month, day, ssal, bsal, stemp, btemp, sdo, and bdo columns. There were 3,410 extreme outliers for the Depth column. Keep in mind, at the time of this outlier analysis (08/02/23), the issues with P195 Depthend and Depthstart hadn't been resolved. The minimum depth was 0.1 and the maximum was 8.8 meters. The only watersheds that had water depth over 7 meters were New River, Pamlico River, and Pamlico Sound. Based on briefly examining the maxinimum depth for water bodies, I think this might be plausible. For Colnum, there were around 14,000 extreme outliers with a maximum Colnum of 9006. As the species with extreme outliers for this category are commonly caught in the estuary (atlantic croaker, black drum, blue crab, spot, etc.), I feel comfortable with retaining these outliers. Lastly, there were 17 rows of extreme outliers for distance to nearest inlet, all within the Tar River Reservoir-Tar River. I decided to remove these from the analysis (but this in above code) due to the distance from water bodies of focus.
+detach(package:plyr)
+library(dplyr)
+match_data2 <- as.data.frame(do.call(rbind, match_df)) 
+match_data2 <- match_data2 %>% group_by(Speciescommonname, Month, Year) %>% dplyr::mutate(count= n())
+
+match_data2 %>% filter(Month== 6) %>% ggplot() + geom_histogram(aes(x= Year)) + facet_wrap(~Speciescommonname) + standard_theme
+
+
+spp_names_trawl <- unique(subset(overlap_t, Survey %in% "P120")$Speciescommonname)
+
+P915_total_spp <- list()
+P915_total_gridID <- list()
+P120_total_spp <- list()
+P120_total_gridID <- list()
+match_df <- list()
+all_match_df <- list()
+
+for (i in spp_names) {
+  P915_total_spp[[i]] <- overlap_t %>%
+    filter(Survey %in% "P915", Speciescommonname %in% i, Colnum > 0, Month== 6) %>%
+    drop_na(Colnum)
+  
+  P915_total_gridID[[i]] <- P915_total_spp[[i]] %>%
+    dplyr::select(gridID, Month, Speciescommonname, Year) %>%
+    group_by(Month, Year, Speciescommonname) %>%
+    distinct(gridID, .keep_all = TRUE)
+  
+  match_df[[i]] <- list()  # Initialize an empty list for each species in spp_names
+  for (j in spp_names_trawl) {
+    P120_total_spp[[j]] <- overlap_t %>%
+      filter(Survey %in% "P120", Speciescommonname %in% j, Colnum > 0, Month==6) %>%
+      drop_na(Colnum)
+    
+    P120_total_gridID[[j]] <- P120_total_spp[[j]] %>%
+      dplyr::select(gridID, Month, Speciescommonname, Year) %>%
+      group_by(Month, Year, Speciescommonname) %>%
+      distinct(gridID, .keep_all = TRUE)
+    
+  #  match_df[[i]][[j]] <- match_df(P915_total_gridID[[i]], #P120_total_gridID[[j]], on = c("gridID", "Season", "Year")) 
+    match_df[[i]][[j]] <- inner_join(P915_total_gridID[[i]], P120_total_gridID[[j]], by = c("gridID", "Month", "Year")) %>%
+      dplyr::select(Speciescommonname.y, everything())
+  }
+   all_match_df[[i]] <- bind_rows(match_df[[i]]) #combine match_df[[i]][[j]] into data frames for each predator
+}
+
+detach(package:plyr)
+final_combo <- bind_rows(all_match_df)
+final_combo_n_yr <- final_combo %>% group_by(Year, Speciescommonname.x, Speciescommonname.y) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% select(-gridID)
+final_combo_n <- final_combo %>% group_by(Speciescommonname.x, Speciescommonname.y) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% select(-gridID, -Year)
+
+```
 
 #### CPUE calculation
 
