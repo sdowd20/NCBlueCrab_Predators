@@ -108,7 +108,7 @@ globe_grid_30_test <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID
 globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
 gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
 gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, geometry)
-write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.18.23.csv")
+#write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.08.18.23.csv")
 
 ##Did this work? Yes! 
 #ggplot(data = world) + geom_sf() + geom_sf(data = gridded_coords_geom, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = gridded_coords_geom, aes(x = Longitude, y = Latitude), size = .2) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
@@ -151,7 +151,7 @@ Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_co
 
 #Finish predicators 
 Grid_predictors_edt2final <- Grid_predictors_edt2 %>% left_join(Sedsize_common, by= "gridID")
-write.csv(Grid_predictors_edt2final, "~/Desktop/gridded_predictors_final.csv")
+#write.csv(Grid_predictors_edt2final, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_predictors_final.csv")
 ```
 
 #### Final CPUE dataset
@@ -181,7 +181,7 @@ for(col in cn){
 t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
 }
 
-#write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_all_grid_pred.csv") #updated on 08/22/23
+write.csv(CPUE_all_grid_pred,"~/Desktop/CPUE_all_grid_pred.csv") #updated on 08/23/23
 ```
 
 #### Overlap
@@ -271,9 +271,7 @@ final_combo_n <- final_combo %>% group_by(Speciescommonname.x, Speciescommonname
 
 ```
 
-
-In general, there were not many extreme outliers throughout the datasets. There were no extreme outliers for year, month, day, ssal, bsal, stemp, btemp, sdo, and bdo columns. There were some extreme outliers for the Depth column. The minimum depth was 0.0 and the maximum was 8.8 meters. The only watersheds that had water depth over 7 meters were New River, Pamlico River, Neuse River, and Pamlico Sound. Based on briefly examining the maxinimum depth for water bodies, I think this might be plausible. For Colnum, there were around 102,398 extreme outliers with a maximum Colnum of 9006. As the species with extreme outliers for this category are commonly caught in the estuary (atlantic croaker, black drum, blue crab, spot, etc.), I feel comfortable with retaining these outliers. Lastly, there were some rows of extreme outliers for distance to nearest inlet and SAV. 
-#### Overlap
+In general, there were not many extreme outliers throughout the datasets. There were no extreme outliers for year, month, day, ssal, bsal, stemp, btemp, sdo, and bdo columns. There were some extreme outliers for the Depth column. The minimum depth was 0.0 and the maximum was 8.8 meters. The only watersheds that had water depth over 7 meters were New River, Pamlico River, Neuse River, and Pamlico Sound. Based on briefly examining the maxinimum depth for water bodies, I think this might be plausible. For Colnum, there were around 102,398 extreme outliers with a maximum Colnum of 9006. As the species with extreme outliers for this category are commonly caught in the estuary (atlantic croaker, black drum, blue crab, spot, etc.), I feel comfortable with retaining these outliers. Lastly, there were some rows of extreme outliers for distance to nearest inlet and SAV. \#### Overlap
 
 ```{r}
 CPUE_dfs_gridded_final <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv", sep= ",")
@@ -359,11 +357,16 @@ final_combo_n_yr <- final_combo %>% group_by(Year, Speciescommonname.x, Speciesc
 final_combo_n <- final_combo %>% group_by(Speciescommonname.x, Speciescommonname.y) %>% mutate(count= n()) %>% distinct(count, .keep_all= TRUE) %>% select(-gridID, -Year)
 
 ```
+
 
 #### CPUE calculation
 
 ```{r}
-CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_dfs_gridded_final.csv")
+CPUE_dfs_gridded_final <- read_csv("~/Desktop/CPUE_all_grid_pred.csv")
+
+
+
+CPUE_all_grid_pred  %>% filter(Speciescommonname %in% "blue crab", Year== 2008, Month== 06)
 
 #Effort by survey: this works 
 CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else 
@@ -371,36 +374,45 @@ CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P12
 #CPUE by row: since you assigned effort correctly, this will work as it should 
 CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort
 CPUE_grid <- CPUE_grid %>% group_by(Survey) %>% mutate(CPUE_stdzd= normalize(CPUE, method= "range", range= c(0,1))) ##min-max scaling:
+CPUE_grid<- CPUE_grid %>% group_by(gridID, Survey, Year) %>% mutate(mean_CPUE= mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd))
 
-ggplot() + geom_histogram(data= CPUE_grid, aes(x= CPUE)) + standard_theme + facet_wrap(~Survey, scales= "free") #CPUEs from surveys don't seem that different (need to standardize)
 
-abund_bc <- CPUE_grid %>% filter(Speciescommonname %in% "blue crab") %>% group_by(gridID, Survey) %>% mutate(mean_CPUE = mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd)) %>% distinct(mean_CPUE, .keep_all= TRUE)
-
-#ggplot(data = world) + geom_sf() + geom_sf(data=pred_gridd_geom, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + #geom_point(data = subset(abund_bc,Survey %in% "P120"), aes(x = Longitude, y = Latitude, color= mean_CPUE), size = 1) + facet_wrap(~Survey) + scale_color_viridis_c(option = "D")
+abund_bc <- CPUE_grid %>% filter(Speciescommonname %in% "blue crab") %>% group_by(gridID, Survey, Year) %>% mutate(mean_CPUE = mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd)) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
 #Number of observations for species of interest: to note- when I redid this (08/06/23), I included bonnethead hammerhead and blue catfish just to look at the #s
-interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel")
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder", "spoot", "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet")
 
-p195_nums <- p195_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P195") 
+unique(p915_CPUEedt$Speciescommonname)
 
-p120_nums <- p120_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month == 5| Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
+p195_nums <- p195_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month== 6) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P195") 
 
-p915_nums <- p915_CPUEedt %>% filter(Year > 2008, Month == 5| Month==6| Month==9) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
+p120_nums <- p120_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
+
+p915_nums <- p915_CPUEedt %>% filter(Year > 2008,Month==6, Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
 
 combo <- rbind(p195_nums, p120_nums, p915_nums)
 combo <- combo %>% arrange(Speciescommonname, Month)
-write.csv(combo, "~/Desktop/seasonality.csv")
+write.csv(combo, "~/Desktop/numbers.08.23.23.csv")
 ```
 
 #### CPUE visualization
 
 ```{r}
 ss_survey_vis <- function(test, species, test2, species2, test3, species3){
-ggplot() + geom_sf(data = world) + geom_point(data = subset(abund, abund$Survey %in% test & abund$Speciescommonname %in% species & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "dark green") + geom_point(data = subset(abund, abund$Survey %in% test2 & abund$Speciescommonname %in% species2 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "light green") + geom_point(data = subset(abund, abund$Survey %in% test3 & abund$Speciescommonname %in% species3 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + scale_colour_discrete(name = "Species") + labs(size= "Average std. CPUE")
+ggplot() + geom_sf(data = world) + geom_point(data = subset(CPUE_grid, CPUE_grid$Survey %in% test & CPUE_grid$Speciescommonname %in% species & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "dark green") + geom_point(data = subset(CPUE_grid, CPUE_grid$Survey %in% test2 & CPUE_grid$Speciescommonname %in% species2 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "light green") + geom_point(data = subset(CPUE_grid, CPUE_grid$Survey %in% test3 & CPUE_grid$Speciescommonname %in% species3 & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + scale_colour_discrete(name = "Species") + labs(size= "Average std. CPUE")
 }
 
-ss_survey_vis("P915", "atlantic croaker", "P120", "blue crab", "P195", "blue crab")   
+test <- CPUE_grid %>% filter(Year == 2008, Speciescommonname %in% "blue crab", Month==6)
+
+
+ggplot() + geom_sf(data = world) + geom_point(data = subset(test, test$Survey %in% "P195" & test$Speciescommonname %in% "blue crab" & Colnum > 0), aes(x = Longitude, y = Latitude, size= mean_CPUE_stdzd), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+
+
+
+ss_survey_vis("P915", "atlantic croaker", "P120", "blue crab", "P195", "blue crab") + facet_wrap(~Year)
 ggsave("/Users/sallydowd/Desktop/atlantic.croaker.jpeg", width= 7, height= 5)
+
+
 
 ss_survey_vis("P915", "striped bass", "P120", "adult blue crab", "P195", "adult blue crab")    
 ss_survey_vis("P915", "striped bass", "P120", "blue crab", "P195", "blue crab") 
