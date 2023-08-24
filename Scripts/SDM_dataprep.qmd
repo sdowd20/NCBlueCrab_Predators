@@ -8,10 +8,12 @@ editor: visual
 
 ```{r}
 #Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
 invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+#select <- dplyr::select()
 
 #Load CPUE datasets
 p915_CPUE <- read_csv("/users/sallydowd/Desktop/p915_CPUE_new.csv")
@@ -46,6 +48,7 @@ CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
 #### Species: Number
+
 ```{r}
 #Number of observations for species of interest: to note- when I redid this (08/06/23), I included bonnethead hammerhead and blue catfish just to look at the #s
 interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder", "spoot", "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet")
@@ -199,7 +202,7 @@ for(col in cn){
 t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
 }
 
-write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_all_grid_pred.csv") #updated on 08/23/23
+#write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_all_grid_pred.csv") #updated on 08/23/23
 ```
 
 #### Overlap
@@ -376,8 +379,6 @@ final_combo_n <- final_combo %>% group_by(Speciescommonname.x, Speciescommonname
 
 ```
 
-
-
 #### CPUE calculation
 
 ```{r}
@@ -392,15 +393,26 @@ CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort
 CPUE_grid <- CPUE_grid %>% group_by(Survey) %>% mutate(CPUE_stdzd= normalize(CPUE, method= "range", range= c(0,1))) ##min-max scaling:
 CPUE_grid <- CPUE_grid %>% group_by(gridID, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd))
 
-summary(is.na(CPUE_grid))
-#Add a few more environmental predictors
-CPUE_grid_avg <- CPUE_grid %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth), avg_ssal= mean(Ssal), avg_bsal= mean(Bsal), avg_stemp= mean(Stemp), avg_btemp= mean(Btemp), avg_sdo= mean(Sdo), avg_bdo= mean(Bdo), avg_latitude= mean(Latitude), avg_longitude= mean(Longitude), avg_photoperiod= mean(Photoperiod))
+#Add a few more environmental predictors: exclude 0 values for stemp, sdo, or ssal by turning them to NAs and then
+CPUE_grid_avg <- CPUE_grid %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid$Stemp==0.0, NA, CPUE_grid$Stemp), Ssal= ifelse(CPUE_grid$Ssal==0.0, NA, CPUE_grid$Ssal), Sdo= ifelse(CPUE_grid$Sdo==0.0, NA, CPUE_grid$Sdo)) %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), avg_photoperiod= mean(Photoperiod), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Photoperiod, -Depth, -avg_photoperiod, -na.rm, -avg_latitude, -avg_longitude)
+CPUE_grid_avg <- CPUE_grid_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 835 rows, 757 NA for avg_do, 114 NA for avg_stemp, 179 NA for avg_ssal
 
-t <- CPUE_grid_avg %>% filter(avg_depth %in% NA)
--Sedsize_new, -Btmcomp_new
+#Correlation plot to see what to remove
+cor <- cor(CPUE_grid_avg[, c(19, 23, 26:32, 38:42)])
+corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
 
-summary(is.na(CPUE_grid_avg))
-CPUE_grid_avgsp <- CPUE_grid_avg %>% group_by(Speciescommonname, Year, gridID, Survey) %>% mutate(CPUE_avgspyrgrid_stdzd= mean(CPUE_stdzd)) %>% distinct(CPUE_avgspyrgrid_stdzd, .keep_all = TRUE) %>% group_by(Speciescommonname, Year, gridID, Survey) %>% distinct() 
+#Remove latitude, longitude, all fishing variables except NofishRest and FishingAll_num 
+CPUE_grid_avg_edt <- CPUE_grid_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_a:-Restricted, -ShrimpTrawl_a:-GillPoundNet_a, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -gridArea_km, -"Strata/station", -WaterbodyCover, -Effort, -Effort, -CPUE, -CPUE_stdzd, -mean_CPUE, -Month, -Control1)
+
+#select <- dplyr::select()
+
+colnames(CPUE_grid_avg_edt)                                    
+summary(is.na(CPUE_grid_avg_edt))                                              
+
+#Make there be one column for each CPUE
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% group_by(Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE_stdzd, .keep_all= TRUE)
+  
+#write.csv(CPUE_grid_avg_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_grid_avg_edt.csv")                 
 ```
 
 #### CPUE visualization
@@ -440,7 +452,6 @@ ss_survey_vis("P915", "sheepshead", "P120", "blue crab", "P195", "blue crab")
 ```
 
 
-#### Grid: Predictor variables
 
 ##TEST GAMs
 
@@ -448,21 +459,14 @@ ss_survey_vis("P915", "sheepshead", "P120", "blue crab", "P195", "blue crab")
 #
 CB_df <- read.csv("/Users/sallydowd/Desktop/P120Counts1972PresentStandardizedSimplified.csv")
 
-CPUE_to_run <- CPUE_grid_avgsp %>% select(-Day, -Sciname, -Effort, -CPUE, -Depth, -Ssal, -Bsal, -Stemp, -Btemp, -Sdo, -Bdo, -Colnum, -Month, -Control1, -Depthzone, -Season, -Latitude, -Longitude, -"Strata/station", -Location, -Date, -Ym_date, -Photoperiod, -geometry, -CPUE_stdzd)
+#CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE_grid_avg_edt.csv")
+#CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_to_run <- CPUE_grid_avg_edt
+CPUE_survey <- CPUE_to_run %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") ##not working here!
+#survey as random effect
 
+CPUE_to_run$SpeciesSurvey <- paste(CPUE_to_run$Speciescommonname, CPUE_to_run$Survey, sep = ".")
+CPUE_to_run_edt <- CPUE_to_run %>% ungroup() %>% dplyr::select(-Speciescommonname, -Survey) %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "mean_CPUE_stdzd") ##not working here!
 
-
-
-
-t <- CPUE_to_run %>% pivot_longer(names_to = "Speciescommonname", values_to = "CPUE_avgspyrgrid_stdzd", cols= everything())
-pivot_wider
-colnames(CPUE_to_run)
-
-
-t <- CPUE_to_run %>% filter(Survey %in% "P915") %>% pivot_wider(names_from = "Speciescommonname", values_from = "CPUE_avgspyrgrid_stdzd")
-
-%>% pivot_wider(names_from = "CPUE_avgspyrgrid_stdzd", values_from = "Speciescommonname")
-
-
-
+#Survey as random effect in GAMs, predict fish species accounting for effect of survey
 ```
