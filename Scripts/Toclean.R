@@ -97,8 +97,8 @@ getwd()
 ##P915 NEW: Biological data 
 
 #P915 CPUE NEW #2 
-setwd("/Users/sallydowd/Desktop/CPUE/CPUE_new")
-filenames <- list.files("/Users/sallydowd/Desktop/CPUE/CPUE_new", pattern= '*.csv')  
+setwd("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final")
+filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.csv')  
 all <- lapply(filenames, readr::read_csv)
 merged <- do.call(rbind, all)
 colnames(merged) <- str_to_title(colnames(merged))
@@ -132,7 +132,7 @@ P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
 P915_CPUE <- P915_CPUE %>% rename("Secchi"= "Depthend")
-write.csv(P915_CPUE, "/Users/sallydowd/Desktop/p915_CPUE_new.csv")
+write.csv(P915_CPUE, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
 #write.csv(p915_biol1, "Data/P915/Raw/p915_biol1new.csv")
@@ -197,7 +197,7 @@ colnames(p120_edt) <- str_to_title(colnames(p120_edt))
 p120_edt[[39]] <- tolower(p120_edt[[39]])
 
 ##P120 NEW: Biological data: through present  
-setwd("~/Desktop")
+setwd("~/Desktop/Ch1Data/P120")
 df=read.delim("P120_1019.txt",sep="$",header=TRUE,dec=".")
 df2=read.delim("P120_7279.txt",sep="$",header=TRUE,dec=".")
 df3=read.delim("P120_8089.txt",sep="$",header=TRUE,dec=".")
@@ -242,7 +242,7 @@ fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize %in% 
 fulld2_edt <- fulld2_edt %>% mutate(Sedsize_new= ifelse(fulld2_edt$Sedsize_new == 1|fulld2_edt$Sedsize_new == 6|fulld2_edt$Sedsize_new == 8, "Sand", ifelse(fulld2_edt$Sedsize_new== 2|fulld2_edt$Sedsize_new== 3|fulld2_edt$Sedsize_new== 4| fulld2_edt$Sedsize_new== 5| fulld2_edt$Sedsize_new== 7| fulld2_edt$Sedsize_new== 9, "Mud", ifelse(fulld2_edt$Sedsize_new== 0, "Hard bottom", fulld2_edt$Sedsize_new))))
 fulld2_edt <- fulld2_edt %>% mutate(Btmcomp_new = ifelse(fulld2_edt$Btmcomp %in% "A"|fulld2_edt$Btmcomp %in% "Q", "Shell", ifelse(fulld2_edt$Btmcomp %in% "L"|fulld2_edt$Btmcomp %in% "H"|fulld2_edt$Btmcomp %in% "C"|fulld2_edt$Btmcomp %in% "B"|fulld2_edt$Btmcomp %in% "K"|fulld2_edt$Btmcomp %in% "D", "Vegetated", ifelse(fulld2_edt$Btmcomp %in% "I"|fulld2_edt$Btmcomp %in% "G"|fulld2_edt$Btmcomp %in% "M", "Vegetated-Shell", ifelse(fulld2_edt$Btmcomp %in% "P"|fulld2_edt$Btmcomp %in% "O"|fulld2_edt$Btmcomp %in% "E", "Unstructured", ifelse(fulld2_edt$Btmcomp %in% "Z", "Unnatural", ifelse(fulld2_edt$Btmcomp %in% "X", NA, fulld2_edt$Btmcomp)))))))
 #write.csv(species_namesedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_speciesnms_new.csv")
-write.csv(fulld2_edt, "~/Desktop/p120_biol_new.csv")
+write.csv(fulld2_edt, "~/Desktop/Ch1Data/P120/p120_biol_new.csv")
 
 #######P195########
 #P195 OLD

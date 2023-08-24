@@ -16,7 +16,7 @@ standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour
 #select <- dplyr::select()
 
 #Load CPUE datasets
-p915_CPUE <- read_csv("/users/sallydowd/Desktop/p915_CPUE_new.csv")
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
