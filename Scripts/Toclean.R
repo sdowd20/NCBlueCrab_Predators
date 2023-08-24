@@ -18,36 +18,11 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 
 #######SPEICES NAMES########
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-P120_speciesnms <- read_csv("Data/P120/P120_speciesnms.csv")
+P120_speciesnms <- read_csv("Data/Spp_names/P120_speciesnms.csv")
 colnames(P120_speciesnms) <- str_to_title(colnames(P120_speciesnms))
 P120_speciesnms$Speciescommonname <- str_to_lower(P120_speciesnms$Speciescommonname)
 P120_speciesnms$Speciesscientificname <- str_to_lower(P120_speciesnms$Speciesscientificname)
 P120_speciesnms_edt <- P120_speciesnms %>% select(Speciescommonname, Sciname)
-
-p915_biol1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
-sci_spp <- as.data.frame(unique(p915_biol1$Sciname))
-colnames(sci_spp)[1] <- "Sciname"
-sppcommonnmsc <- sci_spp %>% left_join(P120_speciesnms_edt, by= "Sciname")
-sppcommonnmsc[8,2] <- "bonnethead hammerhead"
-sppcommonnmsc[10,2] <- "brown shrimp"
-sppcommonnmsc[13,2] <- "eastern oyster"
-sppcommonnmsc[14,2] <- "sandbar shark"
-sppcommonnmsc[17,2] <- "blue catfish"
-sppcommonnmsc[18,2] <- "angel shark"
-sppcommonnmsc[20,2] <- "scallop hammerhead"
-sppcommonnmsc[3,2] <- "striped bass" #northern kingfish doesn't exist in dataset, has same abbreviated name 
-sppcommonnmsc[21,1] <- "A. pseudoharengus"
-sppcommonnmsc[21,2] <- "A. pseudoharengus"
-sppcommonnmsc[21,1] <- "A. sapidissima"
-
-unique(merged$Species)
-
-t <- merged %>% select(Species) %>% distinct(Species)
-write.csv(t, "/Users/sallydowd/Desktop/t.csv")
-#write.csv(sppcommonnmsc, "Data/sppcommonnmsc.csv")
-
-spp_list <- read.csv("Data/sppcommonnmsc.csv")
-spp_list <- as.data.frame(spp_list[,-1])
 
 #######P915########
 #P915 OLD
@@ -148,7 +123,7 @@ merged <- merged %>% mutate(Btmcomp_new = ifelse(merged$Btmcomp %in% "shell"|mer
 summary(is.na(merged$Btmcomp_new)) #it worked, more NAs from the tow 
 
 #Scientific name, just do species names!
-p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/p915_sppnames.csv")
+p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/p915_sppnames.csv")
 P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species") %>% left_join(p915_sppnames, by= "Speciescommonname")
 
 ##Add in other predictor variables
@@ -315,7 +290,7 @@ P195_bind$Wbd <- ifelse(P195_bind$Location %in% "PAMLICO SOUND WEST OF BLUFF SHO
 #Adding in Sciname for species
 P195_bind$Speciescommonname <- str_to_lower(P195_bind$Speciescommonname)
 P195_bind$Speciesscientificname <- str_to_lower(P195_bind$Speciesscientificname)
-species_P195 <- read_csv("species.P195.csv")
+species_P195 <- read_csv("Spp_names/species.P195.csv")
 colnames(species_P195) <- str_to_title(colnames(species_P195))
 species_P195$Speciescommonname <- str_to_lower(species_P195$Speciescommonname)
 species_P195$Speciesscientificname <- str_to_lower(species_P195$Speciesscientificname)

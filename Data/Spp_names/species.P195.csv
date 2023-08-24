@@ -1,0 +1,250 @@
+﻿SPECIESSCIENTIFICNAME,SPECIESCOMMONNAME,SpeciesCommonNameNew,Habitat,OtherCategory,GENUS,SPECIES,Species 2,Species,Identifier
+ACIPENSER OXYRINCHUS,ATLANTIC STURGEON,Atlantic Sturgeon,Demersal,,A, OXYRINCHUS,A. oxyrinchus,A. oxyrinchus,A
+AETOBATUS NARINARI,SPOTTED EAGLE RAY,Spotted Eagle Ray,Pelagic,Elasmobranchs,A, NARINARI,A. narinari,A. narinari,A
+ALECTIS CILIARIS,THREADFIN,African Pompano,Demersal,,A, CILIARIS,A. ciliaris,A. ciliaris,A
+ALOSA AESTIVALIS,BLUEBACK HERRING,Blueback Herring,Pelagic,Forage Fishes,A, AESTIVALIS,A. aestivalis,A. aestivalis,A
+ALOSA MEDIOCRIS,HICKORY SHAD,Hickory Shad,Pelagic,Forage Fishes,A, MEDIOCRIS,A. mediocris,A. mediocris,A
+ALOSA PSEUDOHARENGUS,ALEWIFE,Alewife,Pelagic,Forage Fishes,A, PSEUDOHARENGUS,A. pseudoharengus,A. pseudoharengus,A
+ALOSA SAPIDISSIMA,AMERICAN SHAD,American Shad,Pelagic,Forage Fishes,A, SAPIDISSIMA,A. sapidissima,A. sapidissima,A
+ALPHEIDAE SPP,SNAPPING SHRIMPS,Snapping Shrimps,Demersal,Crustacean,A, SPP,A. spp,Alpheidae,A
+ALPHEUS HETEROCHAELIS,BIGCLAW SNAPPING SHRIMP,Bigclaw Snapping Shrimp,Demersal,Crustacean,A, HETEROCHAELIS,A. heterochaelis,A. heterochaelis,A
+ALUTERUS SPP,FILEFISHES,Filefishes,Demersal,,A, SPP,A. spp,Aluterus spp.,A
+ALUTERUS SCHOEPFII,ORANGE FILEFISH,Orange Filefish,Demersal,,A, SCHOEPFII,A. schoepfii,A. schoepfii,A
+ALUTERUS SCRIPTUS,SCRAWLED FILEFISH,Scrawled Filefish,Demersal,,A, SCRIPTUS,A. scriptus,A. scriptus,A
+AMEIURUS CATUS,WHITE CATFISH,White Catfish,Demersal,,A, CATUS,A. catus,A. catus,A
+AMEIURUS NATALIS,YELLOW BULLHEAD,Yellow Bullhead,Demersal,,A, NATALIS,A. natalis,A. natalis,A
+AMEIURUS NEBULOSUS,BROWN BULLHEAD,Brown Bullhead,Demersal,,A, NEBULOSUS,A. nebulosus,A. nebulosus,A
+ANCHOA SPP,ANCHOVIES,Anchovies,Pelagic,Forage Fishes,A, SPP,A. spp,Anchoa spp.,A
+ANCHOA HEPSETUS,STRIPED ANCHOVY,Striped Anchovy,Pelagic,Forage Fishes,A, HEPSETUS,A. hepsetus,A. hepsetus,A
+ANCHOA MITCHILLI,BAY ANCHOVY,Bay Anchovy,Pelagic,Forage Fishes,A, MITCHILLI,A. mitchilli,A. mitchilli,A
+ANGUILLA ROSTRATA,AMERICAN EEL,American Eel,Demersal,,A, ROSTRATA,A. rostrata,A. rostrata,A
+ANOMURA SPP,,Crustaceans,Demersal,Crustacean,A, SPP,A. spp,Anomura spp.,A
+ARCHOSARGUS PROBATOCEPHALUS,SHEEPSHEAD,Sheepshead,Demersal,,A, PROBATOCEPHALUS,A. probatocephalus,A. probatocephalus,A
+ARENAEUS CRIBRARIUS,SPECKLED SWIMMING CRAB,Speckled Swimming Crab,Demersal,Crustacean,A, CRIBRARIUS,A. cribrarius,A. cribrarius,A
+ASTROSCOPUS SPP,ELECTRIC STARGAZERS,Electric Stargazers,Demersal,,A, SPP,A. spp,Astroscopus spp.,A
+ASTROSCOPUS GUTTATUS,NORTHERN STARGAZER,Northern Stargazer,Demersal,,A, GUTTATUS,A. guttatus,A. guttatus,A
+ASTROSCOPUS Y-GRAECUM,SOUTHERN STARGAZER,Southern Stargazer,Demersal,,A, Y-GRAECUM,A. y-graecum,A. y-graecum,A
+BAIRDIELLA CHRYSOURA,SILVER PERCH,Silver Perch,Demersal,,B, CHRYSOURA,B. chrysoura,B. chrysoura,A
+BALISTES SPP,TRIGGERFISHES,Triggerfishes,Demersal,,B, SPP,B. spp,Balistes spp.,A
+BALISTES CAPRISCUS,GRAY TRIGGERFISH,Triggerfishes,Demersal,,B, CAPRISCUS,B. capriscus,B. capriscus,A
+BLENNIIDAE SPP,BLENNY,Gobies and Blennies,Demersal,,B, SPP,B. spp,Blenniidae,A
+BREVOORTIA TYRANNUS,ATLANTIC MENHADEN,Atlantic Menhaden,Pelagic,Forage Fishes,B, TYRANNUS,B. tyrannus,B. tyrannus,A
+BUSYCON SPP,,Whelks,Demersal,,B, SPP,B. spp,Busycon spp.,A
+BUSYCON CARICA,KNOBBED WHELK,Whelks,Demersal,,B, CARICA,B. carica,B. carica,A
+BUSYCOTYPUS CANALICCULATUS,CHANNELED WHELK,Whelks,Demersal,,B, CANALICCULATUS,B. canalicculatus,B. canalicculatus,A
+CALLINECTES SPP,SWIMMING CRABS,Swimming Crabs,Demersal,Crustacean,C, SPP,C. spp,Callinectes spp.,A
+CALLINECTES SAPIDUS,BLUE CRAB,Blue Crab,Demersal,Crustacean,C, SAPIDUS,C. sapidus,C. sapidus,A
+CALLINECTES SIMILIS,LESSER BLUE CRAB,Lesser Blue Crab,Demersal,Crustacean,C, SIMILIS,C. similis,C. similis,A
+CANCER SPP,,Crustaceans,Demersal,Crustacean,C, SPP,C. spp,Cancer spp.,A
+CANCER BOREALIS,JONAH CRAB,Jonah Crab,Demersal,Crustacean,C, BOREALIS,C. borealis,C. borealis,A
+CANCER IRRORATUS,ATLANTIC ROCK CRAB,Atlantic Rock Crab,Demersal,Crustacean,C, IRRORATUS,C. irroratus,C. irroratus,A
+CARANX BARTHOLOMAEI,YELLOW JACK,Yellow Jack,Pelagic,,C, BARTHOLOMAEI,C. bartholomaei,C. bartholomaei,A
+CARANX CRYSOS,BLUE RUNNER,Blue Runner,Pelagic,,C, CRYSOS,C. crysos,C. crysos,A
+CARANX HIPPOS,CREVALLE JACK,Crevalle Jack,Pelagic,,C, HIPPOS,C. hippos,C. hippos,A
+CARCHARHINUS FALCIFORMIS,SILKY SHARK,Silky Shark,Pelagic,Elasmobranchs,C, FALCIFORMIS,C. falciformis,C. falciformis,A
+CARCHARHINUS LEUCAS,BULL SHARK,Bull Shark,Demersal,Elasmobranchs,C, LEUCAS,C. leucas,C. leucas,A
+CARCHARHINUS LIMBATUS,BLACKTIP SHARK,Blacktip Shark,Demersal,Elasmobranchs,C, LIMBATUS,C. limbatus,C. limbatus,A
+CARCHARHINUS PLUMBEUS,SANDBAR SHARK,Sandbar Shark,Demersal,Elasmobranchs,C, PLUMBEUS,C. plumbeus,C. plumbeus,A
+CARETTA CARETTA,LOGGERHEAD,Loggerhead,Pelagic,,C, CARETTA,C. caretta,C. caretta,A
+CENTROPRISTIS PHILADELPHICA,ROCK SEA BASS,Rock Sea Bass,Demersal,,C, PHILADELPHICA,C. philadelphica,C. philadelphica,A
+CENTROPRISTIS STRIATA,BLACK SEA BASS,Black Sea Bass,Demersal,,C, STRIATA,C. striata,C. striata,A
+CEPHALOPODA SPP,,Squid,Pelagic,,C, SPP,C. spp,Cephalopda spp.,A
+CHAETODIPTERUS FABER,ATLANTIC SPADEFISH,Atlantic Spadefish,Demersal,,C, FABER,C. faber,C. faber,A
+CHAETODON SPP,BUTTERFLYFISHES,Butterflyfishes,Demersal,,C, SPP,C. spp,Chaetodon spp.,A
+CHAETODON SEDENTARIUS,REEF BUTTERFLYFISH,Reef Butterflyfish,Demersal,,C, SEDENTARIUS,C. sedentarius,C. sedentarius,A
+CHASMODES BOSQUIANUS,STRIPED BLENNY,Gobies and Blennies,Demersal,,C, BOSQUIANUS,C. bosquianus,C. bosquianus,A
+CHELONIA MYDAS,GREEN SEA TURTLE,Green Sea Turtle,Pelagic,,C, MYDAS,C. mydas,C. mydas,A
+CHILOMYCTERUS ATRINGA,SPOTTED BURRFISH,Spotted Burrfish,Demersal,,C, ATRINGA,C. atringa,C. atringa,A
+CHILOMYCTERUS SCHOEPFII,STRIPED BURRFISH,Striped Burrfish,Demersal,,C, SCHOEPFII,C. schoepfii,C. schoepfii,A
+CHLOROSCOMBRUS CHRYSURUS,ATLANTIC BUMPER,Atlantic Bumper,Pelagic,,C, CHRYSURUS,C. chrysurus,C. chrysurus,A
+CHONDRICHTHYES SPP,CARTILAGINOUS FISHES,Elasmobranchs,Demersal,Elasmobranchs,C, SPP,C. spp,Chondrichthyes spp.,A
+CITHARICHTHYS MACROPS,SPOTTED WHIFF,Spotted Whiff,Demersal,,C, MACROPS,C. macrops,C. macrops,A
+CITHARICHTHYS SPILOPTERUS,BAY WHIFF,Bay Whiff,Demersal,,C, SPILOPTERUS,C. spilopterus,C. spilopterus,A
+CLUPEA HARENGUS,BALTIC HERRING,Baltic Herring,Pelagic,Forage Fishes,C, HARENGUS,C. harengus,C. harengus,A
+CONGER SPP,,Conger Eels,Demersal,,C, SPP,C. spp,Conger. spp,A
+CONGER OCEANICUS,CONGER EEL,Conger Eels,Demersal,,C, OCEANICUS,C. oceanicus,C. oceanicus,A
+CRANGON SPP,CRANGON SHRIMP,Crangon Shrimps,Demersal,Crustacean,C, SPP,C. spp,Crangon spp.,A
+CRANGON SEPTEMSPINOSA,SEVENSPINE BAY SHRIMP,Crangon Shrimps,Demersal,Crustacean,C, SEPTEMSPINOSA,C. septemspinosa,C. septemspinosa,A
+CRANGONIDAE SPP,,Crangon Shrimps,Demersal,Crustacean,C, SPP,C. spp,Crangonidae spp.,A
+CYNOSCION SPP,WEAKFISHES,Weakfishes,Demersal,,C, SPP,C. spp,Cynoscion spp.,A
+CYNOSCION NEBULOSUS,SPOTTED SEATROUT,Spotted Seatrout,Demersal,,C, NEBULOSUS,C. nebulosus,C. nebulosus,A
+CYNOSCION NOTHUS,SILVER SEATROUT,Silver Seatrout,Demersal,,C, NOTHUS,C. nothus,C. nothus,A
+CYNOSCION REGALIS,WEAKFISH,Weakfish,Demersal,,C, REGALIS,C. regalis,C. regalis,A
+DASYATIS AMERICANA,SOUTHERN STINGRAY,Southern Stingray,Demersal,Elasmobranchs,D, AMERICANA,D. americana,D. americana,A
+DASYATIS CENTROURA,ROUGHTAIL STINGRAY,Roughtail Stingray,Demersal,Elasmobranchs,D, CENTROURA,D. centroura,D. centroura,A
+DASYATIS SABINA,ATLANTIC STINGRAY,Atlantic Stingray,Demersal,Elasmobranchs,D, SABINA,D. sabina,D. sabina,A
+DASYATIS SAY,BLUNTNOSE STINGRAY,Bluntnose Stingray,Demersal,Elasmobranchs,D, SAY,D. say,D. say,A
+DIAPTERUS SPP,LONGSPINE MOJARRAS,Longspine Mojarras,Demersal,,D, SPP,D. spp,Diapterus spp.,A
+DIODON SPP,PORCUPINEFISHES,Porcupinefishes,Demersal,,D, SPP,D. spp,Diodon spp.,A
+DIPLODUS HOLBROOKII,SPOTTAIL PINFISH,Spottail Pinfish,Demersal,,D, HOLBROOKII,D. holbrookii,D. holbrookii,A
+DOROSOMA CEPEDIANUM,GIZZARD SHAD,Gizzard Shad,Pelagic,Forage Fishes,D, CEPEDIANUM,D. cepedianum,D. cepedianum,A
+DYSPANOPEUS SPP,DYSPANOPEUS MUD CRABS,Mud Crabs,Demersal,Crustacean,D, SPP,D. spp,Dyspanopeus spp.,A
+ECHENEIDAE SPP,SHARKSUCKERS,Sharksuckers,Pelagic,,E, SPP,E. spp,Echeneidae spp.,A
+ECHENEIS NAUCRATES,SHARKSUCKER,Sharksuckers,Pelagic,,E, NAUCRATES,E. naucrates,E. naucrates,A
+ELEOTRIS PISONIS,SPINYCHEEK SLEEPER,Spinycheek Sleeper,Demersal,,E, PISONIS,E. pisonis,E. pisonis,A
+ELOPS SAURUS,LADYFISH,Ladyfish,Demersal,,E, SAURUS,E. saurus,E. saurus,A
+EPINEPHELUS NIGRITUS,WARSAW GROUPER,Warsaw Grouper,Demersal,,E, NIGRITUS,E. nigritus,E. nigritus,A
+ETROPUS SPP,FLOUNDER,Other Flounders,Demersal,,E, SPP,E. spp,Etropus spp.,A
+ETROPUS CROSSOTUS,FRINGED FLOUNDER,Fringed Flounder,Demersal,,E, CROSSOTUS,E. crossotus,E. crossotus,A
+ETRUMEUS TERES,ROUND HERRING,Round Herring,Pelagic,Forage Fishes,E, TERES,E. teres,E. teres,A
+EUCINOSTOMUS SPP,MOJARRITAS,Mojarras,Demersal,,E, SPP,E. spp,Eucinostomus spp.,A
+EUCINOSTOMUS GULA,SILVER JENNY,Silver Jenny,Demersal,,E, GULA,E. gula,E. gula,A
+EVORTHODUS LYRICUS,LYRE GOBY,Gobies and Blennies,Demersal,,E, LYRICUS,E. lyricus,E. lyricus,A
+FARFANTEPENAEUS AZTECUS,NORTHERN BROWN SHRIMP,Northern Brown Shrimp,Demersal,Crustacean,F, AZTECUS,F. aztecus,F. aztecus,A
+FARFANTEPENAEUS DUORARUM,PINK SHRIMP,Pink Shrimp,Demersal,Crustacean,F, DUORARUM,F. duorarum,F. duorarum,A
+FISTULARIA TABACARIA,TOBACCO TRUMPETFISH,Tobacco Trumpetfish,Demersal,,F, TABACARIA,F. tabacaria,F. tabacaria,A
+GERREIDAE SPP,MOJARRAS,Mojarras,Demersal,,G, SPP,G. spp,Gerreidae spp.,A
+GLYPTOCEPHALUS CYNOGLOSSUS,WITCH FLOUNDER,Witch Flounder,Demersal,,G, CYNOGLOSSUS,G. cynoglossus,G. cynoglossus,A
+GOBIESOX STRUMOSUS,SKILLETFISH,Skilletfish,Demersal,,G, STRUMOSUS,G. strumosus,G. strumosus,A
+GOBIONELLUS BOLEOSOMA,DARTER GOBY,Gobies and Blennies,Demersal,,G, BOLEOSOMA,G. boleosoma,G. boleosoma,A
+GOBIONELLUS OCEANICUS,HIGHFIN GOBY,Gobies and Blennies,Demersal,,G, OCEANICUS,G. oceanicus,G. oceanicus,A
+GOBIOSOMA BOSC,NAKED GOBY,Gobies and Blennies,Demersal,,G, BOSC,G. bosc,G. bosc,A
+GYMNURA SPP,BUTTERFLY RAYS,Butterfly Rays,Demersal,Elasmobranchs,G, SPP,G. spp,Gymnura spp.,A
+GYMNURA ALTAVELA,SPINY BUTTERFLY RAY,Spiny Butterfly Ray,Demersal,Elasmobranchs,G, ALTAVELA,G. altavela,G. altavela,A
+GYMNURA MICRURA,SMOOTH BUTTERFLY RAY,Smooth Butterfly Ray,Demersal,Elasmobranchs,G, MICRURA,G. micrura,G. micrura,A
+HAEMULON AUROLINEATUM,TOMTATE,Tomtate,Demersal,,H, AUROLINEATUM,H. aurolineatum,H. aurolineatum,A
+HEPATUS EPHELITICUS,SHAMEFACED CRAB,Shamefaced Crab,Demersal,Crustacean,H, EPHELITICUS,H. epheliticus,H. epheliticus,A
+HIPPOCAMPUS SPP,SEAHORSES,Seahorses,Demersal,,H, SPP,H. spp,Hippocampus spp.,A
+HIPPOCAMPUS ERECTUS,LINED SEAHORSE,Seahorses,Demersal,,H, ERECTUS,H. erectus,H. erectus,A
+HYPLEUROCHILUS GEMINATUS,CRESTED BLENNY,Gobies and Blennies,Demersal,,H, GEMINATUS,H. geminatus,H. geminatus,A
+HYPSOBLENNIUS HENTZ,FEATHER BLENNY,Gobies and Blennies,Demersal,,H, HENTZ,H. hentz,H. hentz,A
+ILLEX ILLECEBROSUS,NORTHERN SHORTFIN SQUID,Northern Shortfin Squid,Pelagic,,I, ILLECEBROSUS,I. illecebrosus,I. illecebrosus,A
+LACHNOLAIMUS MAXIMUS,HOGFISH,Hogfish,Demersal,,L, MAXIMUS,L. maximus,L. maximus,A
+LAGOCEPHALUS LAEVIGATUS,SMOOTH PUFFER,Smooth Puffer,Demersal,,L, LAEVIGATUS,L. laevigatus,L. laevigatus,A
+LAGODON RHOMBOIDES,PINFISH,Pinfish,Demersal,,L, RHOMBOIDES,L. rhomboides,L. rhomboides,A
+LARIMUS FASCIATUS,BANDED DRUM,Banded Drum,Demersal,,L, FASCIATUS,L. fasciatus,L. fasciatus,A
+LEIOSTOMUS XANTHURUS,SPOT,Spot,Demersal,,L, XANTHURUS,L. xanthurus,L. xanthurus,A
+LEPIDOCHELYS KEMPII,KEMP'S RIDLEY SEA TURTLE,Kemp's Ridley Sea Turtle,Pelagic,,L, KEMPII,L. kempii,L. kempii,A
+LEPISOSTEUS OSSEUS,LONGNOSE GAR,Longnose Gar,Demersal,,L, OSSEUS,L. osseus,L. osseus,A
+LEPOMIS GIBBOSUS,PUMPKINSEED,Pumpkinseed,Demersal,,L, GIBBOSUS,L. gibbosus,L. gibbosus,A
+LEPOMIS MACROCHIRUS,BLUEGILL,Bluegill,Demersal,,L, MACROCHIRUS,L. macrochirus,L. macrochirus,A
+LIBINIA SPP,,Spider Crabs,Demersal,Crustacean,L, SPP,L. spp,Libinia spp.,A
+LIBINIA DUBIA,LONGNOSE SPIDER CRAB,Spider Crabs,Demersal,Crustacean,L, DUBIA,L. dubia,L. dubia,A
+LIBINIA EMARGINATA,PORTLY SPIDER CRAB,Spider Crabs,Demersal,Crustacean,L, EMARGINATA,L. emarginata,L. emarginata,A
+LIMULUS POLYPHEMUS,,Horseshoe Crabs,Demersal,Crustacean,L, POLYPHEMUS,L. polyphemus,L. polyphemus,A
+LITOPENAEUS SETIFERUS,WHITE SHRIMP,White Shrimp,Demersal,Crustacean,L, SETIFERUS,L. setiferus,L. setiferus,A
+LOBOTES SURINAMENSIS,TRIPLETAIL,Tripletail,Demersal,,L, SURINAMENSIS,L. surinamensis,L. surinamensis,A
+LOLIGINIDAE SPP,,Squid,Pelagic,,L, SPP,L. spp,Loligo spp.,A
+LOLIGO SPP,,Squid,Pelagic,,L, SPP,L. spp,Loligo spp.,A
+LOLIGO PEALEII,LONGFIN SQUID,Longfin Squid,Pelagic,,L, PEALEII,L. pealeii,L. pealeii,A
+LOLLIGUNCULA BREVIS,ATLANTIC BRIEF SQUID,Atlantic Brief Squid,Pelagic,,L, BREVIS,L. brevis,L. brevis,A
+LOPHIUS AMERICANUS,GOOSEFISH,Goosefish,Demersal,,L, AMERICANUS,L. americanus,L. americanus,A
+LUTJANUS CAMPECHANUS,RED SNAPPER,Red Snapper,Demersal,,L, CAMPECHANUS,L. campechanus,L. campechanus,A
+LUTJANUS GRISEUS,GRAY SNAPPER,Gray Snapper,Demersal,,L, GRISEUS,L. griseus,L. griseus,A
+LUTJANUS SYNAGRIS,LANE SNAPPER,Lane Snapper,Demersal,,L, SYNAGRIS,L. synagris,L. synagris,A
+MAJIDAE SPP,SPIDER CRABS,Spider Crabs,Demersal,Crustacean,M, SPP,M. spp,Majidae spp.,A
+MALACLEMYS TERRAPIN CENTRATA,FLORIDA DIAMONDBACK TERR,Florida Diamondback Terr,Pelagic,,M, TERRAPIN CENTRATA,M. terrapin centrata,M. terrapin centrata,A
+MEMBRAS MARTINICA,ROUGH SLIVERSIDE,Rough Sliverside,Pelagic,Forage Fishes,M, MARTINICA,M. martinica,M. martinica,A
+MENIDIA SPP,ATLANTIC SILVERSIDES,Atlantic Silverside,Pelagic,Forage Fishes,M, SPP,M. spp,Menidia spp.,A
+MENIDIA BERYLLINA,TIDEWATER SILVERSIDE,Tidewater Silverside,Pelagic,Forage Fishes,M, BERYLLINA,M. beryllina,M. beryllina,A
+MENIDIA MENIDIA,ATLANTIC SILVERSIDE,Atlantic Silverside,Pelagic,Forage Fishes,M, MENIDIA,M. menidia,M. menidia,A
+MENIPPE MERCENARIA,FLORIDA STONE CRAB,Florida Stone Crab,Demersal,Crustacean,M, MERCENARIA,M. mercenaria,M. mercenaria,A
+MENTICIRRHUS AMERICANUS,SOUTHERN KINGFISH,Southern Kingfish,Demersal,,M, AMERICANUS,M. americanus,M. americanus,A
+MENTICIRRHUS LITTORALIS,GULF KINGFISH,Gulf Kingfish,Demersal,,M, LITTORALIS,M. littoralis,M. littoralis,A
+MENTICIRRHUS SAXATILIS,NORTHERN KINGFISH,Northern Kingfish,Demersal,,M, SAXATILIS,M. saxatilis,M. saxatilis,A
+MICROPOGONIAS UNDULATUS,ATLANTIC CROAKER,Atlantic Croaker,Demersal,,M, UNDULATUS,M. undulatus,M. undulatus,A
+MONACANTHUS SPP,MONACANTHUS FILEFISHES,Filefishes,Demersal,,M, SPP,M. spp,Monacanthus spp.,A
+MONACANTHUS TUCKERI,SLENDER FILEFISH,Slender Filefish,Demersal,,M, TUCKERI,M. tuckeri,M. tuckeri,A
+MORONE AMERICANA,,White Perch,Demersal,,M, AMERICANA,M. americana,M. americana,A
+MORONE SAXATILIS,STRIPED BASS,Striped Bass,Pelagic,,M, SAXATILIS,M. saxatilis,M. saxatilis,A
+MUGIL CEPHALUS,STRIPED MULLET,Striped Mullet,Demersal,,M, CEPHALUS,M. cephalus,M. cephalus,A
+MUGIL CUREMA,WHITE MULLET,White Mullet,Demersal,,M, CUREMA,M. curema,M. curema,A
+MUSTELUS CANIS,SMOOTH DOGFISH,Smooth Dogfish,Demersal,,M, CANIS,M. canis,M. canis,A
+MYCTEROPERCA BONACI,BLACK GROUPER,Black Grouper,Demersal,,M, BONACI,M. bonaci,M. bonaci,A
+MYCTEROPERCA MICROLEPIS,GAG,Gag,Demersal,,M, MICROLEPIS,M. microlepis,M. microlepis,A
+MYLIOBATIS FREMINVILLEI,BULLNOSE RAY,Bullnose Ray,Demersal,Elasmobranchs,M, FREMINVILLEI,M. freminvillei,M. freminvillei,A
+NEOGASTROPODA STENOGLOSSA,CONCHS,Whelks,Demersal,,N, STENOGLOSSA,N. stenoglossa,N. stenoglossa,A
+OLIGOPLITES SAURUS,LEATHERJACKET,Leatherjacket,Pelagic,,O, SAURUS,O. saurus,O. saurus,A
+OPHIDIIDAE SPP,CUSK EEL,Cusk Eels,Demersal,,O, SPP,O. spp,Ophidion spp.,A
+OPHIDION SPP,CUSK-EELS,Cusk Eels,Demersal,,O, SPP,O. spp,Ophidion spp.,A
+OPHIDION HOLBROOKI,BANK CUSK-EEL,Bank Cusk-Eel,Demersal,,O, HOLBROOKI,O. holbrooki,O. holbrooki,A
+OPHIDION MARGINATUM,STRIPED CUSK-EEL,Striped Cusk-Eel,Demersal,,O, MARGINATUM,O. marginatum,O. marginatum,A
+OPISTHONEMA OGLINUM,ATLANTIC THREAD HERRING,Atlantic Thread Herring,Pelagic,Forage Fishes,O, OGLINUM,O. oglinum,O. oglinum,A
+OPSANUS PARDUS,LEOPARD TOADFISH,Leopard Toadfish,Demersal,,O, PARDUS,O. pardus,O. pardus,A
+OPSANUS TAU,OYSTER TOADFISH,Oyster Toadfish,Demersal,,O, TAU,O. tau,O. tau,A
+ORTHOPRISTIS CHRYSOPTERA,PIGFISH,Pigfish,Demersal,,O, CHRYSOPTERA,O. chrysoptera,O. chrysoptera,A
+OVALIPES OCELLATUS,LADY CRAB,Lady Crab,Demersal,Crustacean,O, OCELLATUS,O. ocellatus,O. ocellatus,A
+PAGRUS PAGRUS,RED PORGY,Red Porgy,Demersal,,P, PAGRUS,P. pagrus,P. pagrus,A
+PAGURIDAE SPP,RIGHT-HANDED HERMIT CRAB,Right-Handed Hermit Crab,Demersal,Crustacean,P, SPP,P. spp,Paguridae spp.,A
+PALAEMONETES SPP,,Grass Shrimps,Demersal,Crustacean,P, SPP,P. spp,Palaemonetes spp.,A
+PANOPEUS SPP,PANOPEUS MUD CRABS,Mud Crabs,Demersal,Crustacean,P, SPP,P. spp,Panopeus spp.,A
+PANOPEUS HERBSTII,ATLANTIC MUD CRAB,Mud Crabs,Demersal,Crustacean,P, HERBSTII,P. herbstii,P. herbstii,A
+PARABLENNIUS MARMOREUS,SEAWEED BLENNY,Gobies and Blennies,Demersal,,P, MARMOREUS,P. marmoreus,P. marmoreus,A
+PARALICHTHYS SPP,FLOUNDER,Other Flounders,Demersal,,P, SPP,P. spp,Paralichthys spp.,A
+PARALICHTHYS ALBIGUTTA,GULF FLOUNDER,Gulf Flounder,Demersal,,P, ALBIGUTTA,P. albigutta,P. albigutta,A
+PARALICHTHYS DENTATUS,SUMMER FLOUNDER,Summer Flounder,Demersal,,P, DENTATUS,P. dentatus,P. dentatus,A
+PARALICHTHYS LETHOSTIGMA,SOUTHERN FLOUNDER,Southern Flounder,Demersal,,P, LETHOSTIGMA,P. lethostigma,P. lethostigma,A
+PARALICHTHYS OBLONGUS,FOURSPOT FLOUNDER,Fourspot Flounder,Demersal,,P, OBLONGUS,P. oblongus,P. oblongus,A
+PARAPENAEUS LONGIROSTRIS,DEEP-WATER ROSE SHRIMP,Deep-Water Rose Shrimp,Demersal,Crustacean,P, LONGIROSTRIS,P. longirostris,P. longirostris,A
+PENAEIDAE SPP,,Other Shrimp,Demersal,Crustacean,P, SPP,P. spp,Penaeidae spp.,A
+PENAEUS MONODON,GIANT TIGER PRAWN,Giant Tiger Prawn,Demersal,Crustacean,P, MONODON,P. monodon,P. monodon,A
+PEPRILUS ALEPIDOTUS,HARVESTFISH,Harvestfish,Pelagic,,P, ALEPIDOTUS,P. alepidotus,P. alepidotus,A
+PEPRILUS TRIACANTHUS,BUTTERFISH,Butterfish,Pelagic,,P, TRIACANTHUS,P. triacanthus,P. triacanthus,A
+PERCA FLAVESCENS,YELLOW PERCH,Yellow Perch,Demersal,,P, FLAVESCENS,P. flavescens,P. flavescens,A
+PINNIXA CHAETOPTERANA,TUBE PEA CRAB,Tube Pea Crab,Demersal,Crustacean,P, CHAETOPTERANA,P. chaetopterana,P. chaetopterana,A
+POGONIAS CROMIS,BLACK DRUM,Black Drum,Demersal,,P, CROMIS,P. cromis,P. cromis,A
+POLYDACTYLUS OCTONEMUS,ATLANTIC THREADFIN,Atlantic Threadfin,Demersal,,P, OCTONEMUS,P. octonemus,P. octonemus,A
+POMATOMUS SALTATRIX,BLUEFISH,Bluefish,Pelagic,,P, SALTATRIX,P. saltatrix,P. saltatrix,A
+PORTUNIDAE SPP,SWIMMING CRABS,Swimming Crabs,Demersal,Crustacean,P, SPP,P. spp,Portunidae,A
+PORTUNUS SPP,,Swimming Crabs,Demersal,Crustacean,P, SPP,P. spp,Portunus spp.,A
+PORTUNUS GIBBESII,IRIDESCENT SWIMMING CRAB,Iridescent Swimming Crab,Demersal,Crustacean,P, GIBBESII,P. gibbesii,P. gibbesii,A
+PORTUNUS SAYI,SARGASSUM SWIMMING CRAB,Sargassum Swimming Crab,Demersal,Crustacean,P, SAYI,P. sayi,P. sayi,A
+PORTUNUS SPINIMANUS,BLOTCHED SWIMMING CRAB,Blotched Swimming Crab,Demersal,Crustacean,P, SPINIMANUS,P. spinimanus,P. spinimanus,A
+PRIONOTUS SPP,SEA ROBIN,Sea Robin,Demersal,,P, SPP,P. spp,Prionotus spp.,A
+PRIONOTUS CAROLINUS,NORTHERN SEAROBIN,Northern Searobin,Demersal,,P, CAROLINUS,P. carolinus,P. carolinus,A
+PRIONOTUS EVOLANS,STRIPED SEAROBIN,Striped Searobin,Demersal,,P, EVOLANS,P. evolans,P. evolans,A
+PRIONOTUS RUBIO,BLACKWING SEAROBIN,Blackwing Searobin,Demersal,,P, RUBIO,P. rubio,P. rubio,A
+PRIONOTUS SCITULUS,LEOPARD SEAROBIN,Leopard Searobin,Demersal,,P, SCITULUS,P. scitulus,P. scitulus,A
+PRIONOTUS TRIBULUS,BIGHEAD SEAROBIN,Bighead Searobin,Demersal,,P, TRIBULUS,P. tribulus,P. tribulus,A
+RACHYCENTRON CANADUM,COBIA,Cobia,Pelagic,,R, CANADUM,R. canadum,R. canadum,A
+RAJA EGLANTERIA,CLEARNOSE SKATE,Clearnose Skate,Demersal,Elasmobranchs,R, EGLANTERIA,R. eglanteria,R. eglanteria,A
+REMORA REMORA,REMORA,Remora,Pelagic,,R, REMORA,R. remora,R. remora,A
+RHINOPTERA BONASUS,COWNOSE RAY,Cownose Ray,Demersal,Elasmobranchs,R, BONASUS,R. bonasus,R. bonasus,A
+RHIZOPRIONODON TERRAENOVAE,ATLANTIC SHARPNOSE SHARK,Atlantic Sharpnose Shark,Pelagic,Elasmobranchs,R, TERRAENOVAE,R. terraenovae,R. terraenovae,A
+RIMAPENAEUS CONSTRICTUS,ROUGHNECK SHRIMP,Roughneck Shrimp,Demersal,Crustacean,R, CONSTRICTUS,R. constrictus,R. constrictus,A
+SARDINELLA AURITA,SCAD,Scad,Pelagic,Forage Fishes,S, AURITA,S. aurita,S. aurita,A
+SCIAENOPS OCELLATUS,RED DRUM,Red Drum,Demersal,,S, OCELLATUS,S. ocellatus,S. ocellatus,A
+SCOMBER SCOMBRUS,ATLANTIC MACKEREL,Atlantic Mackerel,Pelagic,,S, SCOMBRUS,S. scombrus,S. scombrus,A
+SCOMBEROMORUS CAVALLA,KING MACKEREL,King Mackerel,Pelagic,,S, CAVALLA,S. cavalla,S. cavalla,A
+SCOMBEROMORUS MACULATUS,SPANISH MACKEREL,Spanish Mackerel,Pelagic,,S, MACULATUS,S. maculatus,S. maculatus,A
+SCOPHTHALMUS AQUOSUS,WINDOWPANE,Windowpane,Demersal,,S, AQUOSUS,S. aquosus,S. aquosus,A
+SCORPAENA BRASILIENSIS,BARBFISH,Barbfish,Demersal,,S, BRASILIENSIS,S. brasiliensis,S. brasiliensis,A
+SELENE SETAPINNIS,ATLANTIC MOONFISH,Atlantic Moonfish,Pelagic,,S, SETAPINNIS,S. setapinnis,S. setapinnis,A
+SELENE VOMER,LOOKDOWN,Lookdown,Pelagic,,S, VOMER,S. vomer,S. vomer,A
+SERIOLA RIVOLIANA,PACIFIC AMBERJACK,Pacific Amberjack,Demersal,,S, RIVOLIANA,S. rivoliana,S. rivoliana,A
+SERIOLA ZONATA,BANDED RUDDERFISH,Banded Rudderfish,Pelagic,,S, ZONATA,S. zonata,S. zonata,A
+SICYONIA SPP,ROCK SHRIMPS,Rock Shrimps,Demersal,Crustacean,S, SPP,S. spp,Sicyonia spp.,A
+SICYONIA BREVIROSTRIS,BROWN ROCK SHRIMP,Brown Rock Shrimp,Demersal,Crustacean,S, BREVIROSTRIS,S. brevirostris,S. brevirostris,A
+SPHOEROIDES MACULATUS,NORTHERN PUFFER,Northern Puffer,Demersal,,S, MACULATUS,S. maculatus,S. maculatus,A
+SPHOEROIDES NEPHELUS,SOUTHERN PUFFER,Southern Puffer,Demersal,,S, NEPHELUS,S. nephelus,S. nephelus,A
+SPHYRAENA SPP,BARRACUDAS,Barracudas,Pelagic,,S, SPP,S. spp,Sphyraena spp.,A
+SPHYRAENA BARRACUDA,GREAT BARRACUDA,Great Barracuda,Demersal,,S, BARRACUDA,S. barracuda,S. barracuda,A
+SPHYRAENA BOREALIS,NORTHERN SENNET,Northern Sennet,Demersal,,S, BOREALIS,S. borealis,S. borealis,A
+SPHYRAENA GUACHANCHO,GUAGUANCHE,Guaguanche,Pelagic,,S, GUACHANCHO,S. guachancho,S. guachancho,A
+SQUALUS ACANTHIAS,SPINY DOGFISH,Spiny Dogfish,Demersal,,S, ACANTHIAS,S. acanthias,S. acanthias,A
+SQUILLA SPP,,Mantis Shrimp,Demersal,Crustacean,S, SPP,S. spp,Squilla spp.,A
+SQUILLA EMPUSA,,Mantis Shrimp,Demersal,Crustacean,S, EMPUSA,S. empusa,S. empusa,A
+STELLIFER LANCEOLATUS,STAR DRUM,Star Drum,Demersal,,S, LANCEOLATUS,S. lanceolatus,S. lanceolatus,A
+STENOTOMUS CAPRINUS,LONGSPINE PORGY,Longspine Porgy,Demersal,,S, CAPRINUS,S. caprinus,S. caprinus,A
+STENOTOMUS CHRYSOPS,SCUP,Scup,Demersal,,S, CHRYSOPS,S. chrysops,S. chrysops,A
+STEPHANOLEPIS HISPIDA,PLANEHEAD FILEFISH,Planehead Filefish,Demersal,,S, HISPIDA,S. hispida,S. hispida,A
+STRONGYLURA MARINA,ATLANTIC NEEDLEFISH,Atlantic Needlefish,Demersal,,S, MARINA,S. marina,S. marina,A
+SYMPHURUS SPP,STRAIGHTMOUTH TOUNGEFISHES,Other Tonguefishes,Demersal,,S, SPP,S. spp,Symphurus spp.,A
+SYMPHURUS PLAGIUSA,BLACKCHEEK TONGUEFISH,Blackcheek Tonguefish,Demersal,,S, PLAGIUSA,S. plagiusa,S. plagiusa,A
+SYNGNATHUS SPP,SEAWEED PIPEFISHES,Pipefishes,Demersal,,S, SPP,S. spp,Syngnathus spp.,A
+SYNGNATHUS FLORIDAE,BERMUDA DUSKY PIPEFISH,Pipefishes,Demersal,,S, FLORIDAE,S. floridae,S. floridae,A
+SYNGNATHUS FUSCUS,NORTHERN PIPEFISH,Pipefishes,Demersal,,S, FUSCUS,S. fuscus,S. fuscus,A
+SYNGNATHUS LOUISIANAE,CHAIN PIPEFISH,Pipefishes,Demersal,,S, LOUISIANAE,S. louisianae,S. louisianae,A
+SYNODUS SPP,LIZARD FISHES,Other Lizardfishes,Demersal,,S, SPP,S. spp,Synodus spp.,A
+SYNODUS FOETENS,INSHORE LIZARDFISH,Inshore Lizardfish,Demersal,,S, FOETENS,S. foetens,S. foetens,A
+SYNODUS INTERMEDIUS,SAND DIVER,Sand Diver,Demersal,,S, INTERMEDIUS,S. intermedius,S. intermedius,A
+TAUTOGA ONITIS,TAUTOG,Tautog,Demersal,,T, ONITIS,T. onitis,T. onitis,A
+TRACHINOTUS CAROLINUS,FLORIDA POMPANO,Florida Pompano,Pelagic,,T, CAROLINUS,T. carolinus,T. carolinus,A
+TRACHURUS SPP,SAURELS,Saurels,Pelagic,,T, SPP,T. spp,Trachurus spp.,A
+TRICHIURUS LEPTURUS,ATLANTIC CUTLASSFISH,Atlantic Cutlassfish,Pelagic,,T, LEPTURUS,T. lepturus,T. lepturus,A
+TRIGLIDAE SPP,SEAROBINS,Searobins,Demersal,,T, SPP,T. spp,Triglidae,A
+TRINECTES MACULATUS,HOGCHOKER,Hogchoker,Demersal,,T, MACULATUS,T. maculatus,T. maculatus,A
+TYLOSURUS CROCODILUS,HOUNDFISH,Houndfish,Pelagic,,T, CROCODILUS,T. crocodilus,T. crocodilus,A
+UPENEUS PARVUS,DWARF GOATFISH,Dwarf Goatfish,Demersal,,U, PARVUS,U. parvus,U. parvus,A
+UROPHYCIS REGIA,SPOTTED HAKE,Spotted Hake,Demersal,,U, REGIA,U. regia,U. regia,A
+XANTHIDAE SPP,MUD CRABS,Mud Crabs,Demersal,Crustacean,X, SPP,X. spp,Xanthidae,A
