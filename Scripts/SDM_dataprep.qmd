@@ -453,15 +453,14 @@ ss_survey_vis("P915", "sheepshead", "P120", "blue crab", "P195", "blue crab")
 ```
 
 
-
 ##TEST GAMs
 
 ```{r}
 #
 CB_df <- read.csv("/Users/sallydowd/Desktop/P120Counts1972PresentStandardizedSimplified.csv")
 
-#CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
-#CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
 CPUE_to_run <- CPUE_grid_avg_edt
 CPUE_survey <- CPUE_to_run %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") ##not working here!
 #survey as random effect

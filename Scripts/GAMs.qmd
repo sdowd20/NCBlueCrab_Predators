@@ -1,0 +1,108 @@
+---
+title: "GAMs"
+format: html
+editor: visual
+---
+
+#### Load packages, functions, and final CPUE dataset
+
+```{r}
+#Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+
+#Make character environmental variables factors
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+```
+
+#### GAM: diagnostics
+
+GAMs, or generalized additive models, provide more flexibility than linear models to explore ecological data. A GAM is a form of a generalized linear model with a linear predictor involving a sum of smooth functions of covariates. They have three parts: 1) a random part, which describes the variability in data by means of an exponential-family probability distribution 2) a structural part which is a linear model 3) a link function that connects the structural and random part. Transformations here are applied to the predictions of a linear model. The link is different depending on the regression used: identity for linear regression, log for poisson regression (counts), and logit for logistic regression (0 or 1).
+
+The k value is the number of basis functions that determines how wiggly the model is. A rule of thumb is that it should be between 5 and the number of years in the dataset (start with 2*number of decades in dataset). A low k-index (< 1) might indicate that k is too low especially if edf is close to k'. Change k from there and see if p-value increases/k-index, compare k and edf values in addition to looking at p value. Small and significant p values indicate that residuals are not randomly distributed as there are not enough basis functions. 
+
+Smoothers are added to continuous variables in GAMs which is denoted by s(). Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables. 
+
+```{r}
+
+#Create Training and validation datasets
+sample_size = floor(0.8*nrow(CPUE_to_runP915)) #take 80% of rows 
+set.seed(777)
+
+# randomly split data in r
+picked = sample(seq_len(nrow(CPUE_to_runP915)),size = sample_size)
+CPUE_to_runP915Validation=CPUE_to_runP915[-picked,]
+
+CPUE_to_runP915_updated =CPUE_to_runP915[picked,]
+colnames(CPUE_to_runP915_updated)
+Bmod.beinf_test <- gamlss(bonnethead_shark ~pb(InletDist_km, control=pb.control(method="GAIC")) +  pb(red_drum, control=pb.control(method="GAIC")) + 
+                                             pb(SAVDist_km, control=pb.control(method="GAIC")) + 
+                                             pb(NoFishRest, control=pb.control(method="GAIC")) +
+                                             pb(avg_depth, control=pb.control(method="GAIC")) +
+                                             pb(avg_ssal, control=pb.control(method="GAIC")) +
+                                             pb(avg_stemp, control=pb.control(method="GAIC")) +
+                                             pb(avg_sdo, control=pb.control(method="GAIC")) + Sedsize_common + ShorelineType, data=na.omit(CPUE_to_runP915_updated),family=BEINF0,n.cyc=ncyc, c.crit=ccrit)
+summary(Bmod.beinf_test)   
+
+```
+
+#### Delta-Gamma 
+```{r}
+
+```
+
+#### Tweedie 
+
+The Tweedie distribution is an example of an exponential dispersion model where there is a common mathematical structure such as a link function. This distribution contains three parameters: the mean, standard deviation, and p which can stand for continuous normal, gamma, Poisson, or inverse Gaussian distributions. While the probability density function can't be evaluated with this distribution, a special algorithm is created for density calculation. 
+
+For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette). 
+
+Here are some helpful resources on Tweedie distributions in general:
+https://r.qcbs.ca/workshop08/book-en/other-distributions.html
+https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/Tweedie.html
+
+```{r}
+#About the tweedie: 
+#Common link function for Tweedie is the log, link function maps non-linear relationship to linear one
+library(mgcv)
+
+CPUE_to_run <- CPUE_grid_avg_edt
+CPUE_to_run$Speciescommonname <- gsub(" ", "_", CPUE_to_run$Speciescommonname)
+CPUE_to_runP915 <- CPUE_to_run %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") 
+CPUE_to_runP915$FishingAll_num <- as.numeric(CPUE_to_runP915$FishingAll_num)
+#Create Training and validation datasets
+sample_size = floor(0.8*nrow(CPUE_to_runP915)) #take 80% of rows 
+set.seed(777)
+#Randomly split data in r
+picked = sample(seq_len(nrow(CPUE_to_runP915)),size = sample_size)
+CPUE_to_runP915Validation=CPUE_to_runP915[-picked,]
+CPUE_to_runP915_updated =CPUE_to_runP915[picked,]
+colnames(CPUE_to_runP915_updated)
+
+#data type tweedie is expecting 
+
+tweedie <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= CPUE_to_runP915_updated, method= "REML")
+summary(tweedie)    
+tweedie_logist <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "logit"), data= CPUE_to_runP915_updated, method= "REML")
+summary(tweedie_logist)  
+
+smooth_gam <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + Sedsize_common, family= gaussian(link= "identity"), data= CPUE_to_runP915_updated, method= "REML")
+summary(smooth_gam) 
+
+summary(smooth_gam)$s.table
+summary(tweedie)$s.table
+##check the choice of k
+k.check(tweedie)
+k.check(smooth_gam)
+##look at residual plots 
+gam.check(smooth_gam)
+gam.check(tweedie)
+##compare the two models 
+AIC(smooth_gam,tweedie)
+```
+
