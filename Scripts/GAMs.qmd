@@ -51,11 +51,6 @@ summary(Bmod.beinf_test)
 
 ```
 
-#### Delta-Gamma 
-```{r}
-
-```
-
 #### Tweedie 
 
 The Tweedie distribution is an example of an exponential dispersion model where there is a common mathematical structure such as a link function. This distribution contains three parameters: the mean, standard deviation, and p which can stand for continuous normal, gamma, Poisson, or inverse Gaussian distributions. While the probability density function can't be evaluated with this distribution, a special algorithm is created for density calculation. 
@@ -104,5 +99,25 @@ gam.check(smooth_gam)
 gam.check(tweedie)
 ##compare the two models 
 AIC(smooth_gam,tweedie)
+```
+
+#### Delta models 
+
+Delta (hurdle models) are a two part model with one model for zero vs. non-zero data and another model for the positive component. Hurdle models are more appropriate than something like a Tweedie when there are differences in the processes controlling presence vs. abundance, or when greater flexibility to account for dispersion is required. As ecological data often has more zeros than is expected if the process generating their data was only from a standard probability distribution, there are multiple methods for dealing with zero inflation. One of these methods is the hurdle model where the zero and non-zero data are in one model and the non-zero data is in another. 
+
+There can be Delta-gamma, Delta-lognormal, Delta-NB1 (negative binomial), and Delta-NB2 model types. 
+
+Helpful resources:
+-https://pbs-assess.github.io/sdmTMB/articles/delta-models.html
+```{r}
+?gam()
+
+any(is.na(CPUE_to_runP915_updated))
+
+CPUE_to_runP915_updated$summer_flounder <- as.integer(CPUE_to_runP915_updated$summer_flounder)
+delta <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= ziplss(), data= CPUE_to_runP915_updated)
+summary(delta)  
+
+
 ```
 
