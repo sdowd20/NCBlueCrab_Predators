@@ -29,6 +29,24 @@ The k value is the number of basis functions that determines how wiggly the mode
 Smoothers are added to continuous variables in GAMs which is denoted by s(). Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables. 
 
 ```{r}
+gam_diagn <- function(dep_var, k_value, df){
+mod <- gam(dep_var ~ s(avg_ssal, k= k_value), data = df)
+print(summary(mod))
+gam.check(mod)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Create Training and validation datasets
 sample_size = floor(0.8*nrow(CPUE_to_runP915)) #take 80% of rows 
@@ -49,6 +67,17 @@ Bmod.beinf_test <- gamlss(bonnethead_shark ~pb(InletDist_km, control=pb.control(
                                              pb(avg_sdo, control=pb.control(method="GAIC")) + Sedsize_common + ShorelineType, data=na.omit(CPUE_to_runP915_updated),family=BEINF0,n.cyc=ncyc, c.crit=ccrit)
 summary(Bmod.beinf_test)   
 
+```
+
+#### Generalized linear model
+```{r}
+#Perfect separation is occuring 
+flounder_glm <- glm(summer_flounder ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest, data = CPUE_to_runP915_updated, family="poisson") 
+summary(flounder_glm)
+report(flounder_glm)
+
+autoplot.countreg(flounder_glm)
+tweedie <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= CPUE_to_runP915_updated, method= "REML")
 ```
 
 #### Tweedie 
@@ -99,6 +128,10 @@ gam.check(smooth_gam)
 gam.check(tweedie)
 ##compare the two models 
 AIC(smooth_gam,tweedie)
+
+autoplot.countreg(tweedie)
+
+rootogram.plot <- rootogram(tweedie, style = "hanging", plot = FALSE)
 ```
 
 #### Delta models 
@@ -110,14 +143,21 @@ There can be Delta-gamma, Delta-lognormal, Delta-NB1 (negative binomial), and De
 Helpful resources:
 -https://pbs-assess.github.io/sdmTMB/articles/delta-models.html
 ```{r}
-?gam()
+prop_0 <- 100*sum(CPUE_to_runP915_updated$summer_flounder == 0)/nrow(CPUE_to_runP915_updated) #definitely zero inflated 
 
-any(is.na(CPUE_to_runP915_updated))
-
+CPUE_to_runP915_updated <- CPUE_to_runP915_updated %>% filter(!summer_flounder %in% NA)
 CPUE_to_runP915_updated$summer_flounder <- as.integer(CPUE_to_runP915_updated$summer_flounder)
-delta <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= ziplss(), data= CPUE_to_runP915_updated)
+delta <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5), family= ziplss(), data= CPUE_to_runP915_updated)
 summary(delta)  
 
+list(response ~ x1 + s(x2), # location linear predictor, left & right hand sided
+              ~ x1 + s(x3)  # scale linear predictor, right-hand side only
+    )
 
+
+
+?ziplss()
+
+summary(CPUE_to_runP915_updated$summer_flounder)
 ```
 
