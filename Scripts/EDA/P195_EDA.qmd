@@ -116,12 +116,19 @@ For seasonality, it does appear that there is enough data to look at these speci
 #### Length
 
 ```{r}
+select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "southern kingfish", "silver perch", "weakfish", "atlantic thread herring", "lesser blue crab", "atlantic brief squid", "cownose ray", "white shrimp", "pink shrimp")
+
+unique(p195_lengthfreq$Speciescommonname)
+
 #Explore
-#p195_lengthfreq %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
-#ggsave("~/Desktop/p195_length.png", width= 25, height= 25)
+p195_lengthfreq %>% filter(Speciescommonname %in% select_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p195_length.png", width= 10, height= 10)
 
 #p195_lengthfreq %>% drop_na(Length) %>% group_by(Speciescommonname, Season) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Season, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
 #ggsave("~/Desktop/p195_length_season.png", width= 25, height= 25)
+
+select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "southern kingfish", "silver perch", "weakfish", "atlantic thread herring", "lesser blue crab", "atlantic brief squid", "cownose ray", "white shrimp", "pink shrimp")
+
 
 #Form blue crab dataset and make sure each blue crab in the subsample has their own row
 P195_bc <- p195_lengthfreq %>% filter(Speciescommonname %in% "blue crab") %>% select(Eventname, Speciescommonname, Date, Location, Length, Numbermeasure, Totalnumber) #Important: Numbertotal isn't here- will have to, Totalnumber is the frequency, uncount this

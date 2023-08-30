@@ -28,7 +28,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 
 ##Load and edit data set
 setwd("~/Desktop")
-P120_bioledt <- read_csv("p120_biol_new.csv")
+P120_bioledt <- read_csv("Ch1Data/P120/p120_biol_new.csv")
 
 coords_captured <- function(species){
 ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_CPUEold$Species %in% species & as.numeric(p915_CPUEold$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
@@ -124,9 +124,9 @@ ggplot() + geom_histogram(data = subset(fine, fine$Colnum > 0), stat="count", ae
 test <- fine %>% group_by(Speciescommonname) %>% drop_na(Colnum) %>% summarise(sum_colnum= sum(Colnum)) #atlantic croaker, atlantic menhaden, blue crab, bluefish, northern brown shrimp, southern flounder, spot, and summer flounder have the most data 
 
 #08/14/23: explore crustaceans, only including if have count > 100 (some have a lot of observations but few capture instances ), looked at Colnum after 2007 and in June to narrow down 
-crust_count <- P120_bioledt %>% filter(Speciescommonname %in% c("periwinkles", "cephalopod molluscs", "mud snails", "pink shrimp", "sevenspine bay shrimp", "flatback mud crab", "oppossum shrimps", "isopods", "atlantic mud crab", "lesser blue crab", "hermit crabs", "mantis shrimp", "snapping shrimps", "hippolyte shrimps", "crayfishes", "florida stone crab", "iridescent swimming crab", "harris mud crab", "white shrimp", "cephalopod mullusc")) %>% group_by(Speciescommonname) %>% mutate(count= n()) %>% distinct(count)
+crust_count <- P120_bioledt %>% filter(Speciescommonname %in% c("periwinkles", "cephalopod molluscs", "mud snails", "pink shrimp", "sevenspine bay shrimp", "flatback mud crab", "oppossum shrimps", "isopods", "atlantic mud crab", "lesser blue crab", "hermit crabs", "mantis shrimp", "snapping shrimps", "hippolyte shrimps", "crayfishes", "florida stone crab", "iridescent swimming crab", "harris mud crab", "white shrimp", "cephalopod mullusc", interest_spp), Year > 2001, Month== 6) %>% group_by(Speciescommonname) %>% mutate(count= n()) %>% distinct(count)
 
-P120_bioledt %>% filter(Speciescommonname %in% "cephalopod mullusc", Year > 2007, Month== 6) %>% drop_na(Colnum) %>% summarise(sum_Colnum= sum(Colnum))
+P120_bioledt %>% filter(Speciescommonname %in% "cephalopod mullusc", Year >= 2001, Month== 6) %>% drop_na(Colnum) %>% summarise(sum_Colnum= sum(Colnum))
 
 coords_captured("pink shrimp") 
 coords_captured("periwinkles")
@@ -137,15 +137,17 @@ coords_captured("cephalopod mullusc")
 #### Exploring length
 
 ```{r}
+spp_interest <- c("pink shrimp", "white shrimp", "spot", "northern brown shrimp", "atlantic croaker", "blue crab", "atlantic menhaden", "southern flounder", "summer flounder", "red drum", "bluefish") 
+  
 colnames(P120_bioledt)
 
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(min_l= min(Length), max_l= max(Length), mean_l = mean(Length), sd_l= sd(Length))
 
-P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
-ggsave("~/Desktop/p120_length.png", width= 25, height= 25)
+P120_bioledt %>% filter(Speciescommonname %in% spp_interest, Month==6, Year >=2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p120_length.png", width= 10, height= 10)
 
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp,Month == 5|Month==6) %>% drop_na(Length) %>% group_by(Speciescommonname, Month) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Month, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
-ggsave("~/Desktop/p120_length.month.png", width= 25, height= 25)
+ggsave("~/Desktop/p120_length.month.png", width= 10, height= 10)
 ```
 
 #### Actually dealing with length

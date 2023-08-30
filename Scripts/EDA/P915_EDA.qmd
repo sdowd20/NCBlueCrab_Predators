@@ -18,10 +18,9 @@ However, the Control \# is representative of an individual sampling event with a
 
 As of now (05/06/23), the sample IDs for the river systems (only Neuse and Pamlico) have an error. Cara Kowalchyk is planning to send me the updated CPUE data by the end of June. Right now, I can left_join by sample ID for the old CPUE and new biological dataset excluding the Neuse and Pamlico River systems.
 
-An update about the datasets (correspondence with Cara Kowalchyk on 08/07/23): Different Control1s can be for the same sampling event because of samples split between half and whole mesh sizes (when data began). For example, 0111796 and 0111797 were the same set of deep nets but didn't merge correctly. They should be merged under sample= 11011HYDE220. If you see a sample ID that contains the control1, you can delete it off the end and it would merge properly, maybe. If you have trouble with that, Cara offered to repull the data. I propose to group_by Speciescommonname, Area, Quad, and Strata and sum the Colnum. 
+An update about the datasets (correspondence with Cara Kowalchyk on 08/07/23): Different Control1s can be for the same sampling event because of samples split between half and whole mesh sizes (when data began). For example, 0111796 and 0111797 were the same set of deep nets but didn't merge correctly. They should be merged under sample= 11011HYDE220. If you see a sample ID that contains the control1, you can delete it off the end and it would merge properly, maybe. If you have trouble with that, Cara offered to repull the data. I propose to group_by Speciescommonname, Area, Quad, and Strata and sum the Colnum.
 
-However, this isn't going to be an issue because the Control1s only vary for the early data. When I did this command, p915_CPUE %>% filter(Year >= 2001) %>% group_by(Control1, Speciescommonname) %>% summarize(count = n()) and then unique(t$count), there was only 1 value for count. This means that each species only has one row for each Control1
-
+However, this isn't going to be an issue because the Control1s only vary for the early data. When I did this command, p915_CPUE %\>% filter(Year \>= 2001) %\>% group_by(Control1, Speciescommonname) %\>% summarize(count = n()) and then unique(t\$count), there was only 1 value for count. This means that each species only has one row for each Control1
 
 ##### Biological dataset
 
@@ -289,8 +288,10 @@ summary(is.na(p915_bioln_sel)) #2 NAs in Colnum, 19 in Quad, 343 in Colwgt, 396 
 
 p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% summarise(mean_l = mean(Length*0.0393701), min_l = min(Length*0.0393701), max_l= max(Length*0.0393701), sd_l= sd(Length*0.0393701))
 
-p915_bioln_sel %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
-ggsave("~/Desktop/p915_length.png", width= 25, height= 25)
+p915_bioln_sel %>% drop_na(Length) %>% filter(Month== 6, Speciescommonname %in% c("southern flounder", "red drum", "striped bass", "atlantic croaker", "black drum", "bonnethead hammerhead", "sheepshead", "southern kingfish", "blue catfish")) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p915_length.png", width= 10, height= 10)
+
+unique(p915_bioln_sel$Speciescommonname)
 
 p915_bioln_sel %>% drop_na(Length) %>% filter(Month== 5|Month==6|Month==9) %>% group_by(Speciescommonname, Month) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname + Month, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p915_length_month.png", width= 25, height= 25)
