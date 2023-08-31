@@ -109,6 +109,9 @@ ggplot() + geom_histogram(data = subset(fine, fine$Numbertotal > 0), stat="count
 #Spring: atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, gizzard shad? southern flounder, spot, summer flounder, southern kingfish
 
 species_count <- p195_abund %>% group_by(Speciescommonname) %>% filter(Year> 2000, Month==6) %>% mutate(count= n()) %>% distinct(count)
+
+silver <- dplyr::filter(p195_abund, grepl("silverside",Speciescommonname))
+unique(silver$Speciescommonname)
 ```
 
 For seasonality, it does appear that there is enough data to look at these species in June and September: Atlantic croaker, atlantic menhaden, blue crab, bluefish, brown shrimp, cownose ray, southern flounder, spot, summer flounder, southern kingfish. Refer to the seasonality.csv file in EDA folder in the Blue Crab google drive.
@@ -169,10 +172,10 @@ Length data pulled: DataType: Length Frequency AreaLocation: NEUSE RIVER;PAMLICO
 p195_abundedt <- p195_abund %>% drop_na(Sciname) #1 NA for Sciname
 length(unique(p195_abundedt$Eventname)) #2012
 haul <- p195_abundedt %>% group_by(Date, Stationcode) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul (2012 hauls), same as unique eventname 
-select_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "southern kingfish", "silver perch", "weakfish", "atlantic thread herring", "lesser blue crab", "atlantic brief squid", "cownose ray", "white shrimp", "pink shrimp")
+select_spp <- c("atlantic brief squid", "atlantic thread herring", "atlantic menhaden", "bay anchovy", "blue crab", "bluefish", "brown shrimp", "pink shrimp", "white shrimp", "cownose ray", "lesser blue crab", "pinfish", "silver perch", "southern flounder", "southern kingfish", "spot", "striped anchovy", "summer flounder", "weakfish")
 
 haul$Species=NA#create a dummy column first
-haul$Species=rep_along(haul$Species,c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "spot", "blue crab", "atlantic menhaden", "juv blue crab", "adult blue crab", "southern kingfish", "silver perch", "weakfish", "atlantic thread herring", "lesser blue crab", "atlantic brief squid", "cownose ray", "white shrimp", "pink shrimp"))
+haul$Species=rep_along(haul$Species,c("atlantic brief squid", "atlantic thread herring", "atlantic menhaden", "bay anchovy", "blue crab", "bluefish", "brown shrimp", "pink shrimp", "white shrimp", "cownose ray", "lesser blue crab", "pinfish", "silver perch", "southern flounder", "southern kingfish", "spot", "striped anchovy", "summer flounder", "weakfish"))
 
 haul_df <- haul %>% dplyr::select(Eventname, Year, Month, Day, Date, Location, Stationcode, Timestart, Duration, Tempsurface, Tempbottom, Salinitysurface, Salinitybottom, Sdo, Bdo, Latitudestart, Longitudestart, Depthstart, Depthend, Sedsize_new, Btmcomp_new, Secchi_depthcm, Photoperiod, Wbdytype, Season, Ym_date, Wbd, Depthzone, Species)
 
@@ -196,5 +199,5 @@ spp_names <- p195_abundedt %>% select(Speciescommonname, Speciesscientificname, 
 p195_CPUE <- haul_sel_spp %>% left_join(spp_names) #NA for juv and adult blue crab
 p195_CPUE$Sciname <- ifelse(p195_CPUE$Speciescommonname %in% "juv blue crab"|p195_CPUE$Speciescommonname %in% "adult blue crab", "C. sapidus", p195_CPUE$Sciname)
 p195_CPUE$Speciesscientificname <- ifelse(p195_CPUE$Speciescommonname %in% "juv blue crab"|p195_CPUE$Speciescommonname %in% "adult blue crab", "callinectes sapidus", p195_CPUE$Speciesscientificname)
-#write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
+write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```

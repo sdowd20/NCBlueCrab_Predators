@@ -40,10 +40,22 @@ GAMs, or generalized additive models, provide more flexibility than linear model
 
 The k value is the number of basis functions that determines how wiggly the model is (smoothing parameter of a spline). A spline is a piece wise polynomial functions that are used as a smoothing technique. A rule of thumb is that it should be between 5 and the number of years in the dataset (start with 2\*number of decades in dataset). A low k-index (\< 1) might indicate that k is too low especially if edf is close to k'. Change k from there and see if p-value increases/k-index, compare k and edf values in addition to looking at p value. Small and significant p values indicate that residuals are not randomly distributed as there are not enough basis functions.
 
-Smoothers are added to continuous variables in GAMs which is denoted by s(). Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables.
+Smoothers are added to continuous variables in GAMs which is denoted by s() to fit the data. The s operator produces the spline base expansion. Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables. GAM in R can only accept spline smoothers (number of knots) and not LOESS. It is important to have a good compromise between roughness and smoothness. The parameter λ specifies how much weight the roughness penalty will get.
+
+How do we know when to drop a model? If the answers to all three of these quesitons are yes, then drop it:
+
+1) Are the EDF for the questioned term approaching 1 (i.e., linear effect)? 
+2) Is the confidence interval of the term including zero throughout its domain? (i.e., high p-value) 
+3) Does the GCV (generalized cross validation) score for the entire model drop when the term is removed?
+
+#### GAM output:
+plot(model3,pages=1,se=T, residuals=T,pch=1), forms covariate plots 
+Use the F-ratio test 
+
 
 #### Initial models
-###test for over and underdispersion for poisson vs. binomial 
+
+###test for over and underdispersion for poisson vs. binomial
 
 ```{r}
 #Create training and test datasets 
@@ -164,9 +176,7 @@ Delta (hurdle models) are a two part model with one model for zero vs. non-zero 
 
 There can be Delta-gamma, Delta-lognormal, Delta-NB1 (negative binomial), and Delta-NB2 model types. With ziplss() in gam(), a zero inflated (hurdle) Poisson location-scale model family is fit to data. One linear predictor in the model controls the probability of presence (binomial) and the other controls the mean given presence with ocunts (poisson). Within a list of formulae, the linear predictors are used. The first formulae is for the linear predictor for the Poisson parameter and the second is for the probability of presence. These hurdle models should only be used when 1) there are a large number of zero counts in the data and 2) the positive counts approximate a Poisson distribution.
 
-Helpful resources: 
--https://pbs-assess.github.io/sdmTMB/articles/delta-models.html
--Modeling relative abundance: https://cornelllabofornithology.github.io/ebird-best-practices/abundance.html
+Helpful resources: -https://pbs-assess.github.io/sdmTMB/articles/delta-models.html -Modeling relative abundance: https://cornelllabofornithology.github.io/ebird-best-practices/abundance.html
 
 ```{r}
 prop_0 <- 100*sum(CPUE_to_runP915_updated$summer_flounder == 0)/nrow(CPUE_to_runP915_updated) #definitely zero inflated 
@@ -233,11 +243,3 @@ points(grid.bin$year,pred.mean, type="l")
 lines(grid.bin$year, pred.95CI[1,], lty=2)
 lines(grid.bin$year, pred.95CI[2,], lty=2)
 ```
-
-
-
-
-
-
-
-
