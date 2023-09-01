@@ -4,170 +4,139 @@ format: html
 editor: visual
 ---
 
-#### Load packages, functions, and modify final CPUE dataset
-
+#### Load packages, functions, and datasets
 ```{r}
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv")
+
 invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
-#Edit dataset with standardized CPUE
+#Load in datasets
+##Standardized catch per unit effort 
 CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
 CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
-
-##Make character environmental variables factors
 CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", "_", CPUE_grid_avg_edt$Speciescommonname)
 
-##Pivot_wider: each species to have their own column 
-CPUE_to_run <- CPUE_grid_avg_edt
-CPUE_to_run$Speciescommonname <- gsub(" ", "_", CPUE_to_run$Speciescommonname)
-df_wide <- CPUE_to_run %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
-
-#Create binary and count datasets 
-df_binary <- df_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
-
+##Count dataset 
 df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
-df_count <- df_count[,-1]
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
 df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
+
+#Pivot-wider datasets: 
+##Standardized catch per unit effort dataset wide 
+df_CPUE_wide <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+
+##Binary dataset (0 or 1):  
+df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+##Count dataset wide 
 df_count_wide <- df_count %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Form train/testing datasets by dividing 80% 20% 
+set.seed(777)
+##Randomly split data in R
+sample_size = floor(0.8*nrow(df_CPUE_wide)) #take 80% of rows, # is same b/w dfs
+
+##CPUE model
+picked_CPUE = sample(seq_len(nrow(df_CPUE_wide)),size = sample_size)
+df_CPUE_wide_test =df_CPUE_wide[-picked_CPUE,]
+df_CPUE_wide_train =df_CPUE_wide[picked,]
+
+##Binary model
+picked_binary = sample(seq_len(nrow(df_binary_wide)),size = sample_size)
+df_binary_wide_test = df_binary_wide[-picked_binary,]
+df_binary_wide_train = df_binary_wide[picked_binary,]
+
+##Poisson model
+picked = sample(seq_len(nrow(df_count_wide)),size = sample_size) 
+df_count_wide_test = df_count_wide[-picked,]
+df_count_wide_train = df_count_wide[picked,]
 ```
 
-#### Diagnostics
+#### Overview: 
 
 GAMs, or generalized additive models, provide more flexibility than linear models to explore ecological data. A GAM is a form of a generalized linear model with a linear predictor involving a sum of smooth functions of covariates. They have three parts: 1) a random part, which describes the variability in data by means of an exponential-family probability distribution 2) a structural part which is a linear model 3) a link function that connects the structural and random part. Transformations here are applied to the predictions of a linear model. The link is different depending on the regression used: identity for linear regression, log for poisson regression (counts), and logit for logistic regression (0 or 1).
 
-The k value is the number of basis functions that determines how wiggly the model is (smoothing parameter of a spline). A spline is a piece wise polynomial functions that are used as a smoothing technique. A rule of thumb is that it should be between 5 and the number of years in the dataset (start with 2\*number of decades in dataset). A low k-index (\< 1) might indicate that k is too low especially if edf is close to k'. Change k from there and see if p-value increases/k-index, compare k and edf values in addition to looking at p value. Small and significant p values indicate that residuals are not randomly distributed as there are not enough basis functions.
+The k value is the number of basis functions that determines how wiggly the model is (smoothing parameter of a spline). "The value(s) for k set the upper limit on the wiggliness of the smooth function(s). The penalty measures the wiggliness of the function (it is typically the squared second derivative of the smooth summed over the range of the covariate). The model then estimates values for the coefficients for the basis functions representing each smooth and chooses smoothness parameter(s) by maximizing the penalized log likelihood criterion. The penalized log likelihood is the log likelihood plus some amount of penalty for wiggliness for each smooth" (stack overflow). A spline is a piece wise polynomial functions that are used as a smoothing technique. A rule of thumb is that it should be between 5 and the number of years in the dataset (start with 2\*number of decades in dataset). A low k-index (\< 1) might indicate that k is too low especially if edf is close to k'. Change k from there and see if p-value increases/k-index, compare k and edf values in addition to looking at p value. Small and significant p values indicate that residuals are not randomly distributed as there are not enough basis functions. It is important to know that the number of knots is not always just k. "The value you give to k sets the dimensionality of the basis, which implies a certain number of knots" (stack overflow). In the GAM function, you can specify the number of knots outside of specifying the k. Normally, there is not a need to set the knots yourself.
 
-Smoothers are added to continuous variables in GAMs which is denoted by s() to fit the data. The s operator produces the spline base expansion. Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables. GAM in R can only accept spline smoothers (number of knots) and not LOESS. It is important to have a good compromise between roughness and smoothness. The parameter λ specifies how much weight the roughness penalty will get.
+Smoothers are added to continuous variables in GAMs which is denoted by s() to fit the data. The s operator produces the spline base expansion. Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables (smoothing penalty). Thin plate spine basis are the default in the mgcv package. Thin plate splines tend to have better RMSE performance but are more computationally expensive. If you have a reason to do P-spliens or B-splines you can use those and if not, thin plate splines are fine. GAM in R can only accept spline smoothers (number of knots) and not LOESS. It is important to have a good compromise between roughness and smoothness. The parameter λ specifies how much weight the roughness penalty will get. It is important to note that regression spilnes don't implement penalization by reducing the number of knots rather they do this by reducing the coefficients of spline terms. 
 
 How do we know when to drop a model? If the answers to all three of these quesitons are yes, then drop it:
 
-1) Are the EDF for the questioned term approaching 1 (i.e., linear effect)? 
-2) Is the confidence interval of the term including zero throughout its domain? (i.e., high p-value) 
-3) Does the GCV (generalized cross validation) score for the entire model drop when the term is removed?
+1)  Are the EDF for the questioned term approaching 1 (i.e., linear effect)?
+2)  Is the confidence interval of the term including zero throughout its domain? (i.e., high p-value)
+3)  Does the GCV (generalized cross validation) score for the entire model drop when the term is removed?
 
-#### GAM output:
-plot(model3,pages=1,se=T, residuals=T,pch=1), forms covariate plots 
-Use the F-ratio test 
+Helpful articles:
+-smoothers and k: https://stats.stackexchange.com/questions/243367/smoothing-methods-for-gam-in-mgcv-package
+-choosing k: https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html
+-stack overflow: https://stackoverflow.com/questions/60078003/gam-in-r-is-it-a-spline-model-with-automated-knots-selection
 
-
-#### Initial models
-
-###test for over and underdispersion for poisson vs. binomial
-
+#### Diagnostics
 ```{r}
-#Create training and test datasets 
-#Create Training and validation datasets
-sample_size = floor(0.8*nrow(df_binary)) #take 80% of rows 
-set.seed(777)
-picked = sample(seq_len(nrow(df_binary)),size = sample_size)
-df_binary_test = df_binary[-picked,]
-df_binary_train = df_binary[picked,]
-picked2 = sample(seq_len(nrow(df_count_wide)),size = sample_size)
-df_count_test = df_count_wide[-picked,]
-df_count_train = df_count_wide[picked,]
+#Exploratory graphs: left skewed and zero-inflated model
+df_CPUE_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("CPUE") + ylab("Counts") + standard_theme
+df_binary_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Presence/absence") + ylab("Counts") + standard_theme
+df_count_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Counts") + ylab("Counts") + standard_theme
+
+prop_0 <- 100*sum(df_CPUE_wide$red_drum == 0)/nrow(df_CPUE_wide) #definitely zero inflated 
+```
+
+#### Initial models: 
+```{r}
+#Generalized linear model: perfect separation is happening 
+flounder_glm <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest, data = df_CPUE_wide_train, family="poisson")
+summary(flounder_glm)
+#report(flounder_glm)
 
 #Binomial GAM with logit link
 ##This is a submodel that relates presence or absence to predictor variables
-df_binary_train <- df_binary %>% mutate_at(vars(15:41), as.integer)
-binomial <- gam(summer_flounder ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family=binomial(link="logit"), data= df_binary_train)
+binomial <- gam(red_drum ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family=binomial(link="logit"), data= df_binary_wide_train)
 summary(binomial)
 gam.check(binomial)
 
-##Visualize impact of predictor variables 
-par(mfrow=c(2,3),mai=c(0.3,0.3,0,0),omi=c(0.35,0.35,0.1,0.1))
-plot(binomial, shade=TRUE, seWithMean=TRUE, scale=0, all.terms=TRUE)
+#Negative binomial: related to poisson, use for count data
+binomial_neg <- gam(red_drum ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family= "nb", data= df_count_wide_train)
+summary(binomial_neg)
+gam.check(binomial_neg)
+
+binomial_neg_pred <- predict(binomial_neg, df_binary_wide_test, type = "response") %>% tibble(family = "Negative Binomial", pred = .) %>% mutate(red_drum= df_binary_wide_test$red_drum)
 
 #Poisson model did not work because it is for integers
-poisson <- gam(summer_flounder ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family=poisson(), data= df_count_wide)
+poisson <- gam(red_drum ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family=poisson(), data= df_count_wide_train)
 summary(poisson)
 gam.check(poisson)
+autoplot.countreg(poisson)
+
+#Gaussian GAM 
+smooth_gam <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + Sedsize_common, family= gaussian(link= "identity"), data= df_CPUE_wide_train, method= "REML")
+summary(smooth_gam) 
 ```
 
-```{r}
-gam_diagn <- function(dep_var, k_value, df){
-mod <- gam(dep_var ~ s(avg_ssal, k= k_value), data = df)
-print(summary(mod))
-gam.check(mod)
-}
-
-#Create Training and validation datasets
-sample_size = floor(0.8*nrow(CPUE_to_runP915)) #take 80% of rows 
-set.seed(777)
-
-# randomly split data in r
-picked = sample(seq_len(nrow(CPUE_to_runP915)),size = sample_size)
-CPUE_to_runP915Validation=CPUE_to_runP915[-picked,]
-
-CPUE_to_runP915_updated =CPUE_to_runP915[picked,]
-colnames(CPUE_to_runP915_updated)
-Bmod.beinf_test <- gamlss(bonnethead_shark ~pb(InletDist_km, control=pb.control(method="GAIC")) +  pb(red_drum, control=pb.control(method="GAIC")) + 
-                                             pb(SAVDist_km, control=pb.control(method="GAIC")) + 
-                                             pb(NoFishRest, control=pb.control(method="GAIC")) +
-                                             pb(avg_depth, control=pb.control(method="GAIC")) +
-                                             pb(avg_ssal, control=pb.control(method="GAIC")) +
-                                             pb(avg_stemp, control=pb.control(method="GAIC")) +
-                                             pb(avg_sdo, control=pb.control(method="GAIC")) + Sedsize_common + ShorelineType, data=na.omit(CPUE_to_runP915_updated),family=BEINF0,n.cyc=ncyc, c.crit=ccrit)
-summary(Bmod.beinf_test)   
-
-```
-
-#### Generalized linear model
-
-```{r}
-#Perfect separation is occuring 
-flounder_glm <- glm(summer_flounder ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest, data = CPUE_to_runP915_updated, family="poisson") 
-summary(flounder_glm)
-report(flounder_glm)
-
-autoplot.countreg(flounder_glm)
-tweedie <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= CPUE_to_runP915_updated, method= "REML")
-```
-
-#### Tweedie
+#### Tweedie: 
 
 The Tweedie distribution is an example of an exponential dispersion model where there is a common mathematical structure such as a link function. This distribution contains three parameters: the mean, standard deviation, and p which can stand for continuous normal, gamma, Poisson, or inverse Gaussian distributions. While the probability density function can't be evaluated with this distribution, a special algorithm is created for density calculation.
 
-For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette).
-
+For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette). The common link function for Tweedie is the log link. 
 Here are some helpful resources on Tweedie distributions in general: https://r.qcbs.ca/workshop08/book-en/other-distributions.html https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/Tweedie.html
 
 ```{r}
-#About the tweedie: 
-#Common link function for Tweedie is the log, link function maps non-linear relationship to linear one
-library(mgcv)
+tweedie <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= df_CPUE_wide_train, method= "REML")
+summary(tweedie)
 
-#Create Training and validation datasets
-sample_size = floor(0.8*nrow(CPUE_to_runP915)) #take 80% of rows 
-set.seed(777)
-#Randomly split data in r
-picked = sample(seq_len(nrow(df_wide)),size = sample_size)
-CPUE_to_runP915Validation=df_wide[-picked,]
-CPUE_to_runP915_updated =df_wide[picked,]
-colnames(CPUE_to_runP915_updated)
+gam(rsd~s(avg_ssal,k=5,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
+gam(rsd~s(avg_depth,k=40,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
+gam(rsd~s(avg_sdo,k=10,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## `k' too low
+gam(rsd~s(x3,k=40,bs="cs"),gamma=1.4,data=dat) ## fine
 
-tweedie <- gam(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= CPUE_to_runP915_updated, method= "REML")
-summary(tweedie)    
 
-smooth_gam <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + Sedsize_common, family= gaussian(link= "identity"), data= CPUE_to_runP915_updated, method= "REML")
-summary(smooth_gam) 
+#penalize for the # of knots, run w/ different number of knots 
+#do something to make sure # of knots is correct 
 
-summary(smooth_gam)$s.table
-summary(tweedie)$s.table
-##check the choice of k
-k.check(tweedie)
-k.check(smooth_gam)
-##look at residual plots 
-gam.check(smooth_gam)
-gam.check(tweedie)
-##compare the two models 
-AIC(smooth_gam,tweedie)
-
-autoplot.countreg(tweedie)
-
-rootogram.plot <- rootogram(tweedie, style = "hanging", plot = FALSE)
+tweedie_pred <- predict(tweedie, df_CPUE_wide_test, type = "response") %>% tibble(family = "Tweedie", pred = .) %>% mutate(red_drum= df_count_wide_test$red_drum)
 ```
 
 #### Delta models
@@ -176,70 +145,133 @@ Delta (hurdle models) are a two part model with one model for zero vs. non-zero 
 
 There can be Delta-gamma, Delta-lognormal, Delta-NB1 (negative binomial), and Delta-NB2 model types. With ziplss() in gam(), a zero inflated (hurdle) Poisson location-scale model family is fit to data. One linear predictor in the model controls the probability of presence (binomial) and the other controls the mean given presence with ocunts (poisson). Within a list of formulae, the linear predictors are used. The first formulae is for the linear predictor for the Poisson parameter and the second is for the probability of presence. These hurdle models should only be used when 1) there are a large number of zero counts in the data and 2) the positive counts approximate a Poisson distribution.
 
-Helpful resources: -https://pbs-assess.github.io/sdmTMB/articles/delta-models.html -Modeling relative abundance: https://cornelllabofornithology.github.io/ebird-best-practices/abundance.html
+Helpful resources: -https://pbs-assess.github.io/sdmTMB/articles/delta-models.html -Modeling relative abundance and combining results: https://cornelllabofornithology.github.io/ebird-best-practices/abundance.html
 
 ```{r}
-prop_0 <- 100*sum(CPUE_to_runP915_updated$summer_flounder == 0)/nrow(CPUE_to_runP915_updated) #definitely zero inflated 
-
-df_count_wide_sf <- df_count_wide %>% drop_na()
-df_count_wide_sf$summer_flounder <- as.integer(df_count_wide_sf$summer_flounder)
-
-delta <- gam(list(summer_flounder ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5), ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5)), family= ziplss(), data= df_count_train, method = "REML")
+#Run binomial and poisson models separately
+delta <- gam(list(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5), ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5)), family= ziplss(), data= df_count_wide_train, method = "REML")
 summary(delta)
 
-df_count_test = df_count_wide[-picked,]
-df_count_train = df_count_wide[picked,]
-
-
-# presence probability is on the complimentary log-log scale
-# we can get the inverse link function with
-obs_count <- select(df_count_test, obs = summer_flounder)
-
-inv_link <- binomial(link = "cloglog")$linkinv
-# combine ziplss presence and count predictions
-delta_pred <- predict(delta, df_count_test, type = "link") %>% 
-  as.data.frame() %>%
-  transmute(family = "Zero-inflated Poisson",
-            pred = inv_link(V2) * exp(V1)) %>% 
-  bind_cols(obs_count)
-
-
-ticks <- c(0, 1, 10, 100, 1000)
-mx <- round(max(delta_pred$obs_count))
-ggplot(delta_pred) +
-  aes(x = log10(obs + 1), 
-      y = log10(pred + 1)) +
-  geom_jitter(alpha = 0.2, height = 0) +
-  # y = x line
-  geom_abline(slope = 1, intercept = 0, alpha = 0.5) +
-  # area where counts off by a factor of 10
-  geom_area(data = tibble(x = log10(seq(0, mx - 1) + 1), 
-                          y = log10(seq(0, mx - 1) / 10 + 1)),
-            mapping = aes(x = x, y = y),
-            fill = "red", alpha = 0.2) +
-  # loess fit
-  geom_smooth(method = "loess", 
-              method.args = list(span = 2 / 3, degree = 1)) +
-  scale_x_continuous(breaks = log10(ticks + 1), labels = ticks) +
-  scale_y_continuous(breaks = log10(ticks + 1), labels = ticks) +
-  labs(x = "Observed count",
-       y = "Predicted count") +
-  facet_wrap(~ family, nrow = 1)
+#Combine both models into one 
+inv_link <- binomial(link = "cloglog")$linkinv #inverse link function, cloglog is the link 
+delta_pred <- predict(delta, df_count_wide_test, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% mutate(red_drum= df_count_wide_test$red_drum) #transmute makes new data frame w/ only specified computations, multiply effects of each submodel 
 ```
 
+#### Compare models 
 ```{r}
-pred.bin <- predict(binomial, df_binary_test, type="response", se=T)
-niter <- 10000  # number of replicates
-pred.bin.boot <- matrix(data=NA,nrow= nrow(df_binary_test),ncol=niter)
-for(i in 1:nrow(df_binary_test)){
-  pred.bin.boot[i,] <- rnorm(niter, pred.bin$fit[i], pred.bin$se.fit[i])}
-pred.mean <- apply(pred.bin.boot,1,mean)
-pred.95CI <- apply(pred.bin.boot,1,quantile,probs=c(0.025,0.975)) 
+test_pred <- bind_rows(delta_pred, tweedie_pred, binomial_neg_pred) %>% 
+  mutate(family = as_factor(family))
 
-# to get 95% CIs
-plot(df_binary_test$avg_stemp, pred.mean, type="p",mgp=c(2,0.7,0), ylim=c(0,0.31),xlab="",lwd=2,cex.lab=1.4,ylab="",boxwex=0.01,cex.axis=1.1)
-points(grid.bin$year,pred.mean, type="p",cex=1.5,pch=19)
-points(grid.bin$year,pred.mean, type="l")
-lines(grid.bin$year, pred.95CI[1,], lty=2)
-lines(grid.bin$year, pred.95CI[2,], lty=2)
+#Spearman's Rank Correlation: assess fit of models, how well model estimated ranking of sites from highest to lowest abundance 
+test_pred %>% group_by(family) %>% summarise(rank_cor = cor.test(summer_flounder, pred, method = "spearman", exact = FALSE)$estimate) %>% ungroup()
+
+#See how many observations are underestimated by an order of mangitude or more
+test_pred %>% group_by(family) %>% summarize(n = sum(summer_flounder / pred > 10),
+pct = mean(summer_flounder / pred > 10))
+
+#Mean absolute deviation: get a sense of quality of magnitude of predicted counts, describes average deviation b/w observation and prediction (variation around mean), average of absolute deviations from a central point, low MAD is good 
+test_pred %>% group_by(family) %>% summarise(mad = mean(abs(summer_flounder - pred), na.rm = TRUE)) %>% ungroup()
+
+summary(delta)$s.table
+summary(tweedie)$s.table
+summary(binomial_neg_pred)$s.table
+
+##check the choice of k
+gam.check(delta)
+gam.check(tweedie)
+gam.check(binomial_neg_pred)
+
+k.check(delta)
+k.check(tweedie)
+k.check(binomial_neg_pred)
+
+#Covariate plot: standard error bars, include plot of residuals 
+plot(tweedie,pages=1,se=T, residuals=T,pch=1)
+```
+
+
+
+## Repeated K-fold cross-validation
+
+The process of splitting the data into k-folds can be repeated a number of times, this is called repeated k-fold cross validation.
+
+The final model error is taken as the mean error from the number of repeats.
+
+Because we have such a small dataset, I want to try using a smaller number of folds. The following example uses 3-fold cross validation with 5 repeats:
+
+```{r}
+library(ggplot2)
+library(interactions)
+library(car)
+library(lmtest)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(GGally)
+library(gvlma)
+library(rstatix)
+library(tidyverse)
+library(caret)
+
+# Define training control
+set.seed(123) 
+train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 5)
+tweedie_full <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= df_CPUE_wide_train, method= "REML", trControl= train.control)
+```
+
+From all of these results I would say that the model that just includes latitude and elevation is better at out-of-sample prediction that the model that includes sarah and randomx.
+
+##looping You can loop through different combinations of predictor variables in k fold cross validation. This is a function I wrote to get out all of the possible combinations of our linear models - be very very careful with this
+
+```{r}
+library(gtools)
+pastePerm<- function(row, names){
+  keep<- which(row==1)
+  if(length(keep)==0){
+    return('1')
+  }else{
+    return(paste(names[keep],collapse='+'))
+  }
+}
+dredgeform<- function(pred, covars, alwaysIn=''){
+  p<- length(covars)
+  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T)
+  myforms<- NULL
+  for(j in 1:nrow(perm.tab)){
+    myforms[j]<- pastePerm(perm.tab[j,], covars)
+  }
+  myforms<- paste0(pred, '~ 1', alwaysIn,'+', myforms)
+  return(myforms)
+}
+
+allformulas<- dredgeform(pred = "red_drum", covars = c("avg_depth", "avg_ssal", "avg_stemp", "avg_sdo", "SAVDist_km", "InletDist_km", "NoFishRest", "black_drum"))
+allformulas <- allformulas[2:length(allformulas)] #i dont want the intercept only one 
+```
+
+now pass these formulas through a for loop in a cross validation - lets say we want this to repeat 100 times
+
+```{r}
+set.seed(123)
+compare_var <- as.data.frame(matrix(ncol = 4, nrow = 0))
+colnames(compare_var) <- c("formula", "RMSE", "R2", "MAE")
+
+for ( i in 1:length(allformulas)) {
+  
+train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 10) #should be 100
+# Train the full model
+model_full <- train(as.formula(allformulas[i]), data = df_CPUE_wide_train, method = "lm",trControl = train.control)
+# Summarize the results
+compare_var[i, 1] <- allformulas[i]
+compare_var[i, 2] <- mean(model_full$resample$RMSE)
+compare_var[i, 3] <- mean(model_full$resample$Rsquared, na.rm = T)
+compare_var[i, 4] <- mean(model_full$resample$MAE)
+
+
+}
+
+compare_var$prediction_error_rate <- compare_var$RMSE/mean(df_CPUE_wide_train$red_drum) 
+
+compare_var %>% arrange(prediction_error_rate)
+
+compare_var %>% arrange(RMSE)
 ```
