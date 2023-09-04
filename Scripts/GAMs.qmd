@@ -5,6 +5,7 @@ editor: visual
 ---
 
 #### Load packages, functions, and datasets
+
 ```{r}
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv")
@@ -43,7 +44,7 @@ sample_size = floor(0.8*nrow(df_CPUE_wide)) #take 80% of rows, # is same b/w dfs
 ##CPUE model
 picked_CPUE = sample(seq_len(nrow(df_CPUE_wide)),size = sample_size)
 df_CPUE_wide_test =df_CPUE_wide[-picked_CPUE,]
-df_CPUE_wide_train =df_CPUE_wide[picked,]
+df_CPUE_wide_train =df_CPUE_wide[picked_CPUE,]
 
 ##Binary model
 picked_binary = sample(seq_len(nrow(df_binary_wide)),size = sample_size)
@@ -54,15 +55,18 @@ df_binary_wide_train = df_binary_wide[picked_binary,]
 picked = sample(seq_len(nrow(df_count_wide)),size = sample_size) 
 df_count_wide_test = df_count_wide[-picked,]
 df_count_wide_train = df_count_wide[picked,]
+
+#Load GAM formula
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
 ```
 
-#### Overview: 
+#### Overview:
 
 GAMs, or generalized additive models, provide more flexibility than linear models to explore ecological data. A GAM is a form of a generalized linear model with a linear predictor involving a sum of smooth functions of covariates. They have three parts: 1) a random part, which describes the variability in data by means of an exponential-family probability distribution 2) a structural part which is a linear model 3) a link function that connects the structural and random part. Transformations here are applied to the predictions of a linear model. The link is different depending on the regression used: identity for linear regression, log for poisson regression (counts), and logit for logistic regression (0 or 1).
 
 The k value is the number of basis functions that determines how wiggly the model is (smoothing parameter of a spline). "The value(s) for k set the upper limit on the wiggliness of the smooth function(s). The penalty measures the wiggliness of the function (it is typically the squared second derivative of the smooth summed over the range of the covariate). The model then estimates values for the coefficients for the basis functions representing each smooth and chooses smoothness parameter(s) by maximizing the penalized log likelihood criterion. The penalized log likelihood is the log likelihood plus some amount of penalty for wiggliness for each smooth" (stack overflow). A spline is a piece wise polynomial functions that are used as a smoothing technique. A rule of thumb is that it should be between 5 and the number of years in the dataset (start with 2\*number of decades in dataset). A low k-index (\< 1) might indicate that k is too low especially if edf is close to k'. Change k from there and see if p-value increases/k-index, compare k and edf values in addition to looking at p value. Small and significant p values indicate that residuals are not randomly distributed as there are not enough basis functions. It is important to know that the number of knots is not always just k. "The value you give to k sets the dimensionality of the basis, which implies a certain number of knots" (stack overflow). In the GAM function, you can specify the number of knots outside of specifying the k. Normally, there is not a need to set the knots yourself.
 
-Smoothers are added to continuous variables in GAMs which is denoted by s() to fit the data. The s operator produces the spline base expansion. Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables (smoothing penalty). Thin plate spine basis are the default in the mgcv package. Thin plate splines tend to have better RMSE performance but are more computationally expensive. If you have a reason to do P-spliens or B-splines you can use those and if not, thin plate splines are fine. GAM in R can only accept spline smoothers (number of knots) and not LOESS. It is important to have a good compromise between roughness and smoothness. The parameter λ specifies how much weight the roughness penalty will get. It is important to note that regression spilnes don't implement penalization by reducing the number of knots rather they do this by reducing the coefficients of spline terms. 
+Smoothers are added to continuous variables in GAMs which is denoted by s() to fit the data. The s operator produces the spline base expansion. Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables (smoothing penalty). Thin plate spine basis are the default in the mgcv package. Thin plate splines tend to have better RMSE performance but are more computationally expensive. If you have a reason to do P-spliens or B-splines you can use those and if not, thin plate splines are fine. GAM in R can only accept spline smoothers (number of knots) and not LOESS. It is important to have a good compromise between roughness and smoothness. The parameter λ specifies how much weight the roughness penalty will get. It is important to note that regression spilnes don't implement penalization by reducing the number of knots rather they do this by reducing the coefficients of spline terms.
 
 How do we know when to drop a model? If the answers to all three of these quesitons are yes, then drop it:
 
@@ -70,73 +74,71 @@ How do we know when to drop a model? If the answers to all three of these quesit
 2)  Is the confidence interval of the term including zero throughout its domain? (i.e., high p-value)
 3)  Does the GCV (generalized cross validation) score for the entire model drop when the term is removed?
 
-Helpful articles:
--smoothers and k: https://stats.stackexchange.com/questions/243367/smoothing-methods-for-gam-in-mgcv-package
--choosing k: https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html
--stack overflow: https://stackoverflow.com/questions/60078003/gam-in-r-is-it-a-spline-model-with-automated-knots-selection
+Helpful articles: -smoothers and k: https://stats.stackexchange.com/questions/243367/smoothing-methods-for-gam-in-mgcv-package -choosing k: https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html -stack overflow: https://stackoverflow.com/questions/60078003/gam-in-r-is-it-a-spline-model-with-automated-knots-selection
 
 #### Diagnostics
+
 ```{r}
 #Exploratory graphs: left skewed and zero-inflated model
 df_CPUE_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("CPUE") + ylab("Counts") + standard_theme
 df_binary_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Presence/absence") + ylab("Counts") + standard_theme
 df_count_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Counts") + ylab("Counts") + standard_theme
 
-prop_0 <- 100*sum(df_CPUE_wide$red_drum == 0)/nrow(df_CPUE_wide) #definitely zero inflated 
+prop_0 <- 100*sum(df_CPUE_wide$red_drum == 0)/nrow(df_CPUE_wide) #only 50% 
+
+
+
 ```
 
-#### Initial models: 
+#### Initial models:
+
+Helpful articles:
+-Model output: https://noamross.github.io/gams-in-r-course/chapter2
+
 ```{r}
 #Generalized linear model: perfect separation is happening 
-flounder_glm <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest, data = df_CPUE_wide_train, family="poisson")
-summary(flounder_glm)
-#report(flounder_glm)
+glm <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot, data = df_count_wide_train, family="poisson")
+summary(glm)
+report(glm)
 
-#Binomial GAM with logit link
-##This is a submodel that relates presence or absence to predictor variables
-binomial <- gam(red_drum ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family=binomial(link="logit"), data= df_binary_wide_train)
-summary(binomial)
-gam.check(binomial)
+#report(flounder_glm)
+glm_pred <- predict(glm, df_CPUE_wide_test, type = "response") %>% tibble(family = "GLM", pred = .) %>% mutate(red_drum= df_CPUE_wide_test$red_drum)
 
 #Negative binomial: related to poisson, use for count data
-binomial_neg <- gam(red_drum ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family= "nb", data= df_count_wide_train)
+binomial_neg <- gam(gam_formula, family= "nb", data= df_count_wide_train)
 summary(binomial_neg)
 gam.check(binomial_neg)
-
+summary(binomial_neg)
 binomial_neg_pred <- predict(binomial_neg, df_binary_wide_test, type = "response") %>% tibble(family = "Negative Binomial", pred = .) %>% mutate(red_drum= df_binary_wide_test$red_drum)
 
 #Poisson model did not work because it is for integers
-poisson <- gam(red_drum ~  s(avg_depth) + s(avg_ssal) + s(avg_stemp) + s(avg_sdo) + s(SAVDist_km) + s(InletDist_km) + s(NoFishRest), family=poisson(), data= df_count_wide_train)
+poisson <- gam(gam_formula, family=poisson(), data= df_count_wide_train)
 summary(poisson)
 gam.check(poisson)
-autoplot.countreg(poisson)
+sum
 
-#Gaussian GAM 
-smooth_gam <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + Sedsize_common, family= gaussian(link= "identity"), data= df_CPUE_wide_train, method= "REML")
-summary(smooth_gam) 
+
 ```
 
-#### Tweedie: 
+#### Tweedie:
 
 The Tweedie distribution is an example of an exponential dispersion model where there is a common mathematical structure such as a link function. This distribution contains three parameters: the mean, standard deviation, and p which can stand for continuous normal, gamma, Poisson, or inverse Gaussian distributions. While the probability density function can't be evaluated with this distribution, a special algorithm is created for density calculation.
 
-For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette). The common link function for Tweedie is the log link. 
-Here are some helpful resources on Tweedie distributions in general: https://r.qcbs.ca/workshop08/book-en/other-distributions.html https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/Tweedie.html
+For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette). The common link function for Tweedie is the log link. Here are some helpful resources on Tweedie distributions in general: https://r.qcbs.ca/workshop08/book-en/other-distributions.html https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/Tweedie.html
 
 ```{r}
-tweedie <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= df_CPUE_wide_train, method= "REML")
+tweedie <- gam(gam_formula, family= tw(link= "log"), data= df_count_wide_train, method= "REML")
 summary(tweedie)
 
-gam(rsd~s(avg_ssal,k=5,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
-gam(rsd~s(avg_depth,k=40,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
-gam(rsd~s(avg_sdo,k=10,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## `k' too low
-gam(rsd~s(x3,k=40,bs="cs"),gamma=1.4,data=dat) ## fine
+#gam(rsd~s(avg_ssal,k=5,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
+#gam(rsd~s(avg_depth,k=40,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
+#gam(rsd~s(avg_sdo,k=10,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## `k' too low
+#gam(rsd~s(x3,k=40,bs="cs"),gamma=1.4,data=dat) ## fine
 
+tweedie_pred <- predict(tweedie, df_count_wide_test, type = "response") %>% tibble(family = "Tweedie", pred = .) %>% mutate(red_drum= df_count_wide_test$red_drum)
 
-#penalize for the # of knots, run w/ different number of knots 
-#do something to make sure # of knots is correct 
-
-tweedie_pred <- predict(tweedie, df_CPUE_wide_test, type = "response") %>% tibble(family = "Tweedie", pred = .) %>% mutate(red_drum= df_count_wide_test$red_drum)
+#covariance plot 
+plot(tweedie,pages=1,se=T, residuals=T,pch=1)
 ```
 
 #### Delta models
@@ -149,7 +151,10 @@ Helpful resources: -https://pbs-assess.github.io/sdmTMB/articles/delta-models.ht
 
 ```{r}
 #Run binomial and poisson models separately
-delta <- gam(list(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5), ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5)), family= ziplss(), data= df_count_wide_train, method = "REML")
+delta <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)), family= ziplss(), data= df_count_wide_train, method = "REML")
+summary(delta)
+
+delta <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)), family= ziplss(), data= df_count_wide_train, method = "REML")
 summary(delta)
 
 #Combine both models into one 
@@ -157,74 +162,126 @@ inv_link <- binomial(link = "cloglog")$linkinv #inverse link function, cloglog i
 delta_pred <- predict(delta, df_count_wide_test, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% mutate(red_drum= df_count_wide_test$red_drum) #transmute makes new data frame w/ only specified computations, multiply effects of each submodel 
 ```
 
-#### Compare models 
+#### Compare models
+
+There is a number of criteria that can be checked when deciding which variables to remove. If a variable has a low EDF (close to 1), then it can be removed. If terms meant to stay in the model are removed, it would cause a further increase of the model GCV.
+
+
+The removal of any other term would result in a further increase of the model GCV, and it is not justified by the covariate effect (EDF>>1 and CI not always including 0)
+
+
 ```{r}
-test_pred <- bind_rows(delta_pred, tweedie_pred, binomial_neg_pred) %>% 
-  mutate(family = as_factor(family))
+test_pred <- bind_rows(delta_pred, tweedie_pred, binomial_neg_pred, glm_pred) %>% mutate(family = as_factor(family))
 
 #Spearman's Rank Correlation: assess fit of models, how well model estimated ranking of sites from highest to lowest abundance 
-test_pred %>% group_by(family) %>% summarise(rank_cor = cor.test(summer_flounder, pred, method = "spearman", exact = FALSE)$estimate) %>% ungroup()
+test_pred %>% group_by(family) %>% summarise(rank_cor = cor.test(red_drum, pred, method = "spearman", exact = FALSE)$estimate) %>% ungroup()
 
 #See how many observations are underestimated by an order of mangitude or more
-test_pred %>% group_by(family) %>% summarize(n = sum(summer_flounder / pred > 10),
-pct = mean(summer_flounder / pred > 10))
+test_pred %>% group_by(family) %>% summarize(n = sum(red_drum/ pred > 10),
+pct = mean(red_drum / pred > 10))
 
 #Mean absolute deviation: get a sense of quality of magnitude of predicted counts, describes average deviation b/w observation and prediction (variation around mean), average of absolute deviations from a central point, low MAD is good 
-test_pred %>% group_by(family) %>% summarise(mad = mean(abs(summer_flounder - pred), na.rm = TRUE)) %>% ungroup()
+test_pred %>% group_by(family) %>% summarise(mad = mean(abs(red_drum - pred), na.rm = TRUE)) %>% ungroup()
 
-summary(delta)$s.table
-summary(tweedie)$s.table
-summary(binomial_neg_pred)$s.table
 
-##check the choice of k
-gam.check(delta)
-gam.check(tweedie)
-gam.check(binomial_neg_pred)
-
-k.check(delta)
-k.check(tweedie)
-k.check(binomial_neg_pred)
-
-#Covariate plot: standard error bars, include plot of residuals 
-plot(tweedie,pages=1,se=T, residuals=T,pch=1)
 ```
 
+##### Compare models: 2 
+```{r}
+#Tweedie and negative binomial look the best 
+gam.check(delta)
+gam.check(tweedie)
+gam.check(binomial_neg)
+gam.check(glm)
 
+#Tweedie as best then neg binomial, delta, then glm, caution: don't think w/ REML method this is a valid comparison of GAM to GLM 
+AIC(delta) #AIC: estimate of prediction error, AIC calculated for GAM is a conditional AIC, likelihood is of all model coefficients set to their maximum penalized likelihood estimates
+AIC(tweedie)
+AIC(binomial_neg)
+AIC(glm)
+
+#Significant difference in fit?
+lrtest(tweedie, delta) #yes, there is a significant difference in fit 
+
+#Check k
+k.check(delta)
+summary(delta)
+k.check(tweedie)
+k.check(binomial_neg)
+summary(glm)
+summary(tweedie)$sp.criterion
+
+#F test
+anova(tweedie,glm,test="F")
+```
 
 ## Repeated K-fold cross-validation
 
-The process of splitting the data into k-folds can be repeated a number of times, this is called repeated k-fold cross validation.
+"The k-fold cross-validation method evaluates the model performance on different subset of the training data and then calculate the average prediction error rate. The algorithm is as follow: Randomly split the data set into k-subsets (or k-fold) (for example 5 subsets) Reserve one subset and train the model on all other subsets Test the model on the reserved subset and record the prediction error Repeat this process until each of the k subsets has served as the test set. Compute the average of the k recorded errors.Lower value of K is more biased and hence undesirable. On the other hand, higher value of K is less biased, but can suffer from large variability. In practice, one typically performs k-fold cross-validation using k = 5 or k = 10, as these values have been shown empirically to yield test error rate estimates that suffer neither from excessively high bias nor from very high variance. The process of splitting the data into k-folds can be repeated a number of times, this is called repeated k-fold cross validation."
 
-The final model error is taken as the mean error from the number of repeats.
+From: Sarah Roberts, Statistics for Environmental Scientists with references from James et al. (2014). 
 
-Because we have such a small dataset, I want to try using a smaller number of folds. The following example uses 3-fold cross validation with 5 repeats:
+Helpful articles:
+-James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2014. An Introduction to Statistical Learning: With Applications in R. Springer Publishing Company, Incorporated.
+-K-fold cross validation w/ GAMs: https://p8105.com/cross_validation.html
 
 ```{r}
-library(ggplot2)
 library(interactions)
 library(car)
 library(lmtest)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(GGally)
 library(gvlma)
 library(rstatix)
 library(tidyverse)
 library(caret)
+library(gtools)
 
 # Define training control
 set.seed(123) 
-train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 5)
-tweedie_full <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(black_drum, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= tw(link= "log"), data= df_CPUE_wide_train, method= "REML", trControl= train.control)
+train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 5) #number: of folds or resampling iterations, repeats: number of complete sets of folds to compute, 10 k-fold cross-validation that is repeated 5 times 
+
+tweedie_full <- train(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType), family= tw(link= "log"), data= df_CPUE_wide, method= "REML", trControl= train.control) #ITP terminates model, excluded 
+
+
+CVgam(formula, data, nfold = 10, debug.level = 0, method = "GCV.Cp",
+              printit = TRUE, cvparts = NULL, gamma = 1, seed = 29)
+
+CVgam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType), family= tw(link= "log"), nfold= 10, debug.level = 0, method = "GCV.Cp",printit = TRUE, cvparts = NULL, gamma = 1, seed = 29)
+
+??CVgam()
+
+library(nimble)
 ```
+
+```{r}
+mae=c()
+
+for (i in 1:10){
+  b <- gam(red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType), family= tw(link= "log"), method= "REML", data= df_CPUE_wide)
+  
+  pred_b = predict(b, newdata = df_CPUE_wide_test, type = "response")
+  pred_b_ud = rep("Down", 125) 
+  pred_b_ud[pred_b > 0.5] = "Up"
+  
+  mae <- c(mae, mean(abs(as.integer(pred_b_ud=="Up")
+                         -as.integer(df_CPUE_wide_test$red_drum == "Up"))))
+}
+
+MAE=c(MAE, mean(mae))
+MAE
+
+
+
+
+```
+
+
+
 
 From all of these results I would say that the model that just includes latitude and elevation is better at out-of-sample prediction that the model that includes sarah and randomx.
 
 ##looping You can loop through different combinations of predictor variables in k fold cross validation. This is a function I wrote to get out all of the possible combinations of our linear models - be very very careful with this
 
 ```{r}
-library(gtools)
 pastePerm<- function(row, names){
   keep<- which(row==1)
   if(length(keep)==0){
@@ -244,7 +301,7 @@ dredgeform<- function(pred, covars, alwaysIn=''){
   return(myforms)
 }
 
-allformulas<- dredgeform(pred = "red_drum", covars = c("avg_depth", "avg_ssal", "avg_stemp", "avg_sdo", "SAVDist_km", "InletDist_km", "NoFishRest", "black_drum"))
+allformulas<- dredgeform(pred = "red_drum", covars = c("avg_depth", "avg_ssal", "avg_stemp", "avg_sdo", "SAVDist_km", "InletDist_km", "NoFishRest", "atlantic_menhaden", "atlantic_croaker", "southern_flounder", "spot", "FishingAll_num", "Sedsize_common", "ShorelineType"))
 allformulas <- allformulas[2:length(allformulas)] #i dont want the intercept only one 
 ```
 
@@ -257,9 +314,9 @@ colnames(compare_var) <- c("formula", "RMSE", "R2", "MAE")
 
 for ( i in 1:length(allformulas)) {
   
-train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 10) #should be 100
+train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 5) #should be 100
 # Train the full model
-model_full <- train(as.formula(allformulas[i]), data = df_CPUE_wide_train, method = "lm",trControl = train.control)
+model_full <- train(as.formula(allformulas[i]), data = df_CPUE_wide, method = "lm",trControl = train.control)
 # Summarize the results
 compare_var[i, 1] <- allformulas[i]
 compare_var[i, 2] <- mean(model_full$resample$RMSE)
