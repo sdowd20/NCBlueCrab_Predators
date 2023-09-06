@@ -466,3 +466,23 @@ ss_survey_vis("P915", "southern kingfish", "P120", "southern kingfish", "P195", 
 ss_survey_vis("P915", "sheepshead", "P120", "adult blue crab", "P195", "adult blue crab")    
 ss_survey_vis("P915", "sheepshead", "P120", "blue crab", "P195", "blue crab")   
 ```
+
+```{r}
+CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.csv")
+CPUE_dfs_gridded_final <- CPUE_dfs_gridded_final[,-1]
+
+
+tester <- CPUE_dfs_gridded_final %>% filter(Survey %in% "P915", Year >= 2001, Month== 06)
+tester <- tester %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor) %>% dplyr::select(-c(Latitude, Longitude, lat_lon, Day, Month, Location, "Strata/station", Date, Season, Ym_date, Sciname, Sedsize_new, Btmcomp_new, Photoperiod, Survey, gridArea_km, ITP:WaterbodyCover, ShrimpTrawl_a:GillPoundNet_a))
+tester$Speciescommonname <- gsub(" ", "_", tester$Speciescommonname)
+tester_wide <- tester %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "Colnum") %>% drop_na()
+
+gam_formula <- red_drum ~ s(Depth, bs="ts", k=5) + s(Ssal, bs="ts", k=5) + s(Stemp, bs="ts", k=5) + s(Sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
+
+
+tweedie <- gam(gam_formula, family= tw(link= "log"), data= tester_wide, method= "REML")
+summary(tweedie)
+
+
+```
+
