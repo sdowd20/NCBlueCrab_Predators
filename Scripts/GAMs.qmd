@@ -8,7 +8,7 @@ editor: visual
 
 ```{r}
 #Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
 
 invisible(lapply(packages, library, character.only= TRUE))
 
@@ -29,10 +29,6 @@ df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
 #Pivot-wider datasets: 
 ##Standardized catch per unit effort dataset wide 
 df_CPUE_wide <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
-
-length(unique(df_CPUE_wide$gridID))
-
-df_CPUE_wide %>% group_by(gridID) %>% tally() %>% pull(n) %>% table() #how many instances for gridID, make sure this is consistent data to make sure there is nothing weird w/ 1s 
 
 ##Binary dataset (0 or 1):  
 df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
@@ -61,7 +57,7 @@ df_count_wide_test = df_count_wide[-picked,]
 df_count_wide_train = df_count_wide[picked,]
 
 #Load GAM formula
-gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=10) + s(avg_ssal, bs="ts", k=10) + s(avg_stemp, bs="ts", k=10) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=10) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + s(gridID, bs= "re") + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType) #gridID as random effect: diff. variance for a grid, could also do first difference approach (year to year)
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
 ```
 
 #### Overview:
@@ -89,6 +85,12 @@ df_binary_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab(
 df_count_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Counts") + ylab("Counts") + standard_theme
 
 prop_0 <- 100*sum(df_CPUE_wide$red_drum == 0)/nrow(df_CPUE_wide) #only 50% 
+
+length(unique(df_CPUE_wide$gridID))
+
+df_CPUE_wide %>% group_by(gridID) %>% tally() %>% pull(n) %>% table() #how many instances for gridID, make sure this is consistent data to make sure there is nothing weird w/ 1s 
+
+df_count_wide %>% dplyr::select(bonnethead_shark, atlantic_croaker, southern_flounder, spot, red_drum) %>% ggpairs() 
 ```
 
 #### Initial models:
@@ -103,9 +105,6 @@ summary(glm)
 table(df_count_wide_train$red_drum)
 table(df_binary_wide_train$red_drum)
 #Look into outliers more 
-
-library(GGally)
-df_count_wide_train %>% dplyr::select(bonnethead_shark, atlantic_croaker, southern_flounder, spot, red_drum) %>% ggpairs() 
 
 #report(flounder_glm)
 glm_pred <- predict(glm, df_CPUE_wide_test, type = "response") %>% tibble(family = "GLM", pred = .) %>% mutate(red_drum= df_CPUE_wide_test$red_drum)
@@ -130,9 +129,9 @@ The Tweedie distribution is an example of an exponential dispersion model where 
 For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette). The common link function for Tweedie is the log link. Here are some helpful resources on Tweedie distributions in general: https://r.qcbs.ca/workshop08/book-en/other-distributions.html https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/Tweedie.html
 
 ```{r}
-tweedie <- gam(gam_formula, family= tw(link= "log"), data= df_count_wide_train, method= "REML")
+tweedie <- gam(gam_formula, family= tw(link= "log"), data= df_binary_wide_train, method= "REML")
 summary(tweedie)
-
+gam.check(tweedie)
 #gam(rsd~s(avg_ssal,k=5,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
 #gam(rsd~s(avg_depth,k=40,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine
 #gam(rsd~s(avg_sdo,k=10,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## `k' too low
@@ -156,8 +155,6 @@ Helpful resources: -https://pbs-assess.github.io/sdmTMB/articles/delta-models.ht
 #Run binomial and poisson models separately
 delta <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)), family= ziplss(), data= df_count_wide_train, method = "REML")
 summary(delta) #binomial: argument excessive 0 
-
-gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
 
 #spatial autocorrelation could be occurring- put average lat and lon near each other, could look at spatially lagged predictors (congtiguity matrix) 
 
@@ -190,7 +187,7 @@ test_pred %>% group_by(family) %>% summarise(mad = mean(abs(red_drum - pred), na
 
 ```{r}
 #Tweedie and negative binomial look the best 
-gam.check(delta)
+gam.check(delta) #redo this, look at residuals as a line
 gam.check(tweedie)
 gam.check(binomial_neg)
 gam.check(glm)
@@ -249,7 +246,7 @@ train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 5) #n
 #Build out tweedie model 
 gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
 
-model <- train(red_drum ~ avg_stemp + avg_sdo + avg_ssal,
+model <- train(red_drum ~ avg_stemp + avg_sdo + avg_ssal + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot,
   data = df_count_wide,  # Your dataset
   method = "gam",   # Specify the GAM model
   trControl = train.control, # Use the custom control object
@@ -278,7 +275,7 @@ dredgeform<- function(pred, covars, alwaysIn=''){
   return(myforms)
 }
 
-allformulas<- dredgeform(pred = "red_drum", covars = c("avg_depth", "avg_ssal", "avg_stemp", "SAVDist_km", "InletDist_km", "NoFishRest", "atlantic_menhaden", "atlantic_croaker", "southern_flounder", "FishingAll_num", "Sedsize_common", "ShorelineType"))
+allformulas<- dredgeform(pred = "red_drum", covars = c("avg_depth", "avg_ssal", "avg_stemp", "SAVDist_km", "InletDist_km", "NoFishRest", "atlantic_menhaden", "atlantic_croaker", "southern_flounder"))
 allformulas <- allformulas[2:length(allformulas)] #i dont want the intercept only one 
 ```
 
@@ -295,7 +292,7 @@ train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 5) #s
 # Train the full model
 
 ##CHANGE THIS! 
-model_full <- train(as.formula(allformulas[i]), data = df_count_wide, method = "lm",trControl = train.control)
+model_full <- train(as.formula(allformulas[i]), data = df_count_wide, method = "gam",trControl = train.control, family= tw())
 
 model_full <- train(as.formula(allformulas[i]), data = df_count_wide, method = "lm",trControl = train.control)
 
