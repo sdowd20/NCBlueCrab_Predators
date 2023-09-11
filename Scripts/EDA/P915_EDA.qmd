@@ -63,6 +63,14 @@ p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
 p915_bioln <- p915_bioln %>% filter(!Area %in% "miss")
 
 t <- p915_CPUE %>% filter(Control1 %in% "111797"|Control1 %in% "111796")
+
+t <- unique(p915_bioln$Sample)
+t2 <- unique(p915_CPUE$Sample)
+
+differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_bioln %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
+unique(differences$Speciescommonname)
+
+
 ```
 
 ##### General
@@ -287,6 +295,9 @@ ggplot(data = centerofbiomass, aes(x = Year, y = CENTER_LON)) + geom_point() + g
 ```{r}
 #For each species look at length ranges of individuals 
 p915_bioln_sel <- p915_bioln %>% dplyr::select(Control1, Date, Month, Year, Ym_date, Location, Total.species.sobserved.in.set, Station, Quad, Repsize, Sciname, Speciescommonname, Colnum, Colwgt, Samnum, Samwgt, Subnum, Subwgt, Frequenc, Length, Weight, Maturity, Age, Sample, Latitude, Longitude) %>% filter(!Speciescommonname %in% c("blue crab", "eastern oyster", "brown shrimp", "oyster toadfish", "white shrimp", NA))
+
+t <- p915_CPUE %>% filter(Date %in% "2014-11-19")
+t2 <- p915_bioln_sel %>% filter(Date %in% "2014-11-19")
 
 summary(is.na(p915_bioln_sel)) #2 NAs in Colnum, 19 in Quad, 343 in Colwgt, 396 in Length, a lot in weight, maturity and age 
 

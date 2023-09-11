@@ -1,0 +1,146 @@
+---
+title: "Predictor_calcs"
+format: html
+editor: visual
+---
+
+#### Load packages, functions, and datasets
+```{r}
+#Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+# make an object the size and shape of the output you want
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
+
+#Load CPUE datasets
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
+p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
+
+#Filter datasets: Add back in Secchi size once get P195 data
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== 6) #added in species of focus for now (still waiting on data)
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month==6)
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month==6)
+
+p915_CPUEedt <- p915_CPUEedt %>% drop_na(Latitude, Longitude)
+p915_CPUEedt$Survey <- "P915"
+p120_CPUEedt <- p120_CPUEedt  %>% drop_na(Latitude, Longitude)
+p120_CPUEedt$Survey <- "P120"
+p195_CPUEedt <- p195_CPUEedt  %>% drop_na(Latitude, Longitude)
+p195_CPUEedt$Survey <- "P195"
+
+CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
+CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
+
+#Gridded dataset with grid geometry 
+gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_08.18.23.csv")
+gridded_coords <- gridded_coords %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% dplyr::select(-...1)
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
+gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
+gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% select(gridID, geometry)
+grid <- st_as_sf(gridded_coords_geom_edt)
+
+ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme 
+```
+
+#### Load predictor datasets
+```{r}
+setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/QGIS_layers")
+Inlet_coords <- st_read("Environmental/Inlet.points.kml")
+DPA_a <- read_sf(dsn = "Fishing/Allowed", layer = "DPA_a")
+GillPound_p <- read_sf(dsn = "Fishing/Restricted", layer = "GillPound_p")
+RestrictedArea <- read_sf(dsn = "Fishing/Restricted", layer = "RestrictedArea")
+ShrimpTrawl_p <- read_sf(dsn = "Fishing/Restricted", layer = "ShrimpTrawl_p")
+TrawlingDredging_p <- read_sf(dsn = "Fishing/Restricted", layer = "TrawlingDredging_p")
+ITP_Management <- read_sf(dsn = "Fishing", layer = "ITPMangamenet")
+
+setwd("/Users/sallydowd/Desktop/Ch1Data")
+SAV <- read_sf(dsn= "QGIS_layers", layer= "SAV_Mosaic_1981_to_2015")
+Estuarine_shoreline <- read_sf(dsn="QGIS_layers", layer= "Estuarine_Shoreline") 
+All_waterbodies <- read_sf(dsn= "QGIS_layers", layer= "Estuarine_Shoreline")
+```
+
+##### CRS Check
+```{r}
+st_crs(Inlet_coords) #WGS 84
+st_crs(DPA_a) #EPSG 32119
+st_crs(GillPound_p) #EPSG 6542
+st_crs(RestrictedArea) #EPSG 32119
+st_crs(ShrimpTrawl_p) #EPSG 32119
+st_crs(TrawlingDredging_p) #EPSG 32119
+st_crs(ITP_Management) #EPSG 32119
+st_crs(SAV) #EPSG 3857
+st_crs(Estuarine_shoreline) #EPSG 3857
+st_crs(All_waterbodies) #EPSG 3857
+st_crs(grid)
+
+Inlet_coords_edt <- st_transform(Inlet_coords, crs = 32119)
+GillPound_p_edt <- st_transform(GillPound_p, crs = 32119)
+SAV_edt <- st_transform(SAV, crs = 32119)
+Estuarine_shoreline_edt <- st_transform(Estuarine_shoreline, crs= 32119)
+All_waterbodies <- st_transform(All_waterbodies, crs= 32119)
+grid_edt <- st_transform(grid, crs= 32119)
+```
+
+##### Visualization Check
+```{r}
+#Checked the first two and it looked fine 
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = InletCoords) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = InletCoords_edt) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+
+ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
+```
+
+#### Grid: Percent Area Covered
+```{r}
+t <- st_intersection(DPA_a, grid_edt)
+st_area(t)
+
+?st_join()
+
+
+t2 <- st_intersection(DPA_a, grid_edt) %>% 
+   mutate(intersect_area = st_area(.)) %>% select(intersect_area, gridID)
+
+
+?st_intersection()
+```
+
+##### Visualizations
+```{r}
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = sp_cent) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+```
+
+
+
+
+####Calculations
+
+
+
+```{r}
+#Calculate most common Sedsize_new in a grid cell
+dataset_bind <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
+datasets_Sedsize <- dataset_bind %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na(Sedsize_new)
+datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
+gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
+datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr::select(gridID, lat_lon), by= "lat_lon")
+Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID)
+```
+
+#### Centroid: Calculations
+```{r}
+sf_cent <- st_centroid(grid)
+```
+
