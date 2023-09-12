@@ -5,6 +5,7 @@ editor: visual
 ---
 
 #### Load packages, functions, and datasets
+
 ```{r}
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
@@ -54,6 +55,7 @@ ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = 
 ```
 
 #### Load predictor datasets
+
 ```{r}
 setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/QGIS_layers")
 Inlet_coords <- st_read("Environmental/Inlet.points.kml")
@@ -67,10 +69,11 @@ ITP_Management <- read_sf(dsn = "Fishing", layer = "ITPMangamenet")
 setwd("/Users/sallydowd/Desktop/Ch1Data")
 SAV <- read_sf(dsn= "QGIS_layers", layer= "SAV_Mosaic_1981_to_2015")
 Estuarine_shoreline <- read_sf(dsn="QGIS_layers", layer= "Estuarine_Shoreline") 
-All_waterbodies <- read_sf(dsn= "QGIS_layers", layer= "Estuarine_Shoreline")
+All_waterbodies <- read_sf(dsn= "QGIS_layers", layer= "All_waterbodies")
 ```
 
 ##### CRS Check
+
 ```{r}
 st_crs(Inlet_coords) #WGS 84
 st_crs(DPA_a) #EPSG 32119
@@ -93,6 +96,7 @@ grid_edt <- st_transform(grid, crs= 32119)
 ```
 
 ##### Visualization Check
+
 ```{r}
 #Checked the first two and it looked fine 
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = InletCoords) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
@@ -103,31 +107,72 @@ ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = 
 ```
 
 #### Grid: Percent Area Covered
+
 ```{r}
-t <- st_intersection(DPA_a, grid_edt)
-st_area(t)
+#Function: 
+mean(st_area(grid_edt))
+sd(st_area(grid_edt))
+grid_A <- 117144138/1000000 #km^2
+perc_A <- function(df1, df2){
+df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
+return(df_new)
+}
 
-?st_join()
+#Fishing
+##Allowed
+###Crab pots allowed (open):
+DPA_aA <- perc_A(DPA_a, grid_edt)
+DPA_aA <- grid_edt %>% left_join(DPA_aA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("DPA_aA"= "column")
+
+###ITP Management Area: Area overlap, take area with largest overlap
+ITP <- st_intersection(ITP_Management, grid_edt) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry()
+
+##Restricted 
+###Shrimp trawling prohibited
+Shrimp_trawl_pA <- perc_A(ShrimpTrawl_p, grid_edt)
+Shrimp_trawl_pA <- grid_edt %>% left_join(Shrimp_trawl_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("Shrimp_trawl_pA"= "column")
+
+#Waterbody
+Waterbodi <- All_waterbodies %>% st_union()
+Waterbodi_A <- 
+Waterbody_A <- st_intersection(grid_edt, Waterbodi) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100)
+Waterbody_A %>% filter(column > 100)
+st_make_valid(Waterbody_A)
+st_area(Waterbody_A)
+Waterbody_A <- perc_A(ShrimpTrawl_p, grid_edt)
 
 
-t2 <- st_intersection(DPA_a, grid_edt) %>% 
-   mutate(intersect_area = st_area(.)) %>% select(intersect_area, gridID)
+df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
+return(df_new)
+}
 
 
-?st_intersection()
+
+tester <- st_intersection(All_waterbodies, grid_edt)
+
+
+mean(st_area(grid_edt))
+sd(st_area(grid_edt))
+grid_A <- 117144138/1000000 #km^2
+perc_A <- function(df1, df2){
+df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
+return(df_new)
+}
+
+
+Grid_predictors_edt2final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/gridded_predictors_final.csv")
+
 ```
 
+#### Grid: Centroids
+
 ##### Visualizations
+
 ```{r}
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = sp_cent) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 ```
 
-
-
-
 ####Calculations
-
-
 
 ```{r}
 #Calculate most common Sedsize_new in a grid cell
@@ -140,7 +185,7 @@ Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_co
 ```
 
 #### Centroid: Calculations
+
 ```{r}
 sf_cent <- st_centroid(grid)
 ```
-
