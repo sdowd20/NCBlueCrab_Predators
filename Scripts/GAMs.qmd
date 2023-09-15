@@ -129,7 +129,7 @@ The Tweedie distribution is an example of an exponential dispersion model where 
 For tw() in the mgcv package, the variance function powers are between 1 (Poisson) and 2 (gamma). This power can be used to specify a distribution or can be estimated in the model. The best smoother parameter estimation method fitting method is either maximum likelihood (ML) or restricted maximum likelihood (REML) as they avoid undersmoothing. With maximum likelihood, parameters are estimated by maximizing the likelihood function. As opposed to ML, REML assumes fixed effects are known and only estimates variance components of random effects. Since ML estimates fixed and random effects simultaneously, biased estimates of variance components of random effects occur (https://aitechtrend.com/choosing-the-right-statistical-method-maximum-likelihood-vs-reml/#google_vignette). The common link function for Tweedie is the log link. Here are some helpful resources on Tweedie distributions in general: https://r.qcbs.ca/workshop08/book-en/other-distributions.html https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/Tweedie.html
 
 ```{r}
-tweedie <- gam(gam_formula, family= tw(link= "log"), data= df_binary_wide_train, method= "REML")
+tweedie <- gam(gam_formula, family= tw(link= "log"), data= df_count_wide_train, method= "REML")
 summary(tweedie)
 gam.check(tweedie)
 #gam(rsd~s(avg_ssal,k=5,bs="cs"),gamma=1.4,data=df_CPUE_wide_train) ## fine

@@ -114,7 +114,7 @@ mean(st_area(grid_edt))
 sd(st_area(grid_edt))
 grid_A <- 117144138/1000000 #km^2
 perc_A <- function(df1, df2){
-df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
+df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% dplyr::select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
 return(df_new)
 }
 
@@ -125,46 +125,64 @@ DPA_aA <- perc_A(DPA_a, grid_edt)
 DPA_aA <- grid_edt %>% left_join(DPA_aA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("DPA_aA"= "column")
 
 ###ITP Management Area: Area overlap, take area with largest overlap
-ITP <- st_intersection(ITP_Management, grid_edt) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry()
+ITP <- st_intersection(ITP_Management, grid_edt) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry() %>% select(-st_area...)
 
 ##Restricted 
 ###Shrimp trawling prohibited
 Shrimp_trawl_pA <- perc_A(ShrimpTrawl_p, grid_edt)
 Shrimp_trawl_pA <- grid_edt %>% left_join(Shrimp_trawl_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("Shrimp_trawl_pA"= "column")
 
+###Trawling, dredging prohibited
+TrawlDredge_pA <- perc_A(TrawlingDredging_p, grid_edt)
+TrawlDredge_pA <- grid_edt %>% left_join(TrawlDredge_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("TrawlDredge_pA"= "column")
+
+###Passive gear prohibited
+GillPound_pA <- perc_A(GillPound_p_edt, grid_edt)
+GillPound_pA <- grid_edt %>% left_join(GillPound_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("GillPound_pA"= "column")
+
+###Total restricted area
+RestrictedArea_pA <- perc_A(RestrictedArea, grid_edt)
+RestrictedArea_pA <- grid_edt %>% left_join(RestrictedArea_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("RestrictedArea_pA"= "column")
+
 #Waterbody
 Waterbodi <- All_waterbodies %>% st_union()
-Waterbodi_A <- 
-Waterbody_A <- st_intersection(grid_edt, Waterbodi) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100)
-Waterbody_A %>% filter(column > 100)
-st_make_valid(Waterbody_A)
-st_area(Waterbody_A)
-Waterbody_A <- perc_A(ShrimpTrawl_p, grid_edt)
-
-
-df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
-return(df_new)
-}
-
-
-
-tester <- st_intersection(All_waterbodies, grid_edt)
-
-
-mean(st_area(grid_edt))
-sd(st_area(grid_edt))
-grid_A <- 117144138/1000000 #km^2
-perc_A <- function(df1, df2){
-df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
-return(df_new)
-}
-
+Waterbody_A <- perc_A(grid_edt, Waterbodi) #this worked! QGIS
+Waterbody_A <- grid_edt %>% left_join(Waterbody_A) %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("Waterbody_A"= "column")
 
 Grid_predictors_edt2final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/gridded_predictors_final.csv")
+```
+
+#### Centroid
+```{r}
+sf_cent <- st_centroid(grid_edt)
+nearest_dist <- function(df1, df2){
+nearest <- st_nearest_feature(df1, df2)
+dist <- st_distance(df1, df2[nearest,], by_element= TRUE)
+dist <- as.numeric(dist)
+df_new <- grid_edt %>% mutate(dist_km = dist/1000)
+}
+
+#Environmental 
+InletDist_km <- nearest_dist(sf_cent, Inlet_coords_edt) %>% rename("InletDist_km"= "dist_km") %>% st_drop_geometry()
+
+##Distance to SAV
+options(scipen = 999)
+SAV_km <- nearest_dist(sf_cent, SAV_edt) %>% rename("SAV_km"= "dist_km") %>% st_drop_geometry()
+options(scipen = 0)
+#These are pretty far off from original calculations, this makes sense b/c using habitat mosaic throughout time instead of 2012-2016
+
+##Shoreline type
+nearest_shoreline <- st_nearest_feature(sf_cent, Estuarine_shoreline_edt )
 
 ```
 
-#### Grid: Centroids
+#### Grid: Other 
+```{r}
+##Sediment size 
+##Number of fishing types 
+##
+```
+
 
 ##### Visualizations
 
@@ -184,8 +202,3 @@ datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr
 Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID)
 ```
 
-#### Centroid: Calculations
-
-```{r}
-sf_cent <- st_centroid(grid)
-```
