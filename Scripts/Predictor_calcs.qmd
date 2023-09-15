@@ -55,7 +55,6 @@ ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = 
 ```
 
 #### Load predictor datasets
-
 ```{r}
 setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/QGIS_layers")
 Inlet_coords <- st_read("Environmental/Inlet.points.kml")
@@ -63,11 +62,12 @@ DPA_a <- read_sf(dsn = "Fishing/Allowed", layer = "DPA_a")
 GillPound_p <- read_sf(dsn = "Fishing/Restricted", layer = "GillPound_p")
 RestrictedArea <- read_sf(dsn = "Fishing/Restricted", layer = "RestrictedArea")
 ShrimpTrawl_p <- read_sf(dsn = "Fishing/Restricted", layer = "ShrimpTrawl_p")
-TrawlingDredging_p <- read_sf(dsn = "Fishing/Restricted", layer = "TrawlingDredging_p")
+TrawlDredge_p <- read_sf(dsn = "Fishing/Restricted", layer = "TrawlingDredging_p")
 ITP_Management <- read_sf(dsn = "Fishing", layer = "ITPMangamenet")
 
 setwd("/Users/sallydowd/Desktop/Ch1Data")
 SAV <- read_sf(dsn= "QGIS_layers", layer= "SAV_Mosaic_1981_to_2015")
+SAV2 <- read_sf(dsn= "QGIS_layers", layer= "SAV_2006-2008_Mapping_Revised")
 Estuarine_shoreline <- read_sf(dsn="QGIS_layers", layer= "Estuarine_Shoreline") 
 All_waterbodies <- read_sf(dsn= "QGIS_layers", layer= "All_waterbodies")
 ```
@@ -80,7 +80,7 @@ st_crs(DPA_a) #EPSG 32119
 st_crs(GillPound_p) #EPSG 6542
 st_crs(RestrictedArea) #EPSG 32119
 st_crs(ShrimpTrawl_p) #EPSG 32119
-st_crs(TrawlingDredging_p) #EPSG 32119
+st_crs(TrawlDredge_p) #EPSG 32119
 st_crs(ITP_Management) #EPSG 32119
 st_crs(SAV) #EPSG 3857
 st_crs(Estuarine_shoreline) #EPSG 3857
@@ -90,13 +90,13 @@ st_crs(grid)
 Inlet_coords_edt <- st_transform(Inlet_coords, crs = 32119)
 GillPound_p_edt <- st_transform(GillPound_p, crs = 32119)
 SAV_edt <- st_transform(SAV, crs = 32119)
+SAV2_edt <- st_transform(SAV2, crs = 32119)
 Estuarine_shoreline_edt <- st_transform(Estuarine_shoreline, crs= 32119)
 All_waterbodies <- st_transform(All_waterbodies, crs= 32119)
 grid_edt <- st_transform(grid, crs= 32119)
 ```
 
 ##### Visualization Check
-
 ```{r}
 #Checked the first two and it looked fine 
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = InletCoords) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
@@ -106,8 +106,8 @@ ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + th
 ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
 ```
 
-#### Grid: Percent Area Covered
 
+#### Grid: Percent Area Covered
 ```{r}
 #Function: 
 mean(st_area(grid_edt))
@@ -125,15 +125,17 @@ DPA_aA <- perc_A(DPA_a, grid_edt)
 DPA_aA <- grid_edt %>% left_join(DPA_aA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("DPA_aA"= "column")
 
 ###ITP Management Area: Area overlap, take area with largest overlap
-ITP <- st_intersection(ITP_Management, grid_edt) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry() %>% select(-st_area...)
+ITP <- st_intersection(ITP_Management, grid_edt) %>% cbind(as.data.frame(st_area(.))) %>% select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry() %>% select(-st_area...) %>% rename("ITP"= "area")
+ITP <- grid_edt %>% left_join(ITP, by= "gridID") %>% st_drop_geometry()
 
 ##Restricted 
 ###Shrimp trawling prohibited
-Shrimp_trawl_pA <- perc_A(ShrimpTrawl_p, grid_edt)
-Shrimp_trawl_pA <- grid_edt %>% left_join(Shrimp_trawl_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("Shrimp_trawl_pA"= "column")
+ShrimpTrawl_pA <- perc_A(grid_edt, ShrimpTrawl)
+ShrimpTrawl_pA <- grid_edt %>% left_join(ShrimpTrawl_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("ShrimpTrawl_pA"= "column")
 
 ###Trawling, dredging prohibited
-TrawlDredge_pA <- perc_A(TrawlingDredging_p, grid_edt)
+TrawlDredge_p_edt <- TrawlDredge_p %>% st_union()
+TrawlDredge_pA <- perc_A(grid_edt, TrawlDredge_p_edt)
 TrawlDredge_pA <- grid_edt %>% left_join(TrawlDredge_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% select(gridID, column) %>% rename("TrawlDredge_pA"= "column")
 
 ###Passive gear prohibited
@@ -167,38 +169,53 @@ InletDist_km <- nearest_dist(sf_cent, Inlet_coords_edt) %>% rename("InletDist_km
 
 ##Distance to SAV
 options(scipen = 999)
-SAV_km <- nearest_dist(sf_cent, SAV_edt) %>% rename("SAV_km"= "dist_km") %>% st_drop_geometry()
+SAV_km <- nearest_dist(sf_cent, SAV2_edt) %>% rename("SAV_km"= "dist_km") %>% st_drop_geometry()
 options(scipen = 0)
-#These are pretty far off from original calculations, this makes sense b/c using habitat mosaic throughout time instead of 2012-2016
+#These are pretty far off from original calculations, checked habitat mosaic w/ 2006-2008 and were more similar
 
 ##Shoreline type
-nearest_shoreline <- st_nearest_feature(sf_cent, Estuarine_shoreline_edt )
-
+nearest_shoreline <- st_nearest_feature(sf_cent, Estuarine_shoreline_edt)
+nearest <- as.numeric(nearest_shoreline)
+ShorelineType <- grid_edt %>% mutate(row_num= nearest)
+ESE <- Estuarine_shoreline_edt %>% mutate(row_num= 1:74937) %>% st_drop_geometry()
+ShorelineType <- ShorelineType %>% left_join(ESE, by= "row_num") %>% select(gridID, SHORE_NAM) %>% rename("ShorelineType"= "SHORE_NAM") %>% st_drop_geometry() #21 differences in 120 gridIDs in common b/w old dataset and new, might be due to different calculation distances 
 ```
 
-#### Grid: Other 
+#### Other calculation
+
 ```{r}
-##Sediment size 
-##Number of fishing types 
-##
-```
+#Merge grid and centroid calculated datasets
+dataframes <- list(ITP, ShrimpTrawl_pA, TrawlDredge_pA, GillPound_pA, RestrictedArea_pA, Waterbody_A, InletDist_km, SAV_km, ShorelineType)
 
+merged_df <- DPA_aA
+for (df in dataframes){
+  merged_df <- merge(merged_df, df, by = "gridID")
+} #merge dataframes by common columns 
+
+#Most common sediment size 
+##Organize datasets: 
+datasets_Sedsize <- CPUE_all %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na(Sedsize_new)
+datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
+gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
+datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr::select(gridID, lat_lon), by= "lat_lon") 
+Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID) #be careful here with dropping gridIDs 
+merged_df2 <- merged_df %>% left_join(Sedsize_common, by= "gridID")
+  
+#Fishing predictors: 
+colnames(merged_df3)
+merged_df3 <- merged_df2 %>% mutate(ShrimpTrawl_aA= Waterbody_A - ShrimpTrawl_pA, TrawlDredge_aA = Waterbody_A - TrawlDredge_pA, GillPound_aA = Waterbody_A - GillPound_pA)
+
+merged_df4 <- merged_df3 %>% mutate(FishingAll_num= rowSums(merged_df3[c("ShrimpTrawl_aA", "TrawlDredge_aA", "GillPound_aA", "DPA_aA")] > 0), NoFishRest= Waterbody_A - RestrictedArea_pA)
+
+#TrawlDredge_aA is off and RestrictedArea
+
+#Remove certain GridIDs
+
+Grid_predictors_edt2 <- Grid_predictors_edt2 %>% filter(!gridID %in% c(398, 543, 668, 678, 679, 707, 895, 173, 199, 388))
+```
 
 ##### Visualizations
 
 ```{r}
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = sp_cent) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 ```
-
-####Calculations
-
-```{r}
-#Calculate most common Sedsize_new in a grid cell
-dataset_bind <- rbind(p915_CPUEedt, p195_CPUEedt, p120_CPUEedt)
-datasets_Sedsize <- dataset_bind %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na(Sedsize_new)
-datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
-gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
-datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr::select(gridID, lat_lon), by= "lat_lon")
-Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID)
-```
-

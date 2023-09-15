@@ -142,12 +142,11 @@ gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= T
 #--> TO QGIS for processing 
 ```
 
-#### Grid: Calculating predictor variables in R 
+#### Grid: Calculating predictor variables in R
+
 ```{r}
 
 ```
-
-
 
 #### Grid: Calculating predictor variables from QGIS
 
