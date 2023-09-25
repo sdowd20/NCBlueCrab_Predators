@@ -3,6 +3,7 @@ title: "Griding"
 format: html
 editor: visual
 ---
+
 #### Load packages, CPUE datasets, and filter them
 
 ```{r}
@@ -12,18 +13,16 @@ invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
-#select <- dplyr::select()
-
 #Load CPUE datasets
 p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-#Filter datasets: Add back in Secchi size once get P195 data
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== 6) #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month==6)
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month==6)
+#Filter datasets:
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021)) #added in species of focus for now (still waiting on data)
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021))
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021))
 
 ##All same column names! 
 colnames(p915_CPUEedt)
@@ -49,35 +48,35 @@ CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ##### Grid: Form 5 x 5 km grid
 
 ```{r}
-# p915_latlon <- p915_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
-# p120_latlon <- p120_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
-# p195_latlon <- p195_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
-# lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
-# lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE) 
-# world <- ne_countries(scale = "medium", returnclass = "sf")
-# # make an object the size and shape of the output you want
-# globe_bb <- matrix(c(-78.900147,33.802938,
-#                       -78.900147,36.672128,
-#                       -75.263672,36.672128,
-#                      -75.263672, 33.802938,
-#                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-# globe_grid_30 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
-# 
-# fish_spat <- as.data.frame(lat_lon_combo)
-# fish_spat$rowID <- 1:nrow(fish_spat)
-# coordinates(fish_spat) <- ~ Longitude + Latitude
-# fish_spat <- st_as_sf(fish_spat)
-# fish_spat <- st_set_crs(fish_spat, 4326)
-# grid <- globe_grid_30
-# fish_extract <- st_intersection(fish_spat, grid)
-# fish_extract_2 <- as.data.frame(fish_extract)
-# 
-# #Group to get rid of duplicates (there are times when a point is overlapping two grid cells)
-# fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
-# 
-# fish_extract_2_2$gridID <- fish_extract_2_2$ID
-# fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
-# write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_09.11.23.5km.csv")
-# 
-# ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_2_2, fill = NA, aes(geometry= geometry)) + geom_sf(data= fish_spat) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) 
+p915_latlon <- p915_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
+p120_latlon <- p120_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
+p195_latlon <- p195_CPUEedt %>% select(Latitude, Longitude) %>% mutate(lat_lon = paste(Latitude, Longitude, sep= "_"))
+lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
+lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE)
+world <- ne_countries(scale = "medium", returnclass = "sf")
+# make an object the size and shape of the output you want
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
+
+fish_spat <- as.data.frame(lat_lon_combo)
+fish_spat$rowID <- 1:nrow(fish_spat)
+coordinates(fish_spat) <- ~ Longitude + Latitude
+fish_spat <- st_as_sf(fish_spat)
+fish_spat <- st_set_crs(fish_spat, 4326)
+grid <- globe_grid_30
+fish_extract <- st_intersection(fish_spat, grid)
+fish_extract_2 <- as.data.frame(fish_extract)
+
+#Group to get rid of duplicates (there are times when a point is overlapping two grid cells)
+fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
+
+fish_extract_2_2$gridID <- fish_extract_2_2$ID
+fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
+write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_09.11.23.5km.csv")
+
+ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_2_2, fill = NA, aes(geometry= geometry)) + geom_sf(data= fish_spat) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 ```
