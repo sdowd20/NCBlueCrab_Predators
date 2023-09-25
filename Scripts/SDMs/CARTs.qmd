@@ -4,6 +4,8 @@ format: html
 editor: visual
 ---
 
+Model description from Sarah Roberts, professor of UNC-CH BIOL 562: Statistics for Environmental Scientists
+
 #### Load packages, functions, and datasets
 
 ```{r}
@@ -60,7 +62,10 @@ df_count_wide_train = df_count_wide[picked,]
 gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
 ```
 
-#### Decision trees 
+#### Decision trees
+
+"Decision trees, as their name conveys, are tree-like diagrams. They work by defining yes-or-no rules based on the data and assign the most common value for each respondent within their final branch. The best way to learn about decision trees is by looking at one."  
+
 ```{r}
 library(tidymodels)
 library(tidyflow)
@@ -89,34 +94,28 @@ tree <- pull_tflow_fit(vanilla_fit)$fit
 rpart.plot(tree)
 ```
 
-#### Bagging: 
+#### Bagging:
 
-Adding in ShorelineType was throwing this error: All of the models failed. An example message was:
-Error in `[.data.frame`(m, labs) : undefined columns selected
-It might be because it has too many categories--> leave out for now, tried to group two marsh categories and it didn't matter
+"Bagging works by bootstraping your data N times and fitting N decision trees. Each of these decision trees has a lot of variance because we allow the tree to overfit the data. The trick with bagging is that we average over the predictions of all the N decision trees, improving the high variability of each single decision tree." 
+
+Adding in ShorelineType was throwing this error: All of the models failed. An example message was: Error in `[.data.frame`(m, labs) : undefined columns selected It might be because it has too many categories--\> leave out for now, tried to group two marsh categories and it didn't matter
+
 ```{r}
 btree <- bag_tree(mode = "regression") %>% set_engine("rpart", times = 50)
 
 tflow2 <-
-  df_count_edt %>%
+  df_count_wide %>%
   tidyflow(seed = 566521) %>%
   plug_split(initial_split) %>% plug_formula(red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common) %>%
 plug_model(btree)
 res_btree <- tflow2 %>% fit()
-
-#Compare 
-rmse_dtree <-
-  vanilla_fit %>%
-  predict_training() %>%
-  rmse(red_drum, .pred)
-
-rmse_btree <-
-  res_btree %>%
-  predict_training() %>%
-  rmse(red_drum, .pred)
 ```
 
-#### Boosting
+#### Random forests: 
+
+"If we have a variable that is constantly repeated in every single tree, then the predictions will be very similar. Random Forests are an extension of bagged decision trees because they randomly sample N variables in each split. More specifically, instead of considering all variables in the data, for calculating a given split, random forests pick a random sample of N variables to be considered for that split.
+
+Random Forests differ from decision trees in that instead of evaluating cutoff splits for every variable, they evaluate cutoff splits only for a random sample of  N variables. The number of variables N used for each split can be chosen by the user and often it is chosen through a grid search." 
 ```{r}
 rf_mod <-
   rand_forest(mode = "regression") %>%
@@ -133,6 +132,25 @@ tflow <-
 
 res_rf <- tflow %>% fit()
 
+
+
+res_rf %>%
+  pull_tflow_fit() %>%
+  .[['fit']] %>%
+  vip() +
+  theme_minimal()
+```
+
+```{r}
+#Compare 
+  vanilla_fit %>%
+  predict_training() %>%
+  rmse(red_drum, .pred)
+
+  res_btree %>%
+  predict_training() %>%
+  rmse(red_drum, .pred)
+
 res_rf %>%
   predict_training() %>%
   rmse(red_drum, .pred)
@@ -142,5 +160,25 @@ res_rf %>%
   .[['fit']] %>%
   vip() +
   theme_minimal()
-```
 
+res_btree %>%
+  pull_tflow_fit() %>%
+  .[['fit']] %>%
+  var_imp()
+
+
+#Predict on testing data
+bt_rmse <-
+  res_btree %>%
+  predict_testing() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
+
+rf_rmse <-
+  res_rf %>%
+  predict_testing() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
+
+c("Bagged decision trees" = bt_rmse, "Random Forest" = rf_rmse)
+```

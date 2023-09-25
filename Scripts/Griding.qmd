@@ -70,7 +70,7 @@ fish_spat <- st_set_crs(fish_spat, 4326)
 grid <- globe_grid_30
 fish_extract <- st_intersection(fish_spat, grid)
 fish_extract_2 <- as.data.frame(fish_extract)
-
+beep(sound=8)
 #Group to get rid of duplicates (there are times when a point is overlapping two grid cells)
 fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
 
