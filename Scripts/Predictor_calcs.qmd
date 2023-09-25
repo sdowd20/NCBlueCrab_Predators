@@ -55,6 +55,7 @@ ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = 
 ```
 
 #### Load predictor datasets
+
 ```{r}
 setwd("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/QGIS_layers")
 Inlet_coords <- st_read("Environmental/Inlet.points.kml")
@@ -97,6 +98,7 @@ grid_edt <- st_transform(grid, crs= 32119)
 ```
 
 ##### Visualization Check
+
 ```{r}
 #Checked the first two and it looked fine 
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = InletCoords) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
@@ -106,8 +108,8 @@ ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + th
 ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
 ```
 
-
 #### Grid: Percent Area Covered
+
 ```{r}
 #Function: 
 mean(st_area(grid_edt))
@@ -155,6 +157,7 @@ Grid_predictors_edt2final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/D
 ```
 
 #### Centroid
+
 ```{r}
 sf_cent <- st_centroid(grid_edt)
 nearest_dist <- function(df1, df2){

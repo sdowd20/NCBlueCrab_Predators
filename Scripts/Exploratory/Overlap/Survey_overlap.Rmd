@@ -246,10 +246,6 @@ ss_survey_vis("brown shrimp") #species-name issues are resolved here: species fo
 
 
 ggplot() + geom_sf(data = world) + geom_point(data = subset(total_edt, total_edt$Species %in% "bonnethead hammerhead" & Colnum > 0 & Survey %in% "P915"), aes(x = Longitude, y = Latitude), colour= "light green") + geom_point(data = subset(total_edt, total_edt$Species %in% "blue crab" & Colnum > 0 & Survey %in% "P195"), aes(x = Longitude, y = Latitude), colour= "dark green") + geom_point(data = subset(total_edt, total_edt$Species %in% "blue crab" & Colnum > 0 & Survey %in% "P120"), aes(x = Longitude, y = Latitude), colour= "yellow") + scale_size_area() + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
-
-
-
-
 ```
 
 ### Overlap metrics
