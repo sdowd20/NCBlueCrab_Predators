@@ -68,15 +68,31 @@ coordinates(fish_spat) <- ~ Longitude + Latitude
 fish_spat <- st_as_sf(fish_spat)
 fish_spat <- st_set_crs(fish_spat, 4326)
 grid <- globe_grid_30
-fish_extract <- st_intersection(fish_spat, grid)
-fish_extract_2 <- as.data.frame(fish_extract)
+
+fish_s <- fish_spat[1:5000,]
+fish_s2 <- fish_spat[5001:10000,]
+fish_s3 <- fish_spat[10001:14246,]
+
+fish_extract_s <- st_intersection(fish_s, grid)
+fish_extract_s <- as.data.frame(fish_extract_s)
+fish_extract_s2 <- st_intersection(fish_s2, grid)
+fish_extract_s2 <- as.data.frame(fish_extract_s2)
+fish_extract_s3 <- st_intersection(fish_s3, grid)
+fish_extract_s3 <- as.data.frame(fish_extract)
+library(beepr)
 beep(sound=8)
+
+fish_extract_combo <- rbind(fish_extract_s, fish_extract_s2, fish_extract_s3)
+
 #Group to get rid of duplicates (there are times when a point is overlapping two grid cells)
-fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
+fish_extract_combo <- fish_extract_combo[!duplicated(fish_extract_combo[c("rowID")]),] #this should be the same size as fish spat, it is 5 observations less, thinking this is bc a few datapoints might be outside of grid cells, didn't change in size from fish_extract_2
 
-fish_extract_2_2$gridID <- fish_extract_2_2$ID
-fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
-write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_09.11.23.5km.csv")
+fish_extract_combo$gridID <- fish_extract_combo$ID
+fish_extract_comboedt <- fish_extract_combo[,-c(2,3, 4)]
+write.csv(fish_extract_comboedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_09.26.23.5km.csv")
 
-ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_2_2, fill = NA, aes(geometry= geometry)) + geom_sf(data= fish_spat) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+# ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_comboedt, fill = NA) + geom_sf(data= fish_spat) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+
+60 * 60
+30 * 30
 ```

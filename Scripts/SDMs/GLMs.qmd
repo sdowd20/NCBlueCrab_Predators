@@ -4,7 +4,6 @@ format: html
 editor: visual
 ---
 
-
 #### Load packages, functions, and datasets
 
 ```{r}
@@ -37,7 +36,7 @@ df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
 
 #Pivot-wider datasets: 
 ##Standardized catch per unit effort dataset wide 
-df_CPUE_wide <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+df_CPUE_wide <- CPUE_grid_avg_edt %>% ungroup() %>% filter(Survey %in% "P915") %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
 
 ##Binary dataset (0 or 1):  
 df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
@@ -148,13 +147,15 @@ autoplot.countreg <- function(object, legend.position="left"){
 ```
 
 #### Data exploration
+
 ```{r}
 100*sum(df_count_wide$red_drum == 0)/nrow(df_count_wide)
 ```
 
 #### Various GLMs
 
-For zero-inflated: "Sometimes count data will have a ridiculous amount of zeros and very few observed counts. Zero-inflated models model two distinct phases of the data generating process: a) The process that moves a unit from zero to some discrete outcome (a binary process) b) The process that generates the observed count (a Count process)" 
+For zero-inflated: "Sometimes count data will have a ridiculous amount of zeros and very few observed counts. Zero-inflated models model two distinct phases of the data generating process: a) The process that moves a unit from zero to some discrete outcome (a binary process) b) The process that generates the observed count (a Count process)"
+
 ```{r}
 glm1 <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, data= df_count_wide, family="gaussian"(link="identity"))
 glm1
@@ -272,5 +273,3 @@ colnames(dat) <- c("model_type", "R2", "RMSE")
 
 compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
 ```
-
-
