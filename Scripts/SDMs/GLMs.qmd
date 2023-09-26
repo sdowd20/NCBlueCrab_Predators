@@ -1,0 +1,276 @@
+---
+title: "GLMs"
+format: html
+editor: visual
+---
+
+
+#### Load packages, functions, and datasets
+
+```{r}
+#Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
+
+library(lmtest)
+library(countreg)
+library(gridExtra)
+library(ggplot2)
+library(MASS)
+library(countreg)
+library(performance)
+
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+#Load in datasets
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", "_", CPUE_grid_avg_edt$Speciescommonname)
+
+##Count dataset 
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
+df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
+
+#Pivot-wider datasets: 
+##Standardized catch per unit effort dataset wide 
+df_CPUE_wide <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+
+##Binary dataset (0 or 1):  
+df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+##Count dataset wide 
+df_count_wide <- df_count %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Form train/testing datasets by dividing 80% 20% 
+set.seed(777)
+##Randomly split data in R
+sample_size = floor(0.8*nrow(df_CPUE_wide)) #take 80% of rows, # is same b/w dfs
+
+##CPUE model
+picked_CPUE = sample(seq_len(nrow(df_CPUE_wide)),size = sample_size)
+df_CPUE_wide_test =df_CPUE_wide[-picked_CPUE,]
+df_CPUE_wide_train =df_CPUE_wide[picked_CPUE,]
+
+##Binary model
+picked_binary = sample(seq_len(nrow(df_binary_wide)),size = sample_size)
+df_binary_wide_test = df_binary_wide[-picked_binary,]
+df_binary_wide_train = df_binary_wide[picked_binary,]
+
+##Poisson model
+picked = sample(seq_len(nrow(df_count_wide)),size = sample_size) 
+df_count_wide_test = df_count_wide[-picked,]
+df_count_wide_train = df_count_wide[picked,]
+
+#Load GAM formula
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + factor(ShorelineType)
+```
+
+```{r}
+#Checks assumptions
+#install.packages("countreg", repos="http://R-Forge.R-project.org")
+library(countreg)
+library(gridExtra)
+library(ggplot2)
+library(MASS)
+library(countreg)
+
+autoplot.countreg <- function(object, legend.position="left"){
+  
+  ###########
+  # rootogram
+  
+  rootogram.plot <- rootogram(object, style = "hanging", plot = FALSE)
+  
+  g1 <- autoplot(rootogram.plot) +
+    labs(x=all.vars(object$formula)[1], y=expression(sqrt(Frequency)))
+  #labs(x="Counts", y=expression(sqrt(Frequency)))
+  
+  
+  
+  #########
+  # qq plot
+  
+  qres <- qresiduals(object)
+  q2q <- function(y) qnorm(ppoints(length(y)))[order(order(y))]
+  qnor <- q2q(qres)
+  
+  plot.res <- data.frame(theoretical=qnor, residuals=qres)
+  
+  g2 <- ggplot(plot.res, aes(x=theoretical, y=residuals)) +
+    geom_point() +
+    labs(x="Theoretical Quantiles", y="Quantile Residuals") +
+    geom_abline(slope=1, intercept = 0, lty="dashed")
+  
+  
+  
+  ############################
+  # expected and actual counts
+  
+  expected.observed <- rootogram(object, style = "hanging", plot = FALSE)
+  
+  expected.observed <- data.frame(x=rep(expected.observed$x, 2),
+                                  y=c(expected.observed$observed, expected.observed$expected),
+                                  group=factor(c(rep("Observed", length(expected.observed$observed)), rep("Expected", length(expected.observed$expected))), levels=c("Observed", "Expected")))
+  
+  
+  # legend justification and position
+  
+  jus <- c(1, 1)
+  pos <- c(0.95, 0.95)
+  if (legend.position=="left"){
+    jus <- c(0, 1)
+    pos <- c(0.05, 0.95)
+  }
+  
+  g3 <- ggplot(expected.observed[expected.observed$x <= 20, ], aes(x=x, y=y, fill=group)) +
+    geom_col(position = "dodge") +
+    labs(x="Counts", y="Frequency", fill="") +
+    scale_fill_grey() +
+    theme(legend.justification=jus, legend.position=pos, legend.background=element_blank())
+  
+  ####################################
+  # pearson residuals vs fitted values
+  
+  g4 <- ggplot(data.frame(x=object$fitted.values, 
+                          y=residuals(object, type="pearson")), 
+               aes(x=x, y=y)) +
+    geom_point() + geom_smooth()
+    labs(x="Fitted Values", y="Pearson Residuals")
+
+  
+  gridExtra::grid.arrange(g1, g2, g3, g4)
+  
+}
+```
+
+#### Data exploration
+```{r}
+100*sum(df_count_wide$red_drum == 0)/nrow(df_count_wide)
+```
+
+#### Various GLMs
+
+For zero-inflated: "Sometimes count data will have a ridiculous amount of zeros and very few observed counts. Zero-inflated models model two distinct phases of the data generating process: a) The process that moves a unit from zero to some discrete outcome (a binary process) b) The process that generates the observed count (a Count process)" 
+```{r}
+glm1 <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, data= df_count_wide, family="gaussian"(link="identity"))
+glm1
+
+check_model(glm1, check = c("linearity", "homogeneity", "qq","pp_check"))
+
+glm_pois <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, data= df_count_wide, family="poisson")
+summary(glm_pois)
+autoplot.countreg(glm_pois)
+
+#Negative binomial
+glm_nbm <- glm.nb(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, data= df_count_wide)
+summary(glm_nbm)
+
+check_zeroinflation(glm_nbm, tolerance = 0.05)
+
+#Zero-inflated negative binomial
+library(glmtoolbox)
+glm_znbm <- zeroinfl(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num | avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, dist = 'negbin', data = df_count_wide)
+summary(glm_znbm)
+
+
+library(glmtoolbox)
+ele_zinb <- zeroinfl(Matings ~ Age | ## Predictor for the Poisson process
+                 Age, ## Predictor for the Bernoulli process;
+               dist = 'negbin',
+               data = eledat1)
+
+summary(ele_zinb)
+```
+
+#### Compare models
+
+Likelihood ratio test: "A comparison of null deviance and residual deviance is used to test the significance of parameters. Likelihood Ratio Test is used for this nested test, following a χ2 distribution under H0 being true"
+
+```{r}
+glm_pois_0 <- glm(red_drum ~ 1, data = df_count_wide, family="poisson")
+lrtest(glm_pois_0, glm_pois)
+anova(glm1, glm_pois,test= "Chisq")
+
+AIC(glm1)
+AIC(glm_pois)
+AIC(glm_qpois)
+AIC(glm_nbm)
+```
+
+```{r}
+#Compare w/ prediction
+#Functions to assess predictive performance first 
+r2_func <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+
+set.seed(321)
+compare_var <- as.data.frame(matrix(ncol = 3, nrow = 0))
+colnames(compare_var) <- c("model_type", "R2", "RMSE")
+
+Bootstrap_times <- 100 #this is how many times i want the loop to run
+smp_size <- floor(0.70 * nrow(df_count_wide)) #this is how i want to split training and testing data 
+
+for(i in 1:Bootstrap_times) {
+  train_ind <- sample(seq_len(nrow(df_count_wide)), size = smp_size)
+  train <- df_count_wide[train_ind, ]
+  test <- df_count_wide[-train_ind, ]
+  
+  pois_mod <- glm(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, data = train, family="poisson")
+  nb_mod <- glm.nb(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, data = train)
+  zipois_mod <- zeroinfl(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num | avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, dist = 'negbin', data = train)
+
+  zinb_mod <- zeroinfl(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num | avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num,
+               dist = 'poisson',
+               data = train)
+
+  pois_pred <- predict(pois_mod, newdata = test, type = "response")
+  nb_pred <- predict(nb_mod, newdata = test, type = "response")
+  zipois_pred <- predict(zipois_mod, newdata = test, type = "response")
+  zinb_pred <- predict(zinb_mod, newdata = test, type = "response")
+ 
+  #make a dataframe for each modeling type
+  pois <- as.data.frame(matrix(ncol =3))
+  pois$V1 <- "pois"
+  pois$V2 <- r2_func(pois_pred, test$red_drum)
+  pois$V3 <- RMSE_func(pois_pred, test$red_drum)
+  
+  nb <- as.data.frame(matrix(ncol =3))
+  nb$V1 <- "nb"
+  nb$V2 <- r2_func(nb_pred, test$red_drum)
+  nb$V3 <- RMSE_func(nb_pred, test$red_drum)
+  
+  zipois <- as.data.frame(matrix(ncol =3))
+  zipois$V1 <- "zipois"
+  zipois$V2 <- r2_func(zipois_pred, test$red_drum)
+  zipois$V3 <- RMSE_func(zipois_pred, test$red_drum)
+  
+  zinb <- as.data.frame(matrix(ncol =3))
+  zinb$V1 <- "zinb"
+  zinb$V2 <- r2_func(zinb_pred, test$red_drum)
+  zinb$V3 <- RMSE_func(zinb_pred, test$red_drum)
+  
+  #combine all of those 
+  
+  dat <- rbind(pois, nb, zipois, zinb)
+colnames(dat) <- c("model_type", "R2", "RMSE")
+
+  #combine it to our dataframe outside of the for loop 
+  
+  compare_var <- rbind(compare_var, dat)
+}
+
+#take the mean of all of those runs 
+
+compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+```
+
+
