@@ -64,8 +64,7 @@ gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5)
 
 #### Decision trees
 
-"Decision trees, as their name conveys, are tree-like diagrams. They work by defining yes-or-no rules based on the data and assign the most common value for each respondent within their final branch. The best way to learn about decision trees is by looking at one."  
-
+"Decision trees, as their name conveys, are tree-like diagrams. They work by defining yes-or-no rules based on the data and assign the most common value for each respondent within their final branch. The best way to learn about decision trees is by looking at one."
 ```{r}
 library(tidymodels)
 library(tidyflow)
@@ -96,7 +95,7 @@ rpart.plot(tree)
 
 #### Bagging:
 
-"Bagging works by bootstraping your data N times and fitting N decision trees. Each of these decision trees has a lot of variance because we allow the tree to overfit the data. The trick with bagging is that we average over the predictions of all the N decision trees, improving the high variability of each single decision tree." 
+"Bagging works by bootstraping your data N times and fitting N decision trees. Each of these decision trees has a lot of variance because we allow the tree to overfit the data. The trick with bagging is that we average over the predictions of all the N decision trees, improving the high variability of each single decision tree."
 
 Adding in ShorelineType was throwing this error: All of the models failed. An example message was: Error in `[.data.frame`(m, labs) : undefined columns selected It might be because it has too many categories--\> leave out for now, tried to group two marsh categories and it didn't matter
 
@@ -111,18 +110,22 @@ plug_model(btree)
 res_btree <- tflow2 %>% fit()
 ```
 
-#### Random forests: 
+#### Random forests:
 
 "If we have a variable that is constantly repeated in every single tree, then the predictions will be very similar. Random Forests are an extension of bagged decision trees because they randomly sample N variables in each split. More specifically, instead of considering all variables in the data, for calculating a given split, random forests pick a random sample of N variables to be considered for that split.
 
-Random Forests differ from decision trees in that instead of evaluating cutoff splits for every variable, they evaluate cutoff splits only for a random sample of  N variables. The number of variables N used for each split can be chosen by the user and often it is chosen through a grid search." 
+Random Forests differ from decision trees in that instead of evaluating cutoff splits for every variable, they evaluate cutoff splits only for a random sample of N variables. The number of variables N used for each split can be chosen by the user and often it is chosen through a grid search."
+
+For tuning random forest models, you can run sub-models with various tuning parameters to find the best final model.  All independent variables are included in the initial formula. This is done through a grid search.
+
+https://cimentadaj.github.io/tidyflow/articles/d04_fitting-model-tuning.html
+
 ```{r}
+#Standard random forest 
 rf_mod <-
   rand_forest(mode = "regression") %>%
   set_engine("ranger", importance = "impurity")
 
-# Define the `tidyflow` with the random forest model
-# and include all variables (including scie_score and read_score)
 tflow <-
   df_count_wide %>%
   tidyflow(seed = 23151) %>%
@@ -132,53 +135,136 @@ tflow <-
 
 res_rf <- tflow %>% fit()
 
-
-
 res_rf %>%
   pull_tflow_fit() %>%
   .[['fit']] %>%
   vip() +
-  theme_minimal()
+  theme_minimal() #visualize variable importance
+
+#Tune the random forest model
+rf_mod <-
+  rand_forest(mode = "regression",
+       trees = tune()) %>% 
+       set_engine("ranger") #tune means trying out different arguments in trees 
+
+tflow <-
+ df_count_wide %>% 
+  tidyflow(seed = 2151) %>%
+  plug_split(initial_split) %>%
+  plug_resample(vfold_cv) %>%
+  plug_grid(grid_regular, levels = 10) %>% #grid_regular: evenly spaced set of values for trees, specifying 10 resamples, can limit value range of trees (this increase rmse)
+  plug_formula(red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common) %>%
+  plug_model(rf_mod)
+
+res <- tflow %>% fit() #execute grid search
+res %>% pull_tflow_fit_tuning() %>% autoplot() #10 values for 10 resamples
+final_mod <- res %>% complete_tflow(metric = "rmse")
+final_mod %>%
+  predict_training() %>%
+  rmse(red_drum, .pred)
+
+pull_tflow_fit(final_mod)
 ```
 
+#### Boosting:
+
+"The name boosting comes from the notion that we fit a weak decision tree and we ‘boost’ it iteratively. This strategy is fundamentally different from bagging and random forests because instead of relying on hundreds of independent decision trees, boosting works by recursively boosting the the result of the same decision tree
+
+Basically, boosting starts by fitting a weak tree (i.e with one variable). Boosting works by predicting the residuals of previous decision tree. In our example, we just fitted our first model and calculated the residuals. Boosting works by fitting a second model but the dependent variable should now be the residuals of the first model rather than the math_score variable.
+
+In contrast to random forests, increasing the number of trees in a boosting algorithm can increase overfitting. For the random forest, increasing the number of trees has no impact on overfitting because what we actually get is the average of all these trees. However, for boosting, increasing the number trees means increasing the number of trees that iteratively try to explain residuals. You might reach a point that adding more trees will just try to explain residuals which are random, resulting in overfitting."
+
 ```{r}
-#Compare 
-  vanilla_fit %>%
+boost_mod <-
+  boost_tree(mode = "regression", trees = 500) %>%
+  set_engine("xgboost")
+
+tflow <-
+ df_count_wide %>%
+  tidyflow(seed = 51231) %>%
+  plug_formula(red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common) %>%
+  plug_split(initial_split) %>%
+  plug_model(boost_mod)
+
+res_boost <- fit(tflow)
+
+c("Bagged decision trees" = bt_rmse,
+  "Random Forest" = rf_rmse,
+  "Extreme Gradient Boosting" = gb_rmse)
+
+boost_mod <- update(boost_mod, stop_iter = 20)
+
+tflow <-
+  tflow %>%
+  replace_model(boost_mod)
+
+res_boost_updated <- fit(tflow)
+```
+#### Compare 
+
+A low RMSE, or a root mean square error, means that the distance between predictions and the true values is low.
+```{r}
+#In-sample (training) comparison 
+vanilla_fit_rmse <- vanilla_fit %>%
   predict_training() %>%
-  rmse(red_drum, .pred)
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
 
-  res_btree %>%
+res_btree_rmse <-  res_btree %>%
   predict_training() %>%
-  rmse(red_drum, .pred)
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
 
-res_rf %>%
+res_rf_rmse <- res_rf %>%
   predict_training() %>%
-  rmse(red_drum, .pred)
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
 
-res_rf %>%
-  pull_tflow_fit() %>%
-  .[['fit']] %>%
-  vip() +
-  theme_minimal()
+res_boost_rmse <-
+  res_boost %>%
+  predict_training() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
 
-res_btree %>%
-  pull_tflow_fit() %>%
-  .[['fit']] %>%
-  var_imp()
+res_boost_updated_rmse <-
+  res_boost_updated %>%
+  predict_training() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
 
+c("Bagged decision trees" = res_btree_rmse,
+  "Random Forest" = res_rf_rmse,
+  "Extreme Gradient Boosting" = res_boost_rmse, "Extreme Gradient Boosting Mod"= res_boost_updated_rmse)
 
-#Predict on testing data
-bt_rmse <-
-  res_btree %>%
+#Out of sample (testing) comparison 
+vanilla_fit_rmse_test <- vanilla_fit %>%
   predict_testing() %>%
   rmse(red_drum, .pred) %>%
   pull(.estimate)
 
-rf_rmse <-
-  res_rf %>%
+res_btree_rmse_test <-  res_btree %>%
   predict_testing() %>%
   rmse(red_drum, .pred) %>%
   pull(.estimate)
 
-c("Bagged decision trees" = bt_rmse, "Random Forest" = rf_rmse)
+res_rf_rmse_test <- res_rf %>%
+  predict_testing() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
+
+res_boost_rmse_test <-
+  res_boost %>%
+  predict_testing() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
+
+res_boost_updated_rmse_test <-
+  res_boost_updated %>%
+  predict_testing() %>%
+  rmse(red_drum, .pred) %>%
+  pull(.estimate)
+
+c("Bagged decision trees" = res_btree_rmse_test,
+  "Random Forest" = res_rf_rmse_test,
+  "Extreme Gradient Boosting" = res_boost_rmse_test, "Extreme Gradient Boosting Mod"= res_boost_updated_rmse_test)
 ```
