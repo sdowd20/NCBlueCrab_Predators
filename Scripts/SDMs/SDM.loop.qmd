@@ -4,9 +4,10 @@ format: html
 editor: visual
 ---
 
-Test script with red drum. Eventually there will be a .R file to load in all the data and functions. 
+Test script with red drum. Eventually there will be a .R file to load in all the data and functions.
 
 #### Load packages, functions, and datasets
+
 ```{r}
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
@@ -82,6 +83,7 @@ model_formula <- red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist
 ```
 
 #### Explore data
+
 ```{r}
 #Exploratory graphs: left skewed and zero-inflated model
 df_CPUE_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("CPUE") + ylab("Counts") + standard_theme
@@ -102,7 +104,8 @@ df_count_wide %>% dplyr::select(avg_stemp, avg_sdo, avg_ssal, SAVDist_km, InletD
 
 compare models from multiple surveys w/ AIC, deviance explained, in and out of sample prediction error,
 
-#### Form loop 
+#### Form loop
+
 ```{r}
 #Compare w/ prediction
 #Functions to assess predictive performance first 
@@ -127,17 +130,16 @@ for(i in 1:Bootstrap_times) {
   test <- df_count_wide[-train_ind, ]
   
   pois_mod <- glm(model_formula, family="poisson", data=train)
-  nb_mod <- glm.nb(model_formula, data = train)
-  # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
-  # zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train)
-  # nb_gam <- gam(gam_formula, family= "nb", data= train)
-  # pois_gam <- gam(gam_formula, family=poisson(), data= test)
-  # tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
+  # nb_mod <- glm.nb(model_formula, data = train)
+  # # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
+  zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train)
+  nb_gam <- gam(gam_formula, family= "nb", data= train)
+  pois_gam <- gam(gam_formula, family=poisson(), data= test)
+  tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
 
-}
   pois_pred <- predict(pois_mod, newdata = test, type = "response")
-  nb_pred <- predict(nb_mod, newdata = test, type = "response")
-  # zipois_pred <- predict(zipois_mod, newdata = test, type = "response")
+  # nb_pred <- predict(nb_mod, newdata = test, type = "response") #glm.fit: algorithm did not convergeWarning: glm.fit: algorithm did not converge
+  # zipois_pred <- predict(zipois_mod, newdata = test, type = "response") #chedWarning: system is computationally singular: reciprocal condition number = 1.30301e-21FALSEWarning: glm.fit: algorithm did not convergeWarning: glm.fit: algorithm did not conve
   zinb_pred <- predict(zinb_mod, newdata = test, type = "response")
   nb_gam_pred <- predict(nb_gam, newdata= test, type= "response")
   pois_gam_pred <- predict(pois_gam, newdata= test, type= "response")
@@ -149,11 +151,11 @@ for(i in 1:Bootstrap_times) {
   pois$V2 <- r2_func(pois_pred, test$red_drum)
   pois$V3 <- RMSE_func(pois_pred, test$red_drum)
   
-  nb <- as.data.frame(matrix(ncol =3))
-  nb$V1 <- "nb"
-  nb$V2 <- r2_func(nb_pred, test$red_drum)
-  nb$V3 <- RMSE_func(nb_pred, test$red_drum)
-  
+  # nb <- as.data.frame(matrix(ncol =3))
+  # nb$V1 <- "nb"
+  # nb$V2 <- r2_func(nb_pred, test$red_drum)
+  # nb$V3 <- RMSE_func(nb_pred, test$red_drum)
+  # 
   # zipois <- as.data.frame(matrix(ncol =3))
   # zipois$V1 <- "zipois"
   # zipois$V2 <- r2_func(zipois_pred, test$red_drum)
@@ -181,7 +183,7 @@ for(i in 1:Bootstrap_times) {
  
   #combine all of those 
   
-  dat <- rbind(pois, nb, zinb, nb_gam_df, pois_gam_df, tweedie_gam_df)
+  dat <- rbind(pois, zinb, nb_gam_df, pois_gam_df, tweedie_gam_df)
 colnames(dat) <- c("model_type", "R2", "RMSE")
 
   #combine it to our dataframe outside of the for loop 
@@ -198,13 +200,6 @@ compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values")
 
 ```
 
-RMSE, Root Mean Square Error, 
+RMSE, Root Mean Square Error,
 
-
-
-Compare models with AIC, deviance explained, and in and out of sample prediction error. 
-
-
-
-
-
+Compare models with AIC, deviance explained, and in and out of sample prediction error.
