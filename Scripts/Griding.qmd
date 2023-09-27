@@ -8,7 +8,7 @@ editor: visual
 
 ```{r}
 #Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "readr")
 invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
@@ -96,3 +96,19 @@ write.csv(fish_extract_comboedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/g
 60 * 60
 30 * 30
 ```
+
+```{r}
+fish_extract_comboedt <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_09.26.23.5km.csv")
+
+fish_extract_comboedtt <- fish_extract_comboedt %>% separate(lat_lon, into = c('lat', 'lon'), sep="_")
+write.csv(fish_extract_comboedtt, "~/Desktop/det.csv")
+globe_grid_30edt <- globe_grid_30 %>% rename("gridID"= "ID")
+write_sf(globe_grid_30edt, "~/Desktop/fish_extract_geom.shp")
+
+fish_extract_geom <- fish_extract_comboedt %>% left_join(globe_grid_30edt, by= "gridID")
+write_sf(fish_extract_geom, "~/Desktop/fish_extract_geom.shp")
+
+length(unique(fish_extract_geom$gridID))
+length(unique(fish_extract_comboedt$gridID))
+```
+

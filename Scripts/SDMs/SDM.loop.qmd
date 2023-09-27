@@ -1,0 +1,210 @@
+---
+title: "SDM.loop"
+format: html
+editor: visual
+---
+
+Test script with red drum. Eventually there will be a .R file to load in all the data and functions. 
+
+#### Load packages, functions, and datasets
+```{r}
+#Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
+
+invisible(lapply(packages, library, character.only= TRUE))
+
+library(lmtest)
+library(countreg)
+library(gridExtra)
+library(ggplot2)
+library(MASS)
+library(countreg)
+library(performance)
+
+library(tidymodels)
+library(tidyflow)
+library(devtools)
+library(rpart.plot)
+library(vip)
+library(baguette)
+library(ranger)
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+#Load in datasets
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", "_", CPUE_grid_avg_edt$Speciescommonname)
+
+##Count dataset 
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
+df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
+
+#Pivot-wider datasets: 
+##Standardized catch per unit effort dataset wide 
+df_CPUE_wide <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+
+##Binary dataset (0 or 1):  
+df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+##Count dataset wide 
+df_count_wide <- df_count %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Form train/testing datasets by dividing 80% 20% 
+set.seed(777)
+##Randomly split data in R
+sample_size = floor(0.8*nrow(df_CPUE_wide)) #take 80% of rows, # is same b/w dfs
+
+##CPUE model
+picked_CPUE = sample(seq_len(nrow(df_CPUE_wide)),size = sample_size)
+df_CPUE_wide_test =df_CPUE_wide[-picked_CPUE,]
+df_CPUE_wide_train =df_CPUE_wide[picked_CPUE,]
+
+##Binary model
+picked_binary = sample(seq_len(nrow(df_binary_wide)),size = sample_size)
+df_binary_wide_test = df_binary_wide[-picked_binary,]
+df_binary_wide_train = df_binary_wide[picked_binary,]
+
+##Poisson model
+picked = sample(seq_len(nrow(df_count_wide)),size = sample_size) 
+df_count_wide_test = df_count_wide[-picked,]
+df_count_wide_train = df_count_wide[picked,]
+
+#Load in formulas  
+##Load GAM formula
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) #no shoreline type b/c was weird w/ CART
+
+##Other 
+model_formula <- red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common
+```
+
+#### Explore data
+```{r}
+#Exploratory graphs: left skewed and zero-inflated model
+df_CPUE_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("CPUE") + ylab("Counts") + standard_theme
+df_binary_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Presence/absence") + ylab("Counts") + standard_theme
+df_count_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("Counts") + ylab("Counts") + standard_theme
+
+prop_0 <- 100*sum(df_CPUE_wide$red_drum == 0)/nrow(df_CPUE_wide) #only 50%
+
+length(unique(df_CPUE_wide$gridID))
+
+df_CPUE_wide %>% group_by(gridID) %>% tally() %>% pull(n) %>% table() #instances of gridID
+
+df_count_wide %>% dplyr::select(atlantic_croaker, southern_flounder, spot, red_drum) %>% ggpairs() 
+df_count_wide %>% dplyr::select(avg_stemp, avg_sdo, avg_ssal, SAVDist_km, InletDist_km) %>% ggpairs() 
+```
+
+##########COUNT##########
+
+compare models from multiple surveys w/ AIC, deviance explained, in and out of sample prediction error,
+
+#### Form loop 
+```{r}
+#Compare w/ prediction
+#Functions to assess predictive performance first 
+r2_func <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+
+set.seed(321)
+compare_var <- as.data.frame(matrix(ncol = 3, nrow = 0))
+colnames(compare_var) <- c("model_type", "R2", "RMSE")
+
+Bootstrap_times <- 100 #this is how many times i want the loop to run
+smp_size <- floor(0.70 * nrow(df_count_wide)) #this is how i want to split training and testing data 
+
+for(i in 1:Bootstrap_times) {
+  train_ind <- sample(seq_len(nrow(df_count_wide)), size = smp_size)
+  train <- df_count_wide[train_ind, ]
+  test <- df_count_wide[-train_ind, ]
+  
+  pois_mod <- glm(model_formula, family="poisson", data=train)
+  nb_mod <- glm.nb(model_formula, data = train)
+  # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
+  # zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train)
+  # nb_gam <- gam(gam_formula, family= "nb", data= train)
+  # pois_gam <- gam(gam_formula, family=poisson(), data= test)
+  # tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
+
+}
+  pois_pred <- predict(pois_mod, newdata = test, type = "response")
+  nb_pred <- predict(nb_mod, newdata = test, type = "response")
+  # zipois_pred <- predict(zipois_mod, newdata = test, type = "response")
+  zinb_pred <- predict(zinb_mod, newdata = test, type = "response")
+  nb_gam_pred <- predict(nb_gam, newdata= test, type= "response")
+  pois_gam_pred <- predict(pois_gam, newdata= test, type= "response")
+  tweedie_gam_pred <- predict(tweedie_gam, newdata= test, type = "response")
+  
+  #make a dataframe for each modeling type
+  pois <- as.data.frame(matrix(ncol =3))
+  pois$V1 <- "pois"
+  pois$V2 <- r2_func(pois_pred, test$red_drum)
+  pois$V3 <- RMSE_func(pois_pred, test$red_drum)
+  
+  nb <- as.data.frame(matrix(ncol =3))
+  nb$V1 <- "nb"
+  nb$V2 <- r2_func(nb_pred, test$red_drum)
+  nb$V3 <- RMSE_func(nb_pred, test$red_drum)
+  
+  # zipois <- as.data.frame(matrix(ncol =3))
+  # zipois$V1 <- "zipois"
+  # zipois$V2 <- r2_func(zipois_pred, test$red_drum)
+  # zipois$V3 <- RMSE_func(zipois_pred, test$red_drum)
+  # 
+  zinb <- as.data.frame(matrix(ncol =3))
+  zinb$V1 <- "zinb"
+  zinb$V2 <- r2_func(zinb_pred, test$red_drum)
+  zinb$V3 <- RMSE_func(zinb_pred, test$red_drum)
+  
+  nb_gam_df <- as.data.frame(matrix(ncol =3))
+  nb_gam_df$V1 <- "tweedie"
+  nb_gam_df$V2 <- r2_func(nb_gam_pred, test$red_drum)
+  nb_gam_df$V3 <- RMSE_func(nb_gam_pred, test$red_drum)
+   
+  pois_gam_df <- as.data.frame(matrix(ncol =3))
+  pois_gam_df$V1 <- "tweedie"
+  pois_gam_df$V2 <- r2_func(pois_gam_pred, test$red_drum)
+  pois_gam_df$V3 <- RMSE_func(pois_gam_pred, test$red_drum)
+   
+  tweedie_gam_df <- as.data.frame(matrix(ncol =3))
+  tweedie_gam_df$V1 <- "tweedie"
+  tweedie_gam_df$V2 <- r2_func(tweedie_gam_pred, test$red_drum)
+  tweedie_gam_df$V3 <- RMSE_func(tweedie_gam_pred, test$red_drum)
+ 
+  #combine all of those 
+  
+  dat <- rbind(pois, nb, zinb, nb_gam_df, pois_gam_df, tweedie_gam_df)
+colnames(dat) <- c("model_type", "R2", "RMSE")
+
+  #combine it to our dataframe outside of the for loop 
+  
+  compare_var <- rbind(compare_var, dat)
+}
+
+#take the mean of all of those runs 
+
+compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+```
+
+```{r}
+
+```
+
+RMSE, Root Mean Square Error, 
+
+
+
+Compare models with AIC, deviance explained, and in and out of sample prediction error. 
+
+
+
+
+
