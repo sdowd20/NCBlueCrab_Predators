@@ -102,9 +102,11 @@ df_count_wide %>% dplyr::select(avg_stemp, avg_sdo, avg_ssal, SAVDist_km, InletD
 
 ##########COUNT##########
 
-compare models from multiple surveys w/ AIC, deviance explained, in and out of sample prediction error,
+Compare models from multiple surveys w/ AIC, deviance explained, in and out of sample prediction error,
 
 #### Form loop
+
+I am going to compare a poisson model, negative binomial model, and zero inflated version of those in terms of out of sample prediction. This is called cross-validation. I am going to write my own for loop this time, so I can manually change my training vs. testing size. If this doesn't make sense - ask me what it is doing!!! 
 
 ```{r}
 #Compare w/ prediction
@@ -135,7 +137,20 @@ for(i in 1:Bootstrap_times) {
   zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train)
   nb_gam <- gam(gam_formula, family= "nb", data= train)
   pois_gam <- gam(gam_formula, family=poisson(), data= test)
-  tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
+ tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
+  # delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= train, method = "REML")
+  rf_mod <-
+  rand_forest(mode = "regression") %>%
+  set_engine("ranger", importance = "impurity")
+
+tflow <-
+  train %>%
+  tidyflow(seed = 23151) %>%
+  plug_formula(model_formula) %>%
+  plug_split(initial_split) %>%
+  plug_model(rf_mod)
+
+res_rf <- tflow %>% fit()
 
   pois_pred <- predict(pois_mod, newdata = test, type = "response")
   # nb_pred <- predict(nb_mod, newdata = test, type = "response") #glm.fit: algorithm did not convergeWarning: glm.fit: algorithm did not converge
@@ -144,12 +159,17 @@ for(i in 1:Bootstrap_times) {
   nb_gam_pred <- predict(nb_gam, newdata= test, type= "response")
   pois_gam_pred <- predict(pois_gam, newdata= test, type= "response")
   tweedie_gam_pred <- predict(tweedie_gam, newdata= test, type = "response")
-  
+  inv_link <- binomial(link = "cloglog")$linkinv
+  # delta_gam_pred <- predict(delta_gam, test, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% mutate(red_drum= test$red_drum) %>% dplyr::select(pred)
+  res_rf_pred <- res_rf %>% predict_training()
+
   #make a dataframe for each modeling type
   pois <- as.data.frame(matrix(ncol =3))
   pois$V1 <- "pois"
   pois$V2 <- r2_func(pois_pred, test$red_drum)
   pois$V3 <- RMSE_func(pois_pred, test$red_drum)
+  # pois$V4 <- AIC(pois_mod)
+  # pois$V5 <- 1-pchisq(pois_mod$deviance,  pois_mod$df.residual)
   
   # nb <- as.data.frame(matrix(ncol =3))
   # nb$V1 <- "nb"
@@ -165,25 +185,43 @@ for(i in 1:Bootstrap_times) {
   zinb$V1 <- "zinb"
   zinb$V2 <- r2_func(zinb_pred, test$red_drum)
   zinb$V3 <- RMSE_func(zinb_pred, test$red_drum)
+  # zinb$V4 <- AIC(zinb_mod)
+  # zinb$V5 <- 1-pchisq(zinb_mod$deviance,  zinb_mod$df.residual)
   
   nb_gam_df <- as.data.frame(matrix(ncol =3))
-  nb_gam_df$V1 <- "tweedie"
+  nb_gam_df$V1 <- "nb gam"
   nb_gam_df$V2 <- r2_func(nb_gam_pred, test$red_drum)
   nb_gam_df$V3 <- RMSE_func(nb_gam_pred, test$red_drum)
+  # nb_gam_df$V4 <- AIC(nb_gam)
+  # nb_gam_df$V5 <- 1-pchisq(nb_gam$deviance,  nb_gam$df.residual)
    
-  pois_gam_df <- as.data.frame(matrix(ncol =3))
-  pois_gam_df$V1 <- "tweedie"
+  pois_gam_df <- as.data.frame(matrix(ncol = 3))
+  pois_gam_df$V1 <- "pois gam"
   pois_gam_df$V2 <- r2_func(pois_gam_pred, test$red_drum)
   pois_gam_df$V3 <- RMSE_func(pois_gam_pred, test$red_drum)
+  # pois_gam_df$V4 <- AIC(pois_gam)
+   # pois_gam_df$V5 <- 1-pchisq(pois_gam$deviance,  pois_gam$df.residual)
    
-  tweedie_gam_df <- as.data.frame(matrix(ncol =3))
-  tweedie_gam_df$V1 <- "tweedie"
+  tweedie_gam_df <- as.data.frame(matrix(ncol= 3))
+  tweedie_gam_df$V1 <- "tweedie gam"
   tweedie_gam_df$V2 <- r2_func(tweedie_gam_pred, test$red_drum)
   tweedie_gam_df$V3 <- RMSE_func(tweedie_gam_pred, test$red_drum)
+  # tweedie_gam_df$V4 <- AIC(tweedie_gam)
+  # tweedie_gam_df$V5 <- 1-pchisq(tweedie_gam$deviance,  tweedie_gam$df.residual)
+
+ #  delta_gam_df <- as.data.frame(matrix(ncol =3))
+ # delta_gam_df$V1 <- "delta gam"
+ # delta_gam_df$V2 <- r2_func(delta_gam_pred$pred, test$red_drum)
+ # delta_gam_df$V3 <- RMSE_func(delta_gam_pred$pred, test$red_drum)
+  
+  res_rf_pred_df <- as.data.frame(matrix(ncol= 3))
+  res_rf_pred_df$V1 <- "rf"
+  res_rf_pred_df$V2 <- r2_func(res_rf_pred$.pred, test$red_drum)
+  res_rf_pred_df$V3 <- RMSE_func(res_rf_pred$.pred, test$red_drum)
  
   #combine all of those 
   
-  dat <- rbind(pois, zinb, nb_gam_df, pois_gam_df, tweedie_gam_df)
+  dat <- rbind(pois, zinb, nb_gam_df, pois_gam_df, tweedie_gam_df, res_rf_pred_df)
 colnames(dat) <- c("model_type", "R2", "RMSE")
 
   #combine it to our dataframe outside of the for loop 
@@ -193,13 +231,28 @@ colnames(dat) <- c("model_type", "R2", "RMSE")
 
 #take the mean of all of those runs 
 
-compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+table <- compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
 ```
+Add in delta model
+Add in AIC and deviance explained 
 
+"The model residual deviance can be used to assess the degree to which the predicted values differ from the observed. When a model is true, we can expect the residual deviance to be distributed as a χ2 random variable with degrees of freedom equal to the model’s residual degrees of freedom. Note - when means (counts) are small (<5), deviance test does not work well. For generalized linear models, instead of computing something like an  R2 measure, it is more common to test overall model fit. This is done by comparing an estimated model to a saturated model. A saturated model, has as many parameters as unique patterns in the data, and therefore fits the data perfectly. Whilst a model that always fits the data perfectly is not very interesting from a modelling point-of-view, it provides a useful criterion to compare less complex models to. The question asked in this comparison can be stated as: how well does my model perform compared to a perfect model of the Data Generating Process?"
+
+#Calculate AIC and deviance explained separately for models
 ```{r}
+ #models 
+pois_mod <- glm(model_formula, family="poisson", data=df_count_wide)
+  # nb_mod <- glm.nb(model_formula, data = train)
+  # # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
+  zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = df_count_wide)
+  nb_gam <- gam(gam_formula, family= "nb", data= df_count_wide)
+  pois_gam <- gam(gam_formula, family=poisson(), data= df_count_wide)
+ tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=df_count_wide)
+  delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide, method = "REML")
 
+AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
+#unsure how to get AIC for hurdle model 
 ```
 
-RMSE, Root Mean Square Error,
 
 Compare models with AIC, deviance explained, and in and out of sample prediction error.

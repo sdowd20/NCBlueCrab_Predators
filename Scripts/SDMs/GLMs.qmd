@@ -177,7 +177,10 @@ library(glmtoolbox)
 glm_znbm <- zeroinfl(red_drum ~ avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num | avg_depth + avg_ssal + avg_stemp + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + spot + FishingAll_num, dist = 'negbin', data = df_count_wide)
 summary(glm_znbm)
 
-
+ nb_mod <- glm.nb(model_formula, data = df_count_wide)
+zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = df_count_wide)
+summary(zipois_mod)
+summary(nb_mod)
 library(glmtoolbox)
 ele_zinb <- zeroinfl(Matings ~ Age | ## Predictor for the Poisson process
                  Age, ## Predictor for the Bernoulli process;
