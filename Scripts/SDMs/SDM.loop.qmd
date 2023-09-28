@@ -106,7 +106,7 @@ Compare models from multiple surveys w/ AIC, and in and out of sample prediction
 
 #### Form loop
 
-I am going to compare a poisson model, negative binomial model, and zero inflated version of those in terms of out of sample prediction. This is called cross-validation. I am going to write my own for loop this time, so I can manually change my training vs. testing size. If this doesn't make sense - ask me what it is doing!!! 
+I am going to compare a poisson model, negative binomial model, and zero inflated version of those in terms of out of sample prediction. This is called cross-validation. I am going to write my own for loop this time, so I can manually change my training vs. testing size. If this doesn't make sense - ask me what it is doing!!!
 
 ```{r}
 #Functions to assess predictive performance 
@@ -130,7 +130,6 @@ colnames(compare_var_in) <- c("model_type", "R2", "RMSE")
 Bootstrap_times <- 100 #this is how many times i want the loop to run
 smp_size <- floor(0.70 * nrow(df_count_wide)) #this is how i want to split training and testing data 
 ```
-
 
 ```{r}
 for(i in 1:Bootstrap_times) {
@@ -254,33 +253,42 @@ colnames(dat) <- c("model_type", "R2", "RMSE")
 
     #Data frame for modeling types: in sample  
     ##GLM, GAMs
-    pois_in <- as.data.frame(matrix(ncol= 2))
-    pois_in$V1 <- r2_func(pois_pred_in, train$red_drum)
-    pois_in$V2 <- RMSE_func(pois_pred_in, train$red_drum)
-    zinb_in <- as.data.frame(matrix(ncol= 2))
-    zinb_in$V1 <- r2_func(zinb_pred_in, train$red_drum)
-    zinb_in$V2 <- RMSE_func(zinb_pred_in, train$red_drum)
-    nb_gam_df_in <- as.data.frame(matrix(ncol= 2))
-    nb_gam_df_in$V1 <- r2_func(nb_gam_pred_in, train$red_drum)
-    nb_gam_df_in$V2 <- RMSE_func(nb_gam_pred_in, train$red_drum)
-    pois_gam_df_in <- as.data.frame(matrix(ncol= 2))
-    pois_gam_df_in$V1 <- r2_func(pois_gam_pred_in, train$red_drum)
-    pois_gam_df_in$V2 <- RMSE_func(pois_gam_pred_in, train$red_drum)
-    tweedie_gam_df_in <- as.data.frame(matrix(ncol= 2))
-    tweedie_gam_df_in$V1 <- r2_func(tweedie_gam_pred_in, train$red_drum)
-    tweedie_gam_df_in$V2 <- RMSE_func(tweedie_gam_pred_in, train$red_drum)
-    delta_gam_df_in <- as.data.frame(matrix(ncol= 2))
-     delta_gam_df_in$V1 <- r2_func(delta_gam_pred_in$pred, train$red_drum)
-    delta_gam_df_in$V2 <- RMSE_func(delta_gam_pred_in$pred, train$red_drum)
-    res_boost_pred_df_in <- as.data.frame(matrix(ncol= 2))
-    res_boost_pred_df_in$V1 <- r2_func(res_bag_pred_in$.pred, train$red_drum)
-    res_boost_pred_df_in$V2 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum)
-   res_rf_pred_df_in <- as.data.frame(matrix(ncol= 2))
-     res_rf_pred_df_in$V1 <- r2_func(res_rf_pred_in$.pred, train$red_drum)
-    res_rf_pred_df_in$V2 <- RMSE_func(res_rf_pred_in$.pred, train$red_drum)
-    res_bag_pred_df_in <- as.data.frame(matrix(ncol= 2))
-    res_bag_pred_df_in$V1 <- r2_func(res_bag_pred_in$.pred, train$red_drum)
-    res_bag_pred_df_in$V2 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum)
+    pois_in <- as.data.frame(matrix(ncol= 3))
+    pois_in$V1 <- "pois in"
+    pois_in$V2 <- r2_func(pois_pred_in, train$red_drum)
+    pois_in$V3 <- RMSE_func(pois_pred_in, train$red_drum)
+    zinb_in <- as.data.frame(matrix(ncol= 3))
+    zinb_in$V1 <- "zinb in"
+    zinb_in$V2 <- r2_func(zinb_pred_in, train$red_drum)
+    zinb_in$V3 <- RMSE_func(zinb_pred_in, train$red_drum)
+    nb_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    nb_gam_df_in$V1 <- "nb gam in"
+    nb_gam_df_in$V2 <- r2_func(nb_gam_pred_in, train$red_drum)
+    nb_gam_df_in$V3 <- RMSE_func(nb_gam_pred_in, train$red_drum)
+    pois_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    pois_gam_df_in$V1 <- "pois gam in"
+    pois_gam_df_in$V2 <- r2_func(pois_gam_pred_in, train$red_drum)
+    pois_gam_df_in$V3 <- RMSE_func(pois_gam_pred_in, train$red_drum)
+    tweedie_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    tweedie_gam_df_in$V1 <- "tweedie gam in"
+    tweedie_gam_df_in$V2 <- r2_func(tweedie_gam_pred_in, train$red_drum)
+    tweedie_gam_df_in$V3 <- RMSE_func(tweedie_gam_pred_in, train$red_drum)
+    delta_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    delta_gam_df_in$V1 <- "delta gam in"
+     delta_gam_df_in$V2 <- r2_func(delta_gam_pred_in$pred, train$red_drum)
+    delta_gam_df_in$V3 <- RMSE_func(delta_gam_pred_in$pred, train$red_drum)
+    res_boost_pred_df_in <- as.data.frame(matrix(ncol= 3))
+    res_boost_pred_df_in$V1 <- "boost tree in"
+    res_boost_pred_df_in$V2 <- r2_func(res_bag_pred_in$.pred, train$red_drum)
+    res_boost_pred_df_in$V3 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum)
+   res_rf_pred_df_in <- as.data.frame(matrix(ncol= 3))
+   res_rf_pred_df_in$V1 <- "rf in"
+     res_rf_pred_df_in$V2 <- r2_func(res_rf_pred_in$.pred, train$red_drum)
+    res_rf_pred_df_in$V3 <- RMSE_func(res_rf_pred_in$.pred, train$red_drum)
+    res_bag_pred_df_in <- as.data.frame(matrix(ncol= 3))
+    res_bag_pred_df_in$V1 <- "bag in"
+    res_bag_pred_df_in$V2 <- r2_func(res_bag_pred_in$.pred, train$red_drum)
+    res_bag_pred_df_in$V3 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum)
     
   dat_in <- rbind(pois_in, zinb_in, nb_gam_df_in, pois_gam_df_in, tweedie_gam_df_in, delta_gam_df_in, res_rf_pred_df_in, res_bag_pred_df_in, res_boost_pred_df_in)
 colnames(dat_in) <- c("model_type", "R2", "RMSE")
@@ -292,6 +300,7 @@ compare_in <- compare_var_in %>% pivot_longer(R2:RMSE, names_to = "metric", valu
 ```
 
 #Calculate AIC and deviance explained separately for models
+
 ```{r}
  #models 
 pois_mod <- glm(model_formula, family="poisson", data=df_count_wide)
@@ -340,4 +349,3 @@ AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
   # 
   
 ```
-
