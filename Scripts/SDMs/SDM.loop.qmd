@@ -104,9 +104,7 @@ df_count_wide %>% dplyr::select(avg_stemp, avg_sdo, avg_ssal, SAVDist_km, InletD
 
 Compare models from multiple surveys w/ AIC, and in and out of sample prediction error.
 
-#### Form loop
-
-I am going to compare a poisson model, negative binomial model, and zero inflated version of those in terms of out of sample prediction. This is called cross-validation. I am going to write my own for loop this time, so I can manually change my training vs. testing size. If this doesn't make sense - ask me what it is doing!!!
+#### P915, 10km
 
 ```{r}
 #Functions to assess predictive performance 
@@ -299,10 +297,8 @@ compare_out <- compare_var %>% pivot_longer(R2:RMSE, names_to = "metric", values
 compare_in <- compare_var_in %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
 ```
 
-#Calculate AIC and deviance explained separately for models
-
 ```{r}
- #models 
+#Calculate AIC and deviance explained separately for models
 pois_mod <- glm(model_formula, family="poisson", data=df_count_wide)
   # nb_mod <- glm.nb(model_formula, data = train)
   # # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
@@ -310,24 +306,21 @@ pois_mod <- glm(model_formula, family="poisson", data=df_count_wide)
   nb_gam <- gam(gam_formula, family= "nb", data= df_count_wide)
   pois_gam <- gam(gam_formula, family=poisson(), data= df_count_wide)
  tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=df_count_wide)
-  delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide, method = "REML")
- 
-  rf_mod <-
-  rand_forest(mode = "regression") %>%
-  set_engine("ranger", importance = "impurity")
+    delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide, method = "REML")
+  
+AIC <- AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
+```
 
-tflow <-
-  df_count_wide %>%
-  tidyflow(seed = 23151) %>%
-  plug_formula(model_formula) %>%
-  plug_split(initial_split, prop= 0.70) %>%  plug_model(rf_mod)
+```{r}
+#Summary output from models
+summary(tweedie_gam)
+gam.check(tweedie_gam)
 
-res_rf <- tflow %>% fit()
+summary(pois_mod)
+autoplot.countreg(pois_mod)
 
-AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
-#unsure how to get AIC for hurdle model 
-
-AIC_tbl_10 <- AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
+summary(pois_gam)
+gam.check(pois_gam)
 ```
 
 ```{r}
@@ -351,7 +344,7 @@ AIC_tbl_10 <- AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
   # zipois$V3 <- RMSE_func(zipois_pred, test$red_drum)
 ```
 
-#### Multiple surveys!!
+#### P915, P120, 10km
 ```{r}
 #Organize data 
 df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
@@ -386,7 +379,7 @@ compare_var_in_na <- as.data.frame(matrix(ncol = 3, nrow = 0))
 colnames(compare_var_in_na) <- c("model_type", "R2", "RMSE")
 
 Bootstrap_times <- 100 #this is how many times i want the loop to run
-smp_size <- floor(0.70 * nrow(df_count_wide_na)) #this is how i want to split training and testing data 
+smp_size_na <- floor(0.70 * nrow(df_count_wide_na)) #this is how i want to split training and testing data 
 
 gam_formula_na <- red_drum_P915 ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5)
 
@@ -395,19 +388,19 @@ model_formula_na <- red_drum_P915 ~ avg_depth + avg_stemp + avg_ssal + avg_sdo +
 
 ```{r}
 for(i in 1:Bootstrap_times) {
-  train_ind <- sample(seq_len(nrow(df_count_wide_na)), size = smp_size)
+  train_ind <- sample(seq_len(nrow(df_count_wide_na)), size = smp_size_na)
   train <- df_count_wide_na[train_ind, ]
   test <- df_count_wide_na[-train_ind, ]
 
   #GLMs and GAMs
  # pois_mod <- glm(model_formula, family="poisson", data=train)
   # zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train) #Warning: glm.fit: fitted rates numerically 0 occurredWarning: glm.fit: fitted probabilities numerically 0 or 1 occurredWarning: system is computationally singular: reciprocal condition number = 2.64664e-26FALSE
-  nb_gam <- gam(gam_formula, family= "nb", data= train)
+  nb_gam <- gam(gam_formula_na, family= "nb", data= train)
 #  pois_gam <- gam(gam_formula, family=poisson(), data= test) #Error in smooth.construct.tp.smooth.spec(object, data, knots) : A term has fewer unique covariate combinations than specified maximum degrees of freedom
 # }
 
- tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
-  delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5) + factor(Sedsize_common)), family= ziplss(), data= train, method = "REML")
+ tweedie_gam <- gam(gam_formula_na, family= tw(link= "log"), method= "REML", data=train)
+  delta_gam <- gam(list(gam_formula_na, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5) + factor(Sedsize_common)), family= ziplss(), data= train, method = "REML")
   
   #Machine learning 
   ##Random forest
@@ -416,7 +409,7 @@ for(i in 1:Bootstrap_times) {
   set_engine("ranger", importance = "impurity")
   tflow <- df_count_wide_na %>%
   tidyflow(seed = 23151) %>%
-  plug_formula(model_formula) %>%
+  plug_formula(model_formula_na) %>%
   plug_split(initial_split, prop= 0.70) %>%  plug_model(rf_mod)
   res_rf <- tflow %>% fit()
 
@@ -424,7 +417,7 @@ for(i in 1:Bootstrap_times) {
   btree <- bag_tree(mode = "regression") %>% set_engine("rpart", times = 50)
   tflow2 <- df_count_wide_na %>%
     tidyflow(seed = 566521) %>%
-    plug_split(initial_split, prop= 0.70) %>% plug_formula(model_formula) %>%
+    plug_split(initial_split, prop= 0.70) %>% plug_formula(model_formula_na) %>%
   plug_model(btree)
   res_bag <- tflow2 %>% fit()
   
@@ -435,7 +428,7 @@ for(i in 1:Bootstrap_times) {
 
   tflow <- df_count_wide_na %>%
     tidyflow(seed = 51231) %>%
-    plug_formula(model_formula) %>%
+    plug_formula(model_formula_na) %>%
     plug_split(initial_split, prop= 0.70) %>%
     plug_model(boost_mod)
     res_boost <- fit(tflow)
@@ -565,33 +558,49 @@ compare_in_na <- compare_var_in_na %>% pivot_longer(R2:RMSE, names_to = "metric"
 
 ```{r}
  #models 
-pois_mod <- glm(model_formula, family="poisson", data=df_count_wide_na)
+pois_mod_na <- glm(model_formula_na, family="poisson", data=df_count_wide_na)
   # nb_mod <- glm.nb(model_formula, data = train)
   # # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
-  zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = df_count_wide_na)
-  nb_gam <- gam(gam_formula, family= "nb", data= df_count_wide_na)
-  pois_gam <- gam(gam_formula, family=poisson(), data= df_count_wide_na)
- tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=df_count_wide_na)
-  delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide_na, method = "REML")
- 
-  rf_mod <-
-  rand_forest(mode = "regression") %>%
-  set_engine("ranger", importance = "impurity")
-
-tflow <-
-  df_count_wide_na %>%
-  tidyflow(seed = 23151) %>%
-  plug_formula(model_formula) %>%
-  plug_split(initial_split, prop= 0.70) %>%  plug_model(rf_mod)
-
-res_rf <- tflow %>% fit()
-
-AIC(pois_mod, zinb_mod, nb_gam, pois_gam, tweedie_gam)
+  zinb_mod_na <- zeroinfl(model_formula_na, dist = 'poisson', data = df_count_wide_na)
+  nb_gam_na <- gam(gam_formula_na, family= "nb", data= df_count_wide_na)
+  pois_gam_na <- gam(gam_formula_na, family=poisson(), data= df_count_wide_na)
+ tweedie_gam_na <- gam(gam_formula_na, family= tw(link= "log"), method= "REML", data=df_count_wide_na)
+  delta_gam_na <- gam(list(gam_formula_na, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide_na, method = "REML")
+    
+  AIC_na <- AIC(pois_mod_na, zinb_mod_na, nb_gam_na, pois_gam_na, tweedie_gam_na)
 #unsure how to get AIC for hurdle model 
+```
 
-summary(pois_gam)
-gam.check(pois_gam)
-summary(tweedie_gam)
-gam.check(tweedie_gam)
+```{r}
+#Look at output from various models 
+summary(zinb_mod_na)
+gam.check(tweedie_gam_na)
+```
+
+### P915, P120, 10 km, Binary
+```{r}
+
+
+
+
+
+
+
+
+df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+colnames(df_CPUE_wide)
+
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
+df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
+df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "_")
+
+df_count_wide2 <- df_count %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") #%>% drop_na()
+
+df_count_wide_na <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") %>% drop_na()
+#87 gridIDs with data from all species 
+#143 for P915 and P195
+#281 b/w P120 and P195
 ```
 

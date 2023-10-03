@@ -20,6 +20,8 @@ As of now (05/06/23), the sample IDs for the river systems (only Neuse and Pamli
 
 An update about the datasets (correspondence with Cara Kowalchyk on 08/07/23): Different Control1s can be for the same sampling event because of samples split between half and whole mesh sizes (when data began). For example, 0111796 and 0111797 were the same set of deep nets but didn't merge correctly. They should be merged under sample= 11011HYDE220. If you see a sample ID that contains the control1, you can delete it off the end and it would merge properly, maybe. If you have trouble with that, Cara offered to repull the data. I propose to group_by Speciescommonname, Area, Quad, and Strata and sum the Colnum.
 
+An update about the datasets now (correspondence with Dan Zapf 09/08/23): When combining the CPUE and the length datasets, Control1 should not be used. This is because before 2008, the Sample # contains the data from multiple Control1s. I checked for the P915 CPUE dataset and there is the same number of unique Sample as Control1 values. Because of this, I felt comfortable using Control1 for my analysis. Once I bring in the length data as well, I will switch to using Sample over Control1. 
+
 However, this isn't going to be an issue because the Control1s only vary for the early data. When I did this command, p915_CPUE %\>% filter(Year \>= 2001) %\>% group_by(Control1, Speciescommonname) %\>% summarize(count = n()) and then unique(t\$count), there was only 1 value for count. This means that each species only has one row for each Control1
 
 ##### Biological dataset
@@ -48,8 +50,10 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 p915_CPUE <- read.csv("~/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 
-
-
+length(unique(p915_CPUE$Sample))
+length(unique(p915_CPUE$Control1))
+control_spp <- p915_CPUE %>% filter(Year >= 2001) %>% group_by(Control1, Speciescommonname) %>% summarize(count = n())
+unique(control_spp$count)
 
 p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
 p915_biolnew1 <- p915_biolnew1 %>% select(-c(X, ...1))
