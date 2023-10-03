@@ -6,6 +6,8 @@ editor: visual
 
 Test script with red drum. Eventually there will be a .R file to load in all the data and functions.
 
+#######################10 KM#######################
+
 #### Load packages, functions, and datasets
 
 ```{r}
@@ -577,30 +579,8 @@ summary(zinb_mod_na)
 gam.check(tweedie_gam_na)
 ```
 
-### P915, P120, 10 km, Binary
+####################### 5 KM#######################
 ```{r}
 
-
-
-
-
-
-
-
-df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
-
-colnames(df_CPUE_wide)
-
-df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
-df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
-df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
-df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "_")
-
-df_count_wide2 <- df_count %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") #%>% drop_na()
-
-df_count_wide_na <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") %>% drop_na()
-#87 gridIDs with data from all species 
-#143 for P915 and P195
-#281 b/w P120 and P195
 ```
 

@@ -247,7 +247,8 @@ CPUE_all_year <- rbind(p915_CPUEedt_year, p120_CPUEedt_year, p195_CPUEedt_year)
 CPUE_all_year$lat_lon <- paste(CPUE_all_year$Latitude, CPUE_all_year$Longitude, sep= "_")
 ```
 
-#### For June, all overlap at once 
+#### For June, all overlap at once
+
 ```{r}
 spp_names <- unique(P915_total$Speciescommonname)
 spp_names_trawl <- c("northern brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel")
