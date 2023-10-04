@@ -347,6 +347,7 @@ gam.check(pois_gam)
 ```
 
 #### P915, P120, 10km
+
 ```{r}
 #Organize data 
 df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
@@ -395,8 +396,8 @@ for(i in 1:Bootstrap_times) {
   test <- df_count_wide_na[-train_ind, ]
 
   #GLMs and GAMs
- # pois_mod <- glm(model_formula, family="poisson", data=train)
-  # zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train) #Warning: glm.fit: fitted rates numerically 0 occurredWarning: glm.fit: fitted probabilities numerically 0 or 1 occurredWarning: system is computationally singular: reciprocal condition number = 2.64664e-26FALSE
+ pois_mod <- glm(model_formula, family="poisson", data=train)
+ zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train) #Warning: glm.fit: fitted rates numerically 0 occurredWarning: glm.fit: fitted probabilities numerically 0 or 1 occurredWarning: system is computationally singular: reciprocal condition number = 2.64664e-26FALSE
   nb_gam <- gam(gam_formula_na, family= "nb", data= train)
 #  pois_gam <- gam(gam_formula, family=poisson(), data= test) #Error in smooth.construct.tp.smooth.spec(object, data, knots) : A term has fewer unique covariate combinations than specified maximum degrees of freedom
 # }
@@ -579,8 +580,503 @@ summary(zinb_mod_na)
 gam.check(tweedie_gam_na)
 ```
 
-####################### 5 KM#######################
-```{r}
+####################### 5 KM
 
+#### P915, 5 km
+
+```{r}
+#Load in datasets
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt_5km <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.5km.10.04.23.csv")
+CPUE_grid_avg_edt_5km <- CPUE_grid_avg_edt_5km[,-1]
+CPUE_grid_avg_edt_5km <- CPUE_grid_avg_edt_5km %>% mutate_at(c("Sedsize_common", "ShorelineType", "Survey"), as.factor) %>% rename("SAVDist_km"= "SAV_km")
+CPUE_grid_avg_edt_5km$Speciescommonname <- gsub(" ", "_", CPUE_grid_avg_edt_5km$Speciescommonname)
+
+##Count dataset 
+df_count_5km <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.5km.10.04.23.csv")  
+df_count_5km <- df_count_5km %>% dplyr::select(-c(...1, CPUE:mean_CPUE_stdzd)) %>% rename("SAVDist_km"= "SAV_km") #need to remove or R will get confused 
+df_count_5km$Speciescommonname <- gsub(" ", "_", df_count_5km$Speciescommonname)
+
+#Pivot-wider datasets: 
+##Standardized catch per unit effort dataset wide 
+df_CPUE_wide_5km <- CPUE_grid_avg_edt_5km %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+
+##Binary dataset (0 or 1):  
+df_binary_wide_5km <- df_CPUE_wide_5km %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+##Count dataset wide 
+df_count_wide_5km <- df_count_5km %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Form train/testing datasets by dividing 80% 20% 
+set.seed(777)
+##Randomly split data in R
+sample_size_5km = floor(0.8*nrow(df_CPUE_wide_5km)) #take 80% of rows, # is same b/w dfs
+
+##CPUE model
+picked_CPUE_5km = sample(seq_len(nrow(df_CPUE_wide_5km)),size = sample_size_5km)
+df_CPUE_wide_test_5km =df_CPUE_wide_5km[-picked_CPUE_5km,]
+df_CPUE_wide_train_5km =df_CPUE_wide_5km[picked_CPUE_5km,]
+
+##Binary model
+picked_binary_5km = sample(seq_len(nrow(df_binary_wide_5km)),size = sample_size_5km)
+df_binary_wide_test_5km = df_binary_wide_5km[-picked_binary_5km,]
+df_binary_wide_train_5km = df_binary_wide_5km[picked_binary_5km,]
+
+##Poisson model
+picked_5km = sample(seq_len(nrow(df_count_wide_5km)),size = sample_size_5km) 
+df_count_wide_test_5km = df_count_wide_5km[-picked_5km,]
+df_count_wide_train_5km = df_count_wide_5km[picked_5km,]
+
+#Load in formulas  
+##Load GAM formula
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) #no shoreline type b/c was weird w/ CART
+
+##Other 
+model_formula <- red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common
+```
+
+```{r}
+#Functions to assess predictive performance 
+r2_func <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+
+
+#Sest up loop 
+set.seed(321)
+compare_var_5km <- as.data.frame(matrix(ncol = 3, nrow = 0))
+colnames(compare_var_5km) <- c("model_type", "R2", "RMSE")
+
+compare_var_in_5km <- as.data.frame(matrix(ncol = 3, nrow = 0))
+colnames(compare_var_in_5km) <- c("model_type", "R2", "RMSE")
+
+Bootstrap_times_5km <- 100 #this is how many times i want the loop to run
+smp_size_5km <- floor(0.70 * nrow(df_count_wide_5km)) #this is how i want to split training and testing data 
+```
+
+```{r}
+for(i in 1:Bootstrap_times_5km) {
+  train_ind <- sample(seq_len(nrow(df_count_wide_5km)), size = smp_size_5km)
+  train <- df_count_wide_5km[train_ind, ]
+  test <- df_count_wide_5km[-train_ind, ]
+
+  #GLMs and GAMs
+  pois_mod <- glm(model_formula, family="poisson", data=train)
+  zinb_mod <- zeroinfl(model_formula, dist = 'poisson', data = train)
+  nb_gam <- gam(gam_formula, family= "nb", data= train)
+  pois_gam <- gam(gam_formula, family=poisson(), data= test)
+ tweedie_gam <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=train)
+  delta_gam <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= train, method = "REML")
+
+  #Machine learning 
+  ##Random forest
+  rf_mod <-
+  rand_forest(mode = "regression") %>%
+  set_engine("ranger", importance = "impurity")
+  tflow <- df_count_wide_5km %>%
+  tidyflow(seed = 23151) %>%
+  plug_formula(model_formula) %>%
+  plug_split(initial_split, prop= 0.70) %>%  plug_model(rf_mod)
+  res_rf <- tflow %>% fit()
+
+  ##Bagging
+  btree <- bag_tree(mode = "regression") %>% set_engine("rpart", times = 50)
+  tflow2 <- df_count_wide_5km %>%
+    tidyflow(seed = 566521) %>%
+    plug_split(initial_split, prop= 0.70) %>% plug_formula(model_formula) %>%
+  plug_model(btree)
+  res_bag <- tflow2 %>% fit()
+  
+  ##Boosting
+  boost_mod <-
+  boost_tree(mode = "regression", trees = 500) %>%
+  set_engine("xgboost")
+
+  tflow <- df_count_wide_5km %>%
+    tidyflow(seed = 51231) %>%
+    plug_formula(model_formula) %>%
+    plug_split(initial_split, prop= 0.70) %>%
+    plug_model(boost_mod)
+    res_boost <- fit(tflow)
+
+##Out of sample prediction 
+ #GLMs and GAMs
+  pois_pred <- predict(pois_mod, newdata = test, type = "response")
+  zinb_pred <- predict(zinb_mod, newdata = test, type = "response")
+  nb_gam_pred <- predict(nb_gam, newdata= test, type= "response")
+  pois_gam_pred <- predict(pois_gam, newdata= test, type= "response")
+  tweedie_gam_pred <- predict(tweedie_gam, newdata= test, type = "response")
+  inv_link <- binomial(link = "cloglog")$linkinv
+  delta_gam_pred <- predict(delta_gam, test, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% dplyr::select(pred)
+
+  #Random forest 
+  res_rf_pred <- res_rf %>% predict_testing()
+  res_bag_pred <- res_bag %>% predict_testing()
+  res_boost_pred <- res_boost %>% predict_testing()
+
+  #Data frame for modeling types: out of sample  
+  ##GLM, GAMs
+    pois <- as.data.frame(matrix(ncol =3))
+    pois$V1 <- "pois 5km"
+    pois$V2 <- r2_func(pois_pred, test$red_drum)
+    pois$V3 <- RMSE_func(pois_pred, test$red_drum)
+    zinb <- as.data.frame(matrix(ncol =3))
+    zinb$V1 <- "zinb 5km"
+    zinb$V2 <- r2_func(zinb_pred, test$red_drum)
+    zinb$V3 <- RMSE_func(zinb_pred, test$red_drum)
+    nb_gam_df <- as.data.frame(matrix(ncol =3))
+    nb_gam_df$V1 <- "nb gam 5km"
+    nb_gam_df$V2 <- r2_func(nb_gam_pred, test$red_drum)
+    nb_gam_df$V3 <- RMSE_func(nb_gam_pred, test$red_drum)
+    pois_gam_df <- as.data.frame(matrix(ncol = 3))
+    pois_gam_df$V1 <- "pois gam 5km"
+    pois_gam_df$V2 <- r2_func(pois_gam_pred, test$red_drum)
+    pois_gam_df$V3 <- RMSE_func(pois_gam_pred, test$red_drum)
+    tweedie_gam_df <- as.data.frame(matrix(ncol= 3))
+    tweedie_gam_df$V1 <- "tweedie gam 5km"
+    tweedie_gam_df$V2 <- r2_func(tweedie_gam_pred, test$red_drum)
+    tweedie_gam_df$V3 <- RMSE_func(tweedie_gam_pred, test$red_drum)
+    delta_gam_df <- as.data.frame(matrix(ncol = 3))
+    delta_gam_df$V1 <- "delta gam 5km"
+    delta_gam_df$V2 <- r2_func(delta_gam_pred$pred, test$red_drum)
+    delta_gam_df$V3 <- RMSE_func(delta_gam_pred$pred, test$red_drum)
+
+    ##Machine learning
+    res_rf_pred_df <- as.data.frame(matrix(ncol= 3))
+    res_rf_pred_df$V1 <- "rf 5km"
+    res_rf_pred_df$V2 <- r2_func(res_rf_pred$.pred, test$red_drum)
+    res_rf_pred_df$V3 <- RMSE_func(res_rf_pred$.pred, test$red_drum)
+    res_bag_pred_df <- as.data.frame(matrix(ncol= 3))
+    res_bag_pred_df$V1 <- "bagged 5km"
+    res_bag_pred_df$V2 <- r2_func(res_bag_pred$.pred, test$red_drum)
+    res_bag_pred_df$V3 <- RMSE_func(res_bag_pred$.pred, test$red_drum)
+    res_boost_pred_df <- as.data.frame(matrix(ncol= 3))
+    res_boost_pred_df$V1 <- "boosted 5km"
+    res_boost_pred_df$V2 <- r2_func(res_bag_pred$.pred, test$red_drum)
+    res_boost_pred_df$V3 <- RMSE_func(res_bag_pred$.pred, test$red_drum)
+    
+  dat_5km <- rbind(pois, zinb, nb_gam_df, pois_gam_df, tweedie_gam_df, delta_gam_df, res_rf_pred_df, res_bag_pred_df, res_boost_pred_df)
+colnames(dat_5km) <- c("model_type", "R2", "RMSE")
+  compare_var_5km <- rbind(compare_var_5km, dat_5km)
+    
+##In-sample:
+  #GLMs and GAMs
+  pois_pred_in <- predict(pois_mod, newdata = train, type = "response")
+  zinb_pred_in <- predict(zinb_mod, newdata = train, type = "response")
+  nb_gam_pred_in <- predict(nb_gam, newdata= train, type= "response")
+  pois_gam_pred_in <- predict(pois_gam, newdata= train, type= "response")
+  tweedie_gam_pred_in <- predict(tweedie_gam, newdata= train, type = "response")
+  inv_link <- binomial(link = "cloglog")$linkinv
+  delta_gam_pred_in <- predict(delta_gam, train, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% dplyr::select(pred)
+
+  #Random forest 
+  res_rf_pred_in <- res_rf %>% predict_training()
+  res_bag_pred_in <- res_bag %>% predict_training()
+  res_boost_pred_in <- res_boost %>% predict_training()
+
+    #Data frame for modeling types: in sample  
+    ##GLM, GAMs
+    pois_in <- as.data.frame(matrix(ncol= 3))
+    pois_in$V1 <- "pois in 5km"
+    pois_in$V2 <- r2_func(pois_pred_in, train$red_drum)
+    pois_in$V3 <- RMSE_func(pois_pred_in, train$red_drum)
+    zinb_in <- as.data.frame(matrix(ncol= 3))
+    zinb_in$V1 <- "zinb in 5km"
+    zinb_in$V2 <- r2_func(zinb_pred_in, train$red_drum)
+    zinb_in$V3 <- RMSE_func(zinb_pred_in, train$red_drum)
+    nb_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    nb_gam_df_in$V1 <- "nb gam in 5km"
+    nb_gam_df_in$V2 <- r2_func(nb_gam_pred_in, train$red_drum)
+    nb_gam_df_in$V3 <- RMSE_func(nb_gam_pred_in, train$red_drum)
+    pois_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    pois_gam_df_in$V1 <- "pois gam in 5km"
+    pois_gam_df_in$V2 <- r2_func(pois_gam_pred_in, train$red_drum)
+    pois_gam_df_in$V3 <- RMSE_func(pois_gam_pred_in, train$red_drum)
+    tweedie_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    tweedie_gam_df_in$V1 <- "tweedie gam in 5km"
+    tweedie_gam_df_in$V2 <- r2_func(tweedie_gam_pred_in, train$red_drum)
+    tweedie_gam_df_in$V3 <- RMSE_func(tweedie_gam_pred_in, train$red_drum)
+    delta_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    delta_gam_df_in$V1 <- "delta gam in 5km"
+     delta_gam_df_in$V2 <- r2_func(delta_gam_pred_in$pred, train$red_drum)
+    delta_gam_df_in$V3 <- RMSE_func(delta_gam_pred_in$pred, train$red_drum)
+    res_boost_pred_df_in <- as.data.frame(matrix(ncol= 3))
+    res_boost_pred_df_in$V1 <- "boost tree in 5km"
+    res_boost_pred_df_in$V2 <- r2_func(res_bag_pred_in$.pred, train$red_drum)
+    res_boost_pred_df_in$V3 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum)
+   res_rf_pred_df_in <- as.data.frame(matrix(ncol= 3))
+   res_rf_pred_df_in$V1 <- "rf in 5km"
+     res_rf_pred_df_in$V2 <- r2_func(res_rf_pred_in$.pred, train$red_drum)
+    res_rf_pred_df_in$V3 <- RMSE_func(res_rf_pred_in$.pred, train$red_drum)
+    res_bag_pred_df_in <- as.data.frame(matrix(ncol= 3))
+    res_bag_pred_df_in$V1 <- "bag in 5km"
+    res_bag_pred_df_in$V2 <- r2_func(res_bag_pred_in$.pred, train$red_drum)
+    res_bag_pred_df_in$V3 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum)
+    
+  dat_in_5km <- rbind(pois_in, zinb_in, nb_gam_df_in, pois_gam_df_in, tweedie_gam_df_in, delta_gam_df_in, res_rf_pred_df_in, res_bag_pred_df_in, res_boost_pred_df_in)
+colnames(dat_in_5km) <- c("model_type", "R2", "RMSE")
+  compare_var_in_5km <- rbind(compare_var_in_5km, dat_in_5km)
+}
+
+compare_out_5km <- compare_var_5km %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+compare_in_5km <- compare_var_in_5km %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+```
+
+
+```{r}
+#Calculate AIC and deviance explained separately for models
+pois_mod_5km <- glm(model_formula, family="poisson", data=df_count_wide_5km)
+  # nb_mod <- glm.nb(model_formula, data = train)
+  # # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
+  zinb_mod_5km <- zeroinfl(model_formula, dist = 'poisson', data = df_count_wide_5km)
+  nb_gam_5km <- gam(gam_formula, family= "nb", data= df_count_wide_5km)
+  pois_gam_5km <- gam(gam_formula, family=poisson(), data= df_count_wide_5km)
+ tweedie_gam_5km <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+    delta_gam_5km <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide_5km, method = "REML")
+  
+AIC <- AIC(pois_mod_5km, zinb_mod_5km, nb_gam_5km, pois_gam_5km, tweedie_gam_5km)
+```
+
+```{r}
+#Model output
+summary(pois_gam_5km)
+gam.check(pois_gam_5km)
+```
+
+#### P915, p120, 5km
+```{r}
+df_count_5km$SpeciesSurvey <- paste(df_count_5km$Speciescommonname, df_count_5km$Survey, sep= "_")
+
+df_count_wide_5km_na <- df_count_5km %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") %>% drop_na()
+#199 for P915, P120
+#66 for P915, P195
+```
+
+```{r}
+#Functions to assess predictive performance 
+r2_func <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+
+
+#Sest up loop 
+set.seed(321)
+compare_var_5km_na <- as.data.frame(matrix(ncol = 3, nrow = 0))
+colnames(compare_var_5km_na) <- c("model_type", "R2", "RMSE")
+
+compare_var_in_5km_na  <- as.data.frame(matrix(ncol = 3, nrow = 0))
+colnames(compare_var_in_5km_na ) <- c("model_type", "R2", "RMSE")
+
+Bootstrap_times_5km_na  <- 100 #this is how many times i want the loop to run
+smp_size_5km_na  <- floor(0.70 * nrow(df_count_wide_5km_na)) #this is how i want to split training and testing data 
+
+#Load in formulas  
+##Load GAM formula
+gam_formula_na <- red_drum_P915 ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5)
+
+model_formula_na <- red_drum_P915 ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden_P915 + atlantic_croaker_P915 + southern_flounder_P915 + FishingAll_num + Sedsize_common + blue_crab_P120 + weakfish_P120 + atlantic_menhaden_P120 + atlantic_croaker_P120 + pinfish_P120 + pink_shrimp_P120 + southern_flounder_P120 + spot_P120
+```
+
+```{r}
+for(i in 1:Bootstrap_times_5km_na) {
+  train_ind <- sample(seq_len(nrow(df_count_wide_5km_na)), size = smp_size_5km_na)
+  train <- df_count_wide_5km_na[train_ind, ]
+  test <- df_count_wide_5km_na[-train_ind, ]
+
+  #GLMs and GAMs
+  # pois_mod <- glm(model_formula_na, family="poisson", data=train)
+  # zinb_mod <- zeroinfl(model_formula_na, dist = 'poisson', data = train)
+  # nb_gam <- gam(gam_formula_na, family= "nb", data= train)
+  # pois_gam <- gam(gam_formula_na, family=poisson(), data= test), fewer unique covariates 
+ # tweedie_gam <- gam(gam_formula_na, family= tw(link= "log"), method= "REML", data=train)
+  # delta_gam <- gam(list(gam_formula_na, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5)), family= ziplss(), data= train, method = "REML")
+
+  #Machine learning 
+  ##Random forest
+  rf_mod <-
+  rand_forest(mode = "regression") %>%
+  set_engine("ranger", importance = "impurity")
+  tflow <- df_count_wide_5km_na %>%
+  tidyflow(seed = 23151) %>%
+  plug_formula(model_formula_na) %>%
+  plug_split(initial_split, prop= 0.70) %>%  plug_model(rf_mod)
+  res_rf <- tflow %>% fit()
+
+  ##Bagging
+  btree <- bag_tree(mode = "regression") %>% set_engine("rpart", times = 50)
+  tflow2 <- df_count_wide_5km_na %>%
+    tidyflow(seed = 566521) %>%
+    plug_split(initial_split, prop= 0.70) %>% plug_formula(model_formula_na) %>%
+  plug_model(btree)
+  res_bag <- tflow2 %>% fit()
+  
+  ##Boosting
+  boost_mod <-
+  boost_tree(mode = "regression", trees = 500) %>%
+  set_engine("xgboost")
+
+  tflow <- df_count_wide_5km_na %>%
+    tidyflow(seed = 51231) %>%
+    plug_formula(model_formula_na) %>%
+    plug_split(initial_split, prop= 0.70) %>%
+    plug_model(boost_mod)
+    res_boost <- fit(tflow)
+
+##Out of sample prediction 
+ #GLMs and GAMs
+  # pois_pred <- predict(pois_mod, newdata = test, type = "response")
+  # zinb_pred <- predict(zinb_mod, newdata = test, type = "response")
+  # nb_gam_pred <- predict(nb_gam, newdata= test, type= "response")
+  # pois_gam_pred <- predict(pois_gam, newdata= test, type= "response")
+  # tweedie_gam_pred <- predict(tweedie_gam, newdata= test, type = "response")
+  # inv_link <- binomial(link = "cloglog")$linkinv
+  # delta_gam_pred <- predict(delta_gam, test, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% dplyr::select(pred)
+
+  #Random forest 
+  res_rf_pred <- res_rf %>% predict_testing()
+  res_bag_pred <- res_bag %>% predict_testing()
+  res_boost_pred <- res_boost %>% predict_testing()
+
+  #Data frame for modeling types: out of sample  
+  ##GLM, GAMs
+    # pois <- as.data.frame(matrix(ncol =3))
+    # pois$V1 <- "pois 5km"
+    # pois$V2 <- r2_func(pois_pred, test$red_drum_P915)
+    # pois$V3 <- RMSE_func(pois_pred, test$red_drum_P915)
+    # zinb <- as.data.frame(matrix(ncol =3))
+    # zinb$V1 <- "zinb 5km"
+    # zinb$V2 <- r2_func(zinb_pred, test$red_drum_P915)
+    # zinb$V3 <- RMSE_func(zinb_pred, test$red_drum_P915)
+    # nb_gam_df <- as.data.frame(matrix(ncol =3))
+    # nb_gam_df$V1 <- "nb gam 5km"
+    # nb_gam_df$V2 <- r2_func(nb_gam_pred, test$red_drum_P915)
+    # nb_gam_df$V3 <- RMSE_func(nb_gam_pred, test$red_drum_P915)
+    # pois_gam_df <- as.data.frame(matrix(ncol = 3))
+    # pois_gam_df$V1 <- "pois gam 5km na"
+    # pois_gam_df$V2 <- r2_func(pois_gam_pred, test$red_drum_P915)
+    # pois_gam_df$V3 <- RMSE_func(pois_gam_pred, test$red_drum_P915)
+    # tweedie_gam_df <- as.data.frame(matrix(ncol= 3))
+    # tweedie_gam_df$V1 <- "tweedie gam 5km na"
+    # tweedie_gam_df$V2 <- r2_func(tweedie_gam_pred, test$red_drum_P915)
+    # tweedie_gam_df$V3 <- RMSE_func(tweedie_gam_pred, test$red_drum_P915)
+    # delta_gam_df <- as.data.frame(matrix(ncol = 3))
+    # delta_gam_df$V1 <- "delta gam 5km na"
+    # delta_gam_df$V2 <- r2_func(delta_gam_pred$pred, test$red_drum_P915)
+    # delta_gam_df$V3 <- RMSE_func(delta_gam_pred$pred, test$red_drum_P915)
+
+    ##Machine learning
+    res_rf_pred_df <- as.data.frame(matrix(ncol= 3))
+    res_rf_pred_df$V1 <- "rf 5km na"
+    res_rf_pred_df$V2 <- r2_func(res_rf_pred$.pred, test$red_drum_P915)
+    res_rf_pred_df$V3 <- RMSE_func(res_rf_pred$.pred, test$red_drum_P915)
+    res_bag_pred_df <- as.data.frame(matrix(ncol= 3))
+    res_bag_pred_df$V1 <- "bagged 5km na"
+    res_bag_pred_df$V2 <- r2_func(res_bag_pred$.pred, test$red_drum_P915)
+    res_bag_pred_df$V3 <- RMSE_func(res_bag_pred$.pred, test$red_drum_P915)
+    res_boost_pred_df <- as.data.frame(matrix(ncol= 3))
+    res_boost_pred_df$V1 <- "boosted 5km na"
+    res_boost_pred_df$V2 <- r2_func(res_bag_pred$.pred, test$red_drum_P915)
+    res_boost_pred_df$V3 <- RMSE_func(res_bag_pred$.pred, test$red_drum_P915)
+    
+  dat_5km_na <- rbind(res_rf_pred_df, res_bag_pred_df, res_boost_pred_df)
+colnames(dat_5km_na) <- c("model_type", "R2", "RMSE")
+  compare_var_5km_na <- rbind(compare_var_5km_na, dat_5km_na)
+    
+##In-sample:
+  #GLMs and GAMs
+  # pois_pred_in <- predict(pois_mod, newdata = train, type = "response")
+  # zinb_pred_in <- predict(zinb_mod, newdata = train, type = "response")
+  # nb_gam_pred_in <- predict(nb_gam, newdata= train, type= "response")
+  # pois_gam_pred_in <- predict(pois_gam, newdata= train, type= "response")
+  # tweedie_gam_pred_in <- predict(tweedie_gam, newdata= train, type = "response")
+  # inv_link <- binomial(link = "cloglog")$linkinv
+  # delta_gam_pred_in <- predict(delta_gam, train, type = "link") %>% as.data.frame() %>% transmute(family = "Zero-inflated Poisson", pred = inv_link(V2) * exp(V1)) %>% dplyr::select(pred)
+
+  #Random forest 
+  res_rf_pred_in <- res_rf %>% predict_training()
+  res_bag_pred_in <- res_bag %>% predict_training()
+  res_boost_pred_in <- res_boost %>% predict_training()
+
+    #Data frame for modeling types: in sample  
+    ##GLM, GAMs
+    # pois_in <- as.data.frame(matrix(ncol= 3))
+    # pois_in$V1 <- "pois in 5km"
+    # pois_in$V2 <- r2_func(pois_pred_in, train$red_drum_P915)
+    # pois_in$V3 <- RMSE_func(pois_pred_in, train$red_drum_P915)
+    # zinb_in <- as.data.frame(matrix(ncol= 3))
+    # zinb_in$V1 <- "zinb in 5km"
+    # zinb_in$V2 <- r2_func(zinb_pred_in, train$red_drum_P915)
+    # zinb_in$V3 <- RMSE_func(zinb_pred_in, train$red_drum_P915)
+    # nb_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    # nb_gam_df_in$V1 <- "nb gam in 5km"
+    # nb_gam_df_in$V2 <- r2_func(nb_gam_pred_in, train$red_drum_P915)
+    # nb_gam_df_in$V3 <- RMSE_func(nb_gam_pred_in, train$red_drum_P915)
+    # pois_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    # pois_gam_df_in$V1 <- "pois gam in 5km na"
+    # pois_gam_df_in$V2 <- r2_func(pois_gam_pred_in, train$red_drum_P915)
+    # pois_gam_df_in$V3 <- RMSE_func(pois_gam_pred_in, train$red_drum_P915)
+    # tweedie_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    # tweedie_gam_df_in$V1 <- "tweedie gam in 5km na"
+    # tweedie_gam_df_in$V2 <- r2_func(tweedie_gam_pred_in, train$red_drum_P915)
+    # tweedie_gam_df_in$V3 <- RMSE_func(tweedie_gam_pred_in, train$red_drum_P915)
+    # delta_gam_df_in <- as.data.frame(matrix(ncol= 3))
+    # delta_gam_df_in$V1 <- "delta gam in 5km na"
+    #  delta_gam_df_in$V2 <- r2_func(delta_gam_pred_in$pred, train$red_drum_P915)
+    # delta_gam_df_in$V3 <- RMSE_func(delta_gam_pred_in$pred, train$red_drum_P915)
+    res_boost_pred_df_in <- as.data.frame(matrix(ncol= 3))
+    res_boost_pred_df_in$V1 <- "boost tree in 5km na"
+    res_boost_pred_df_in$V2 <- r2_func(res_bag_pred_in$.pred, train$red_drum_P915)
+    res_boost_pred_df_in$V3 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum_P915)
+   res_rf_pred_df_in <- as.data.frame(matrix(ncol= 3))
+   res_rf_pred_df_in$V1 <- "rf in 5km na"
+     res_rf_pred_df_in$V2 <- r2_func(res_rf_pred_in$.pred, train$red_drum_P915)
+    res_rf_pred_df_in$V3 <- RMSE_func(res_rf_pred_in$.pred, train$red_drum_P915)
+    res_bag_pred_df_in <- as.data.frame(matrix(ncol= 3))
+    res_bag_pred_df_in$V1 <- "bag in 5km na"
+    res_bag_pred_df_in$V2 <- r2_func(res_bag_pred_in$.pred, train$red_drum_P915)
+    res_bag_pred_df_in$V3 <- RMSE_func(res_bag_pred_in$.pred, train$red_drum_P915)
+    
+  dat_in_5km_na <- rbind(res_rf_pred_df_in, res_bag_pred_df_in, res_boost_pred_df_in)
+colnames(dat_in_5km_na) <- c("model_type", "R2", "RMSE")
+  compare_var_in_5km_na <- rbind(compare_var_in_5km_na, dat_in_5km_na)
+}
+
+compare_out_5km_na <- compare_var_5km_na %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+compare_in_5km_na <- compare_var_in_5km_na %>% pivot_longer(R2:RMSE, names_to = "metric", values_to = "values") %>% group_by(model_type, metric) %>% summarise(mean_val = mean(values)) %>% pivot_wider(names_from = "metric", values_from = "mean_val") %>% arrange(-R2)
+```
+
+
+```{r}
+#Calculate AIC and deviance explained separately for models
+pois_mod_5km <- glm(model_formula_na, family="poisson", data=df_count_wide_5km)
+  # nb_mod <- glm.nb(model_formula, data = train)
+  # # zipois_mod <- zeroinfl(model_formula, dist = 'negbin', data = train)
+  zinb_mod_5km <- zeroinfl(model_formula, dist = 'poisson', data = df_count_wide_5km)
+  nb_gam_5km <- gam(gam_formula, family= "nb", data= df_count_wide_5km)
+  pois_gam_5km <- gam(gam_formula, family=poisson(), data= df_count_wide_5km)
+ tweedie_gam_5km <- gam(gam_formula, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+    delta_gam_5km <- gam(list(gam_formula, ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common)), family= ziplss(), data= df_count_wide_5km, method = "REML")
+  
+AIC <- AIC(pois_mod_5km, zinb_mod_5km, nb_gam_5km, pois_gam_5km, tweedie_gam_5km)
+
+  rf_mod <-
+  rand_forest(mode = "regression") %>%
+  set_engine("ranger", importance = "impurity")
+  tflow <- df_count_wide_5km_na %>%
+  tidyflow(seed = 23151) %>%
+  plug_formula(model_formula_na) %>%
+  plug_split(initial_split, prop= 0.70) %>%  plug_model(rf_mod)
+  res_rf <- tflow %>% fit()
+  
+  res_rf_pred <- res_rf %>% predict_testing()
+  res_rf_pred_train <- res_rf %>% predict_training()
 ```
 

@@ -4,8 +4,10 @@ format: html
 editor: visual
 ---
 
-############### 5 KM in JUNE ###############
+############### 5 KM in JUNE
+
 #### Load packages, functions, and datasets
+
 ```{r}
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
@@ -35,7 +37,7 @@ p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 #Filter datasets: Add back in Secchi size once get P195 data
 p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== 6) #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month==6)
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month==6)
 p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month==6)
 
 p915_CPUEedt <- p915_CPUEedt %>% drop_na(Latitude, Longitude)
@@ -49,13 +51,13 @@ CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
 CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
-#### Combine gridded, predictors, and biological datasets 
+#### Combine gridded, predictors, and biological datasets
 
 ```{r}
 gridpred_lat_lon <- gridded_coords %>% left_join(predictors_df, by= "gridID")
 
 ##Join lat_lon from predictors gridded to CPUE!! 143 rows with NA for gridID, 7 latitude and longitude points, all P915
-CPUE_all_grid_pred <- CPUE_all %>% left_join(gridpred_lat_lon, by= "lat_lon") %>% select(lat_lon, everything())
+CPUE_all_grid_pred <- CPUE_all %>% left_join(gridpred_lat_lon, by= "lat_lon") %>% dplyr::select(lat_lon, everything())
 
 CPUE_all_grid_pred <- CPUE_all_grid_pred %>% drop_na(gridID)
 CPUE_all_grid_pred <- CPUE_all_grid_pred %>% separate(lat_lon, into= c("Latitude", "Longitude"), sep = "_", convert= TRUE, remove=FALSE) %>% filter(!gridID %in% c(706, 757, 1576, 2165, 2655, 3530, 258)) #get rid of grid cells that are outliers, gets rid of 323 rows 
@@ -70,14 +72,14 @@ for(col in cn){
 t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
 }
 
-#write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5.10.4.23.csv") 
+write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5km.10.04.23.csv") 
 ```
 
 #### CPUE calculation
 
 ```{r}
 #Form CPUE dataset 
-CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5.10.4.23.csv")
+CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5km.10.04.23.csv")
 CPUE_dfs_gridded_final <- CPUE_dfs_gridded_final[,-1]
 
 #Effort by survey: this works 
@@ -117,7 +119,8 @@ CPUE_grid_count_avg <- CPUE_grid_count %>% ungroup() %>% mutate(Stemp= ifelse(CP
 
 CPUE_grid_count_avg <- CPUE_grid_count_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 835 rows, 757 NA for avg_do, 114 NA for avg_stemp, 179 NA for avg_ssal        
 
-CPUE_grid_count_avg_edt <- CPUE_grid_count_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_a:-Restricted, -ShrimpTrawl_a:-GillPoundNet_a, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -gridArea_km, -"Strata/station", -WaterbodyCover, -Effort, -Effort, -Month, -Control1)
+colnames(CPUE_grid_count_avg)
+CPUE_grid_count_avg_edt <- CPUE_grid_count_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -Month, -Control1)
 CPUE_grid_count_avg_edt <- CPUE_grid_count_avg_edt %>% group_by(Year, gridID, Speciescommonname, Survey) %>% distinct(avg_count, .keep_all= TRUE)
 
 write.csv(CPUE_grid_count_avg_edt,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.5km.10.04.23.csv")        
