@@ -228,4 +228,3 @@ Grid_predictors_edt2 <- merged_df4 %>% filter(!gridID %in% c(706, 757, 1576, 216
 #Save as CSV
 write.csv(Grid_predictors_edt2, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/grid_predictors_5km.10.03.23.csv")
 ```
-
