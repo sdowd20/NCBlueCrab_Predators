@@ -11,6 +11,9 @@ Test script with red drum. Eventually there will be a .R file to load in all the
 #### Load packages, functions, and datasets
 
 ```{r}
+##Remove sheepshead from analysis!!
+#Remove InletDist or SAVDist_km 
+
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
 
@@ -82,6 +85,8 @@ gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5)
 
 ##Other 
 model_formula <- red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common
+
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) #no shoreline type b/c was weird w/ CART
 ```
 
 #### Explore data
@@ -360,7 +365,7 @@ df_count_wide2 <- df_count %>% dplyr::select(-Speciescommonname, -Survey) %>% un
 df_count_wide_na <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") %>% drop_na()
 #87 gridIDs with data from all species 
 #143 for P915 and P195
-#281 b/w P120 and P195
+#281 b/w P120 and P915
 ```
 
 ```{r}

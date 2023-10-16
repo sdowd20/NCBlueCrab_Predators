@@ -1,0 +1,298 @@
+---
+title: "Tuning"
+format: html
+editor: visual
+---
+
+Tune tweedie and poisson GAM using caret() package in R for different variables and values for k
+either write a for loop, tidy models 
+Take tweedie GAM, go through and try different types of cross-validation (leave 1 out, 70/30), tune as you go (removing variable), find the best K, focus on one distribution that makes sense, do it with tidymodels 
+For loop to try different parameters and for loop to try different k values, maybe 3 for loops to select random 70 and train/test on 30 
+
+#### Load packages, functions, and datasets
+
+```{r}
+##Remove sheepshead from analysis!!
+#Remove InletDist or SAVDist_km 
+
+#Load packages and functions 
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
+
+invisible(lapply(packages, library, character.only= TRUE))
+
+library(lmtest)
+library(countreg)
+library(gridExtra)
+library(ggplot2)
+library(MASS)
+library(countreg)
+library(performance)
+
+library(tidymodels)
+library(tidyflow)
+library(devtools)
+library(rpart.plot)
+library(vip)
+library(baguette)
+library(ranger)
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+#Load in datasets
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", "_", CPUE_grid_avg_edt$Speciescommonname)
+
+##Count dataset 
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
+df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
+
+#Pivot-wider datasets: 
+##Standardized catch per unit effort dataset wide 
+df_CPUE_wide <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+
+##Binary dataset (0 or 1):  
+df_binary_wide <- df_CPUE_wide %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+##Count dataset wide 
+df_count_wide <- df_count %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Form train/testing datasets by dividing 80% 20% 
+set.seed(777)
+##Randomly split data in R
+sample_size = floor(0.8*nrow(df_CPUE_wide)) #take 80% of rows, # is same b/w dfs
+
+##CPUE model
+picked_CPUE = sample(seq_len(nrow(df_CPUE_wide)),size = sample_size)
+df_CPUE_wide_test =df_CPUE_wide[-picked_CPUE,]
+df_CPUE_wide_train =df_CPUE_wide[picked_CPUE,]
+
+##Binary model
+picked_binary = sample(seq_len(nrow(df_binary_wide)),size = sample_size)
+df_binary_wide_test = df_binary_wide[-picked_binary,]
+df_binary_wide_train = df_binary_wide[picked_binary,]
+
+##Poisson model
+picked = sample(seq_len(nrow(df_count_wide)),size = sample_size) 
+df_count_wide_test = df_count_wide[-picked,]
+df_count_wide_train = df_count_wide[picked,]
+
+#Load in formulas  
+##Load GAM formula
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) #no shoreline type b/c was weird w/ CART
+
+##Other 
+model_formula <- red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common
+
+gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) #no shoreline type b/c was weird w/ CART
+
+#5 km 
+#Load in datasets
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt_5km <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.5km.10.04.23.csv")
+CPUE_grid_avg_edt_5km <- CPUE_grid_avg_edt_5km[,-1]
+CPUE_grid_avg_edt_5km <- CPUE_grid_avg_edt_5km %>% mutate_at(c("Sedsize_common", "ShorelineType", "Survey"), as.factor) %>% rename("SAVDist_km"= "SAV_km")
+CPUE_grid_avg_edt_5km$Speciescommonname <- gsub(" ", "_", CPUE_grid_avg_edt_5km$Speciescommonname)
+
+##Count dataset 
+df_count_5km <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.5km.10.04.23.csv")  
+df_count_5km <- df_count_5km %>% dplyr::select(-c(...1, CPUE:mean_CPUE_stdzd)) %>% rename("SAVDist_km"= "SAV_km") #need to remove or R will get confused 
+df_count_5km$Speciescommonname <- gsub(" ", "_", df_count_5km$Speciescommonname)
+
+#Pivot-wider datasets: 
+##Standardized catch per unit effort dataset wide 
+df_CPUE_wide_5km <- CPUE_grid_avg_edt_5km %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "mean_CPUE_stdzd") %>% drop_na() #this removes three rows where NAs were present, feel comfortable doing this b/c a lot of most species had at least 1 NA (some 2), could be an issue from pulling the data or 
+
+##Binary dataset (0 or 1):  
+df_binary_wide_5km <- df_CPUE_wide_5km %>% mutate_at(vars(15:41), ~ ifelse(. > 0, 1, 0))
+
+##Count dataset wide 
+df_count_wide_5km <- df_count_5km %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Form train/testing datasets by dividing 80% 20% 
+set.seed(777)
+##Randomly split data in R
+sample_size_5km = floor(0.8*nrow(df_CPUE_wide_5km)) #take 80% of rows, # is same b/w dfs
+
+##CPUE model
+picked_CPUE_5km = sample(seq_len(nrow(df_CPUE_wide_5km)),size = sample_size_5km)
+df_CPUE_wide_test_5km =df_CPUE_wide_5km[-picked_CPUE_5km,]
+df_CPUE_wide_train_5km =df_CPUE_wide_5km[picked_CPUE_5km,]
+
+##Binary model
+picked_binary_5km = sample(seq_len(nrow(df_binary_wide_5km)),size = sample_size_5km)
+df_binary_wide_test_5km = df_binary_wide_5km[-picked_binary_5km,]
+df_binary_wide_train_5km = df_binary_wide_5km[picked_binary_5km,]
+
+##Poisson model
+picked_5km = sample(seq_len(nrow(df_count_wide_5km)),size = sample_size_5km) 
+df_count_wide_test_5km = df_count_wide_5km[-picked_5km,]
+df_count_wide_train_5km = df_count_wide_5km[picked_5km,]
+
+```
+
+#### Load cross-validation functions
+```{r}
+library(gtools)
+
+pastePerm<- function(row, names){
+  keep<- which(row==1)
+  if(length(keep)==0){
+    return('1')
+  }else{
+    return(paste(names[keep],collapse='+'))
+  }
+}
+my_sqrt <- function(var1){
+  sqrt(var1) #take square root of variable 
+} #construct model formulas 
+
+dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty string
+  p<- length(covars) #number of independent variables
+  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T) #for different combinations of predictor variables
+  myforms<- NULL #store formulas 
+  for(j in 1:nrow(perm.tab)){
+    myforms[j]<- pastePerm(perm.tab[j,], covars) #function above
+  }
+  myforms<- paste0(pred, '~',myforms) #predicted variable and formula
+  return(myforms)
+}
+
+allformulas <- dredgeform(pred = "red_drum", covars = c("s(avg_depth, k= 10)", "s(avg_sdo, k= 10)", "s(SAVDist_km, k= 10)", "s(InletDist_km, k= 10)", "s(NoFishRest, k= 10)", "s(atlantic_menhaden, k= 10)", "s(atlantic_croaker, k= 10)", "s(southern_flounder, k= 10)", "s(spot, k= 10)", "factor(FishingAll_num)", "factor(Sedsize_common)"))
+                                                        
+# "avg_stemp", "avg_sdo", "SAVDist_km", "InletDist_km", "NoFishRest", "atlantic_menhaden", "atlantic_croaker", "southern_flounder", "spot", "FishingAll_num", "Sedsize_common"))
+```
+
+#### Formula selection
+##### Tweedie cross-validation
+```{r}
+#10 km
+compare_var_tw <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw) <- c("formula", "AIC")
+
+for ( i in 1:length(allformulas)) {
+model_tw <- gam(as.formula(allformulas[i]), family= tw(link= "log"), method= "REML", data=df_count_wide)
+compare_var_tw[i, 1] <- allformulas[i]
+compare_var_tw[i, 2] <- AIC(model_tw)
+}
+
+t <- compare_var_tw %>% arrange(AIC) 
+
+t[1,1]
+
+model_tw_picked <- gam(red_drum~ s(avg_depth, k=5) + s(avg_stemp, k= 5) + s(atlantic_menhaden, k=5) + s(SAVDist_km, k=5) + Sedsize_common, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+summary(model_tw_picked)
+
+#5 km
+compare_var_tw5 <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw5) <- c("formula", "AIC")
+
+for ( i in 1:length(allformulas)) {
+model_tw5 <- gam(as.formula(allformulas[i]), family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+compare_var_tw5[i, 1] <- allformulas[i]
+compare_var_tw5[i, 2] <- AIC(model_tw5)
+}
+
+compare_var_tw5 %>% arrange(AIC)
+
+model_tw5_picked <- gam(red_drum~ s(avg_depth, k=5) + s(InletDist_km, k= 5) + s(atlantic_menhaden, k=5) + s(southern_flounder, k=5) + FishingAll_num, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+summary(model_tw5_picked)
+```
+
+##### Poisson GAM cross-validation 
+```{r}
+#10 km
+compare_var_pg <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pg) <- c("formula", "AIC")
+
+for ( i in 1:length(allformulas)) {
+model_pg <- gam(as.formula(allformulas[i]), family= poisson(), method= "REML", data=df_count_wide)
+compare_var_pg[i, 1] <- allformulas[i]
+compare_var_pg[i, 2] <- AIC(model_pg)
+}
+
+compare_var_pg %>% arrange(AIC)
+model_pg_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide)
+summary(model_pg_picked)
+
+?gam()
+#	If this is TRUE then gam can add an extra penalty to each term so that it can be penalized to zero. This means that the smoothing parameter estimation that is part of fitting can completely remove terms from the model. If the corresponding smoothing parameter is estimated as zero then the extra penalty has no effect. Use gamma to increase level of penalization.
+
+#5km
+compare_var_pg5 <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pg5) <- c("formula", "AIC")
+
+for (i in 1:length(allformulas)) {
+model_pg5 <- gam(as.formula(allformulas[i]), family= poisson(), method= "REML", data=df_count_wide_5km)
+compare_var_pg5[i, 1] <- allformulas[i]
+compare_var_pg5[i, 2] <- AIC(model_pg5)
+}
+
+compare_var_pg5 %>% arrange(AIC)
+
+red_drum~avg_depth+avg_stemp+avg_sdo+InletDist_km+atlantic_menhaden+atlantic_croaker+southern_flounder+spot+FishingAll_num+Sedsize_commo
+
+model_pg5_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_5km)
+summary(model_pg5_picked)
+```
+
+```{r}
+set.seed(123)
+compare_var <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var) <- c("formula", "AIC")
+
+for ( i in 1:length(allformulas)) {
+
+model <- gam(as.formula(allformulas[i]), data = cities_df, family = "binomial"(link= logit))
+
+# Summarize the results
+compare_var[i, 1] <- allformulas[i]
+compare_var[i, 2] <- AIC(model)
+}
+
+compare_var %>% arrange(AIC)
+```
+
+```{r}
+set.seed(123)
+library(caret)
+compare_var <- as.data.frame(matrix(ncol = 4, nrow = 0))
+colnames(compare_var) <- c("formula", "AUC", "sensitivity", "specificity")
+
+for ( i in 2:length(allformulas)) {
+  
+train.control <- trainControl(method = "repeatedcv", number = 3, repeats = 10, 
+                     summaryFunction=twoClassSummary, 
+                     classProbs=T,
+                     savePredictions = T)
+
+# Train the full model
+model <- train(as.formula(allformulas[i]), data = df_count_wide, method = "gam", family = "binomial", trControl = train.control, metric = "ROC")
+
+# Summarize the results
+compare_var[i, 1] <- allformulas[i]
+compare_var[i, 2] <- model$results$ROC
+compare_var[i, 3] <- model$results$Sens
+compare_var[i, 4] <- model$results$Spec
+
+
+}
+
+compare_var %>% arrange(-AUC)
+```
+
+```{r}
+model_pg5_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_5km)
+
+tester <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_5km, select= TRUE)
+
+summary(model_pg5_picked)
+summary(tester)
+
+gam.check(model_pg5_picked)
+gam.check(tester)
+```
+
