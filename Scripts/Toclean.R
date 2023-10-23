@@ -179,6 +179,24 @@ p915_biol2_new <- p915_biol2 %>% left_join(spp_list, by= "Sciname") #no NAs for 
 write.csv(p915_biol1_new, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_biol1new_clean.csv")
 write.csv(p915_biol2_new, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_biol2new_clean.csv")
 
+#P915 LENGTH NEW
+mylist <- lapply(1:17, function(i) read_excel("~/Desktop/Ch1Data/P915/P915LengthData_20231003.xlsx", sheet = i))
+combo <- bind_rows(mylist)
+colnames(combo) <- str_to_title(colnames(combo))
+combo$Season <- ifelse(combo$Month==4 | combo$Month==5 | combo$Month==6, "Spring", ifelse(combo$Month==9 |combo$Month==10 | combo$Month==11 | combo$Month==12, "Fall", ifelse(combo$Month==7 |combo$Month==8, "Summer", "Winter")))
+combo$Date <- as.Date(paste(combo$Month, combo$Day, combo$Year, sep= "-"), "%m-%d-%Y")
+combo$Ym_date <- format(combo$Date, "%Y-%m")
+
+#Scientific name, just do species names!
+p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/p915_sppnames.csv")
+p915_length <- combo %>% dplyr::rename("Sciname"= "Species") %>% left_join(p915_sppnames, by= "Sciname") #no NAs for species (works!)
+
+p915_length$doy <- yday(p915_length$Date)
+p915_length$Photoperiod <- daylength(lat= p915_length$Latitude, doy= p915_length$doy)
+p915_length$Wbdytype <- ifelse(p915_length$Area %in% "PUNGO" | p915_length$Area %in% "NEUSE" | p915_length$Area %in% "NEWR"| p915_length$Area %in% "CAPEF" | p915_length$Area %in% "CAPEF", "River", "Sound")
+p915_length$Wbd <- ifelse(p915_length$Area %in% "DARE1" | p915_length$Area %in% "DARE2" | p915_length$Area %in% "DARE3"| p915_length$Area %in% "DARE4" | p915_length$Area %in% "HYDE1"| p915_length$Area %in% "HYDE2"| p915_length$Area %in% "HYDE3"| p915_length$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(p915_length$Area %in% "MHDC1"| p915_length$Area %in% "MHDC2"| p915_length$Area %in% "MHDC3", "MHDC", p915_length$Area))
+write.csv(p915_length, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_length_new.csv")
+
 #######P120########
 #P120 OLD
 p120 <- read_csv("Data/P120/Raw/p120_clean_2021.csv")

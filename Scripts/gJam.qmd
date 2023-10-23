@@ -24,7 +24,7 @@ CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "Shorel
 CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", ".", CPUE_grid_avg_edt$Speciescommonname)
 ```
 
-#### P915 Count 
+#### P915 Count
 
 ##### Prepare data
 
@@ -72,7 +72,7 @@ plot <- list(SMALLPLOTS = T, GRIDPLOTS=T,
 gjamPlot(output = out1, plotPars = plot)
 ```
 
-#### P915, P120 Count 
+#### P915, P120 Count
 
 ##### Prepare data
 
@@ -151,7 +151,7 @@ edata$values
 ##### gJam
 
 ```{r}
-ml <- list(ng = 1000, burnin = 500, typeNames = 'DA', effort= edata)
+ml <- list(ng = 1000, burnin = 500, typeNames = 'CA', effort= edata)
 
 formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 

@@ -20,7 +20,7 @@ As of now (05/06/23), the sample IDs for the river systems (only Neuse and Pamli
 
 An update about the datasets (correspondence with Cara Kowalchyk on 08/07/23): Different Control1s can be for the same sampling event because of samples split between half and whole mesh sizes (when data began). For example, 0111796 and 0111797 were the same set of deep nets but didn't merge correctly. They should be merged under sample= 11011HYDE220. If you see a sample ID that contains the control1, you can delete it off the end and it would merge properly, maybe. If you have trouble with that, Cara offered to repull the data. I propose to group_by Speciescommonname, Area, Quad, and Strata and sum the Colnum.
 
-An update about the datasets now (correspondence with Dan Zapf 09/08/23): When combining the CPUE and the length datasets, Control1 should not be used. This is because before 2008, the Sample # contains the data from multiple Control1s. I checked for the P915 CPUE dataset and there is the same number of unique Sample as Control1 values. Because of this, I felt comfortable using Control1 for my analysis. Once I bring in the length data as well, I will switch to using Sample over Control1. 
+An update about the datasets now (correspondence with Dan Zapf 09/08/23): When combining the CPUE and the length datasets, Control1 should not be used. This is because before 2008, the Sample \# contains the data from multiple Control1s. I checked for the P915 CPUE dataset and there is the same number of unique Sample as Control1 values. Because of this, I felt comfortable using Control1 for my analysis. Once I bring in the length data as well, I will switch to using Sample over Control1.
 
 However, this isn't going to be an issue because the Control1s only vary for the early data. When I did this command, p915_CPUE %\>% filter(Year \>= 2001) %\>% group_by(Control1, Speciescommonname) %\>% summarize(count = n()) and then unique(t\$count), there was only 1 value for count. This means that each species only has one row for each Control1
 
@@ -31,6 +31,10 @@ The raw data (biological) doesn't have a variable for no catch (0) sets. It only
 For each target species caught, they are 1) measured to the nearest mm fork length or total length and 2) the condition of the individual is recorded. Target species should be individually measured regardless of the \# of individuals in the sample with the exception of spot and menhaden (they should be subsampled when numbers are high). When subsampling, it is acceptable to measure 30 individuals, weigh the subsample (subsample weight), and then count and weigh the remaining specimens. It is standard to assume that the subsample weight represents the remainder of the individuals not sampled. The collection weight is the weight of all individuals collected in that gillnet set.
 
 It is standard to divide the weight by the number of species captured. Individuals have relatively standard length throughout P915 with the exception of red drum. The first step is to bin the length and then exclude the outliers. It is important to do this for the predators selected. The prey items should always be the same size.
+
+Here are what the variable names mean: -Sample Number: number of particular species in sampling unit -Colnum: total number of a particular species in the catch, code as 9s for species where count can't be determined -Line number: each record 4 type numbered sequentially, record type 4 means that biological data besides actual lengths are recorded -Frequency: Number of occurrences for like data. In the length dataset, this always = 1. -Length (mm): Individual length from subsample
+
+These species that I will examine do not require length measurements: gizzard shad, silver perch, pinfish, skates, and rays. 
 
 ### EDA
 
@@ -73,9 +77,19 @@ t2 <- unique(p915_CPUE$Sample)
 
 differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_bioln %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
 unique(differences$Speciescommonname)
-
-
 ```
+
+```{r}
+length <- read_excel("/Users/sallydowd/Desktop/P915LengthData_20231003.xlsx", sheet=1)
+
+t <- length %>% filter(SAMPLE %in% "1035HYDE320.")
+write.csv(t, "~/Desktop/length.example.csv")
+t2 <- p915_CPUE %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden")
+write.csv(t2, "~/Desktop/CPUE.example.csv")
+```
+
+
+
 
 ##### General
 
