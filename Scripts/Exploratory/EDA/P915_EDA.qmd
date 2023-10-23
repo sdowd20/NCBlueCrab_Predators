@@ -34,7 +34,7 @@ It is standard to divide the weight by the number of species captured. Individua
 
 Here are what the variable names mean: -Sample Number: number of particular species in sampling unit -Colnum: total number of a particular species in the catch, code as 9s for species where count can't be determined -Line number: each record 4 type numbered sequentially, record type 4 means that biological data besides actual lengths are recorded -Frequency: Number of occurrences for like data. In the length dataset, this always = 1. -Length (mm): Individual length from subsample
 
-These species that I will examine do not require length measurements: gizzard shad, silver perch, pinfish, skates, and rays. 
+These species that I will examine do not require length measurements: gizzard shad, silver perch, pinfish, skates, and rays.
 
 ### EDA
 
@@ -77,6 +77,28 @@ t2 <- unique(p915_CPUE$Sample)
 
 differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_bioln %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
 unique(differences$Speciescommonname)
+
+#New length
+p915_length <- read.csv("/Users/sallydowd/Desktop/Ch1Data/P915/p915_length_new.csv")
+p915_length <- p915_length[,-1]
+
+t <- unique(p915_length$Sample) #13955
+t2 <- unique(p915_CPUE$Sample) #13947
+tC <- unique(p915_length$Control1)
+t2C <- unique(p915_CPUE$Control1) #do not use Control1 for length- it is weird 
+
+merged_df <- merge(p915_CPUE, p915_length, by = "Sample")
+length(unique(merged_df$Sample)) #13720 of the same ones 
+unmerged_df <- anti_join(p915_CPUE, p915_length, by = "Sample")
+length(unique(unmerged_df$Sample)) #227 of different ones, 7945 observations, species include
+
+sample_combo <- merged_df$Sample
+yep <- p915_length %>% filter(!Sample %in% sample_combo)
+unique(yep$Sample)
+unique(unmerged_df$Sample)
+
+write.csv(unmerged_df, "~/Desktop/CPUE_different.csv")
+write.csv(yep, "~/Desktop/length_different.csv")
 ```
 
 ```{r}
@@ -87,9 +109,6 @@ write.csv(t, "~/Desktop/length.example.csv")
 t2 <- p915_CPUE %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden")
 write.csv(t2, "~/Desktop/CPUE.example.csv")
 ```
-
-
-
 
 ##### General
 
