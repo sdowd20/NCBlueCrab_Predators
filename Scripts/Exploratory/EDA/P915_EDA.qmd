@@ -32,9 +32,15 @@ For each target species caught, they are 1) measured to the nearest mm fork leng
 
 It is standard to divide the weight by the number of species captured. Individuals have relatively standard length throughout P915 with the exception of red drum. The first step is to bin the length and then exclude the outliers. It is important to do this for the predators selected. The prey items should always be the same size.
 
-Here are what the variable names mean: -Sample Number: number of particular species in sampling unit -Colnum: total number of a particular species in the catch, code as 9s for species where count can't be determined -Line number: each record 4 type numbered sequentially, record type 4 means that biological data besides actual lengths are recorded -Frequency: Number of occurrences for like data. In the length dataset, this always = 1. -Length (mm): Individual length from subsample
+Here are what the variable names mean: 
+-Sample Number: number of particular species in sampling unit -Colnum: total number of a particular species in that sample, code as 9s for species where count can't be determined, multiple numbers in dataset as it is broken up by mesh size 
+-Line number: each record 4 type numbered sequentially, record type 4 means that biological data besides actual lengths are recorded, the # of each length, so if five lengths from individuals in a given mesh size are collected it's #ed 1-5, if we collected 12 it would be numbered 1-12
+-Frequency: Number of occurrences for like data. In the length dataset, this always = 1. 
+-Length (mm): Individual length from subsample, menhaden is typically the only species that is subsampled, other species that sometimes are subsampled are spot, bluefish, and white perch (if there are large catches), subsample at the net (mesh size) not at the sample level. 
 
 These species that I will examine do not require length measurements: gizzard shad, silver perch, pinfish, skates, and rays.
+
+To analyze the length data, the catch is broken up into length bins. See email with Daniel Zapf on 10/23/23 with subject P915 Length Data for an example. 
 
 ### EDA
 
