@@ -4,10 +4,7 @@ format: html
 editor: visual
 ---
 
-Tune tweedie and poisson GAM using caret() package in R for different variables and values for k
-either write a for loop, tidy models 
-Take tweedie GAM, go through and try different types of cross-validation (leave 1 out, 70/30), tune as you go (removing variable), find the best K, focus on one distribution that makes sense, do it with tidymodels 
-For loop to try different parameters and for loop to try different k values, maybe 3 for loops to select random 70 and train/test on 30 
+Tune tweedie and poisson GAM using caret() package in R for different variables and values for k either write a for loop, tidy models Take tweedie GAM, go through and try different types of cross-validation (leave 1 out, 70/30), tune as you go (removing variable), find the best K, focus on one distribution that makes sense, do it with tidymodels For loop to try different parameters and for loop to try different k values, maybe 3 for loops to select random 70 and train/test on 30
 
 #### Load packages, functions, and datasets
 
@@ -135,6 +132,7 @@ df_count_wide_train_5km = df_count_wide_5km[picked_5km,]
 ```
 
 #### Load cross-validation functions
+
 ```{r}
 library(gtools)
 
@@ -167,7 +165,9 @@ allformulas <- dredgeform(pred = "red_drum", covars = c("s(avg_depth, k= 10)", "
 ```
 
 #### Formula selection
+
 ##### Tweedie cross-validation
+
 ```{r}
 #10 km
 compare_var_tw <- as.data.frame(matrix(ncol = 2, nrow = 0))
@@ -202,7 +202,8 @@ model_tw5_picked <- gam(red_drum~ s(avg_depth, k=5) + s(InletDist_km, k= 5) + s(
 summary(model_tw5_picked)
 ```
 
-##### Poisson GAM cross-validation 
+##### Poisson GAM cross-validation
+
 ```{r}
 #10 km
 compare_var_pg <- as.data.frame(matrix(ncol = 2, nrow = 0))
@@ -214,9 +215,17 @@ compare_var_pg[i, 1] <- allformulas[i]
 compare_var_pg[i, 2] <- AIC(model_pg)
 }
 
-compare_var_pg %>% arrange(AIC)
+sel <- compare_var_pg %>% arrange(AIC)
+sel[1,1]
+
+model_picked_10 <- gam(red_drum~ s(avg_depth, bs="ts", k=10) + s(avg_sdo, bs="ts", k=10) + s(SAVDist_km, bs="ts", k=10) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num), family= poisson(), method= "REML", data=df_count_wide)
+summary(model_picked_10)
+summary(model_pg_picked)
+gam.check(model_picked_10)
+
 model_pg_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide)
 summary(model_pg_picked)
+gam.check(model_pg_picked)
 
 ?gam()
 #	If this is TRUE then gam can add an extra penalty to each term so that it can be penalized to zero. This means that the smoothing parameter estimation that is part of fitting can completely remove terms from the model. If the corresponding smoothing parameter is estimated as zero then the extra penalty has no effect. Use gamma to increase level of penalization.
@@ -295,4 +304,3 @@ summary(tester)
 gam.check(model_pg5_picked)
 gam.check(tester)
 ```
-
