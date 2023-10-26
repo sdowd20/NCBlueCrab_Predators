@@ -306,6 +306,7 @@ gam.check(tester)
 ```
 
 ##### gJam:
+
 ```{r}
 #Functions
 pastePerm<- function(row, names){
@@ -363,7 +364,6 @@ edata <- list(columns=1:ncol(ydata), values = 1)
 
 tot <- cbind(xdata, ydata)
 ```
-
 
 ```{r}
 #Tuning for gJam: Code from GFW_manuscript.Rmd, Sarah Roberts
@@ -446,4 +446,3 @@ write.csv(savestuff, "~/Desktop/modelruns.csv")
 
 #Lowest RMSPE 
 ```
-

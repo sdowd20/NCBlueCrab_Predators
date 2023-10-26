@@ -32,15 +32,11 @@ For each target species caught, they are 1) measured to the nearest mm fork leng
 
 It is standard to divide the weight by the number of species captured. Individuals have relatively standard length throughout P915 with the exception of red drum. The first step is to bin the length and then exclude the outliers. It is important to do this for the predators selected. The prey items should always be the same size.
 
-Here are what the variable names mean: 
--Sample Number: number of particular species in sampling unit -Colnum: total number of a particular species in that sample, code as 9s for species where count can't be determined, multiple numbers in dataset as it is broken up by mesh size 
--Line number: each record 4 type numbered sequentially, record type 4 means that biological data besides actual lengths are recorded, the # of each length, so if five lengths from individuals in a given mesh size are collected it's #ed 1-5, if we collected 12 it would be numbered 1-12
--Frequency: Number of occurrences for like data. In the length dataset, this always = 1. 
--Length (mm): Individual length from subsample, menhaden is typically the only species that is subsampled, other species that sometimes are subsampled are spot, bluefish, and white perch (if there are large catches), subsample at the net (mesh size) not at the sample level. 
+Here are what the variable names mean: -Sample Number: number of particular species in sampling unit -Colnum: total number of a particular species in that sample, code as 9s for species where count can't be determined, multiple numbers in dataset as it is broken up by mesh size -Line number: each record 4 type numbered sequentially, record type 4 means that biological data besides actual lengths are recorded, the \# of each length, so if five lengths from individuals in a given mesh size are collected it's #ed 1-5, if we collected 12 it would be numbered 1-12 -Frequency: Number of occurrences for like data. In the length dataset, this always = 1. -Length (mm): Individual length from subsample, menhaden is typically the only species that is subsampled, other species that sometimes are subsampled are spot, bluefish, and white perch (if there are large catches), subsample at the net (mesh size) not at the sample level.
 
 These species that I will examine do not require length measurements: gizzard shad, silver perch, pinfish, skates, and rays.
 
-To analyze the length data, the catch is broken up into length bins. See email with Daniel Zapf on 10/23/23 with subject P915 Length Data for an example. 
+To analyze the length data, the catch is broken up into length bins. See email with Daniel Zapf on 10/23/23 with subject P915 Length Data for an example.
 
 ### EDA
 
@@ -83,28 +79,6 @@ t2 <- unique(p915_CPUE$Sample)
 
 differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_bioln %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
 unique(differences$Speciescommonname)
-
-#New length
-p915_length <- read.csv("/Users/sallydowd/Desktop/Ch1Data/P915/p915_length_new.csv")
-p915_length <- p915_length[,-1]
-
-t <- unique(p915_length$Sample) #13955
-t2 <- unique(p915_CPUE$Sample) #13947
-tC <- unique(p915_length$Control1)
-t2C <- unique(p915_CPUE$Control1) #do not use Control1 for length- it is weird 
-
-merged_df <- merge(p915_CPUE, p915_length, by = "Sample")
-length(unique(merged_df$Sample)) #13720 of the same ones 
-unmerged_df <- anti_join(p915_CPUE, p915_length, by = "Sample")
-length(unique(unmerged_df$Sample)) #227 of different ones, 7945 observations, species include
-
-sample_combo <- merged_df$Sample
-yep <- p915_length %>% filter(!Sample %in% sample_combo)
-unique(yep$Sample)
-unique(unmerged_df$Sample)
-
-write.csv(unmerged_df, "~/Desktop/CPUE_different.csv")
-write.csv(yep, "~/Desktop/length_different.csv")
 ```
 
 ```{r}
@@ -363,6 +337,52 @@ length(unique(P120_bioledt$Station))
 #Expanded weight frequency for all focal species by area: remove NEUSE and PAMLI 
 
 #centroid shifts by size class 
+```
+
+#Length updated: 10/26/23
+```{r}
+#Compare w/ CPUE dataset
+unique(p915_length$Sample) #13955
+unique(p915_CPUE$Sample) #13947
+unique(p915_length$Control1) #13947
+unique(p915_CPUE$Control1) #20482
+
+merged_df <- merge(p915_CPUE, p915_length, by = "Sample")
+length(unique(merged_df$Sample)) #13720 of the same ones 
+unmerged_df <- anti_join(p915_CPUE, p915_length, by = "Sample")
+length(unique(unmerged_df$Sample)) #227 of different ones, 7945 observations, species include
+sample_combo <- merged_df$Sample
+yep <- p915_length %>% filter(!Sample %in% sample_combo)
+
+values <- 1:310
+breaks <- seq(0, 310, by = 10)
+assigned_values <- seq(0, 300, by = 10)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+#Atlantic menhaden example
+tryit <- p915_length %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
+colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% select(Sample, Colnum) %>% distinct(Sample, .keep_all = TRUE)
+p915_prop <- tryit %>% left_join(df, by= "Length")
+length_freq <- p915_prop %>% group_by(Sample, Assigned_length) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count)) %>% left_join(colnum, by= "Sample") %>% mutate(Number2 = Freq*Colnum, Number= round(Freq*Colnum,0))
+
+length_freq %>% summarize(sum= sum(Number)) #865
+length_freq %>% summarize(sum= sum(Number2)) #867
+
+#Red drum example
+tryit2 <- p915_length %>% filter(Speciescommonname %in% "red drum", Sample %in% "7515DARE120.") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
+
+p915_length %>% filter(Speciescommonname %in% "red drum", Sample %in% "7515DARE120.") %>% ggplot() + geom_histogram(aes(x= Length))
+#Deal with this differently, show example to Janet 
+
+p915_CPUE %>% filter(Speciescommonname %in% "red drum", Colnum > 0) %>% summarize(uni= length(unique(Sample))) 
+p915_length %>% filter(Speciescommonname %in% "red drum") %>% summarize(uni= length(unique(Sample)))
+
+t <- p915_length %>% filter(Speciescommonname %in% "red drum") %>% select(Sample) %>% left_join(p915_CPUE %>% filter(Speciescommonname %in% "red drum", Colnum > 0) %>% select(Sample, Colnum))
+
+
+p915_length %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, y= after_stat(count)), bins= 20) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + xlim(c(0,1000))
 ```
 
 #### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code
