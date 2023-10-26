@@ -304,3 +304,146 @@ summary(tester)
 gam.check(model_pg5_picked)
 gam.check(tester)
 ```
+
+##### gJam:
+```{r}
+#Functions
+pastePerm<- function(row, names){
+  keep<- which(row==1)
+  if(length(keep)==0){
+    return('1')
+  }else{
+    return(paste(names[keep],collapse='+'))
+  }
+}
+dredgeGJAM<- function(covars, alwaysIn=''){
+  p<- length(covars)
+  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T)
+  myforms<- NULL
+  for(j in 1:nrow(perm.tab)){
+    myforms[j]<- pastePerm(perm.tab[j,], covars)
+  }
+  myforms<- paste0('~', alwaysIn,'+', myforms)
+  return(myforms)
+}
+library(gtools)
+
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+         }
+```
+
+```{r}
+#Setup data
+#Count dataset 
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd))
+df_count$Speciescommonname <- gsub(" ", ".", df_count$Speciescommonname) #gJam doesn't like _ in column names
+
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", ".", CPUE_grid_avg_edt$Speciescommonname)
+
+df_count_wide <- df_count %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+xdata <- df_count_wide %>% dplyr::select(avg_depth, avg_stemp, avg_ssal, avg_sdo, SAVDist_km, InletDist_km, NoFishRest,  FishingAll_num, Sedsize_common) %>% mutate_at(vars(c(Sedsize_common, FishingAll_num)), as.factor)
+colnames(xdata) <- gsub(pattern = "_", replacement = ".", colnames(xdata))
+
+##ydata: species of interest, same dimensions as xdata 
+ydata <- df_count_wide %>% dplyr::select(american.shad, atlantic.thread.herring:bonnethead.shark, bull.shark:cownose.ray, gizzard.shad:atlantic.sharpnose.shark, silver.perch:summer.flounder, -silversides)
+
+##edata: effort, columns as number of species and values as effort values  
+edata <- list(columns=1:ncol(ydata), values = 1)
+
+tot <- cbind(xdata, ydata)
+```
+
+
+```{r}
+#Tuning for gJam: Code from GFW_manuscript.Rmd, Sarah Roberts
+smp_size <- floor(0.70 * nrow(tot))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+colnames(xdata)
+xnames <- c("avg.depth", "avg.stemp", "avg.ssal", "avg.sdo", "SAVDist.km", "InletDist.km", "NoFishRest", "FishingAll.num",  "Sedsize.common")
+
+xdata <- train[,xnames] #training xdata
+xdata <- as.data.frame(xdata)
+ydata <- train[,colnames(ydata)]
+ml <- list(ng = 100, burnin = 40, typeNames = 'DA', effort= edata)
+
+#find all possible interactions and variables
+xdata2 <- train[,c("avg.depth", "avg.stemp", "avg.ssal", "avg.sdo", "SAVDist.km", "InletDist.km", "NoFishRest", "FishingAll.num",  "Sedsize.common")]
+inter <- model.matrix( ~.^2, data=xdata2) #create interactions
+covars <- colnames(inter)
+covars <- covars[c(2, 6,7, 9,10,11,37)] #select covars you're interested in
+covars <- c(covars)
+allformulas<- dredgeGJAM(covars, alwaysIn='avg.stemp + avg.ssal + avg.sdo')
+allformulas <- gsub(pattern = ":", replacement = "*", allformulas)
+
+savestuff<- as.data.frame(matrix(NA, length(allformulas), 15))
+
+colnames(savestuff) = c("Formula", "DIC", "R2", "RMSE", "Mean_obs", "R2fishing", "R2trawlers","R2pole","R2pots","R2gillnets", "RMSEfishing", "RMSEtrawlers","RMSEpole","RMSEpots","RMSEgillnets")
+```
+
+```{r}
+#Run gJam
+pb <- txtProgressBar(0, length(allformulas), style = 3)
+### Out of Sample Prediction Part
+test <- test[complete.cases(test),]
+
+    xtest <- test[,xnames]
+    xtest <- as.data.frame(xtest)
+    ytest <- test[,colnames(ydata)]
+    newdata <- list(xdata = xtest, nsim=500)
+    
+for(M in 1:length(allformulas)){
+    tryCatch({
+      form <- allformulas[[M]]
+    model    <- gjam(form, xdata, ydata, modelList = ml)
+    name <- form
+    out_of_sample_prediction_non_conditional <- gjamPredict(model, newdata = newdata)
+    y_pred <- out_of_sample_prediction_non_conditional$sdList$yMu
+    y_obs <- ytest 
+    y_pred_long <- as.data.frame(y_pred) %>% pivot_longer(cols = american.shad:summer.flounder, names_to = c("spec"))
+    y_obs_long <- as.data.frame(y_obs) %>% pivot_longer(cols =american.shad:summer.flounder, names_to = c("spec"))
+    
+    tot <- cbind(y_pred_long$value, y_obs_long$value)
+    colnames(tot) <- c("pred", "obs")
+    tot <- as.data.frame(tot)
+colnames(ydata)
+    ###
+    if(inherits(model, 'try-error'))next
+    savestuff[M,1]<- allformulas[[M]]
+    savestuff[M,2]<- model$fit$DIC
+    savestuff[M,3] <- r2_general(tot$pred, tot$obs)
+    savestuff[M,4] <- RMSE_func(actual = tot$obs, pred = tot$pred) 
+    savestuff[M,5] <- mean(tot$obs)
+    savestuff[M,6] <- r2_general(y_pred[,40], y_obs[,40])
+    savestuff[M,7] <- r2_general(y_pred[,41], y_obs[,41])
+    savestuff[M,8] <- r2_general(y_pred[,42], y_obs[,42])
+    savestuff[M,9] <- r2_general(y_pred[,43], y_obs[,43])
+    savestuff[M,10] <- RMSE_func(actual = y_obs[,40], pred = y_pred[,40]) 
+    savestuff[M,11] <- RMSE_func(actual = y_obs[,41], pred = y_pred[,41]) 
+    savestuff[M,12] <- RMSE_func(actual = y_obs[,42], pred = y_pred[,42]) 
+    savestuff[M,13] <- RMSE_func(actual = y_obs[,43], pred = y_pred[,43]) 
+    setTxtProgressBar(pb, M)
+    Sys.sleep(time = 1)
+}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+}
+
+write.csv(savestuff, "~/Desktop/modelruns.csv")
+
+
+#Lowest RMSPE 
+```
+
