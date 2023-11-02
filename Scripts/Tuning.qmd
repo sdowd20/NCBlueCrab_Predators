@@ -13,7 +13,7 @@ Tune tweedie and poisson GAM using caret() package in R for different variables 
 #Remove InletDist or SAVDist_km 
 
 #Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "report")
 
 invisible(lapply(packages, library, character.only= TRUE))
 
@@ -24,7 +24,6 @@ library(ggplot2)
 library(MASS)
 library(countreg)
 library(performance)
-
 library(tidymodels)
 library(tidyflow)
 library(devtools)
@@ -84,8 +83,6 @@ gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5)
 ##Other 
 model_formula <- red_drum ~ avg_depth + avg_stemp + avg_ssal + avg_sdo + SAVDist_km + InletDist_km + NoFishRest + atlantic_menhaden + atlantic_croaker + southern_flounder + FishingAll_num + Sedsize_common
 
-gam_formula <- red_drum ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) #no shoreline type b/c was weird w/ CART
-
 #5 km 
 #Load in datasets
 ##Standardized catch per unit effort 
@@ -128,7 +125,6 @@ df_binary_wide_train_5km = df_binary_wide_5km[picked_binary_5km,]
 picked_5km = sample(seq_len(nrow(df_count_wide_5km)),size = sample_size_5km) 
 df_count_wide_test_5km = df_count_wide_5km[-picked_5km,]
 df_count_wide_train_5km = df_count_wide_5km[picked_5km,]
-
 ```
 
 #### Load cross-validation functions
@@ -159,14 +155,12 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
   return(myforms)
 }
 
-allformulas <- dredgeform(pred = "red_drum", covars = c("s(avg_depth, k= 10)", "s(avg_sdo, k= 10)", "s(SAVDist_km, k= 10)", "s(InletDist_km, k= 10)", "s(NoFishRest, k= 10)", "s(atlantic_menhaden, k= 10)", "s(atlantic_croaker, k= 10)", "s(southern_flounder, k= 10)", "s(spot, k= 10)", "factor(FishingAll_num)", "factor(Sedsize_common)"))
-                                                        
-# "avg_stemp", "avg_sdo", "SAVDist_km", "InletDist_km", "NoFishRest", "atlantic_menhaden", "atlantic_croaker", "southern_flounder", "spot", "FishingAll_num", "Sedsize_common"))
+allformulas <- dredgeform(pred = "red_drum", covars = c("s(avg_depth, bs= 'ts', k= 10)", "s(avg_sdo, bs= 'ts', k= 10)", "s(SAVDist_km, bs= 'ts', k= 10)", "s(InletDist_km, bs= 'ts', k= 10)", "s(NoFishRest, bs= 'ts', k= 10)", "s(atlantic_menhaden, bs= 'ts', k= 10)", "s(atlantic_croaker, bs= 'ts', k= 10)", "s(southern_flounder, bs= 'ts', k= 10)", "s(spot,bs= 'ts', k= 10)", "factor(FishingAll_num)", "factor(Sedsize_common)"))
 ```
 
 #### Formula selection
 
-##### Tweedie cross-validation
+##### Tweedie cross-validation: redoing it with k= 10 in all formulas and testing datasets
 
 ```{r}
 #10 km
@@ -174,36 +168,53 @@ compare_var_tw <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw) <- c("formula", "AIC")
 
 for ( i in 1:length(allformulas)) {
-model_tw <- gam(as.formula(allformulas[i]), family= tw(link= "log"), method= "REML", data=df_count_wide)
+model_tw <- gam(as.formula(allformulas[i]), family= tw(link= "log"), method= "REML", data=df_count_wide_train)
 compare_var_tw[i, 1] <- allformulas[i]
 compare_var_tw[i, 2] <- AIC(model_tw)
 }
 
-t <- compare_var_tw %>% arrange(AIC) 
+tw_k10 <- gam(red_drum~ s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+ s(atlantic_menhaden, bs= 'ts', k= 10)+factor(FishingAll_num)+factor(Sedsize_common), family= tw(link= "log"), method= "REML", data= df_count_wide_train)
+summary(tw_k10)
+gam.check(tw_k10)
+tw_k10_pred <- predict(tw_k10, newdata = df_count_wide_train, type = "response")
+ pois <- as.data.frame(matrix(ncol =3))
+    pois$V1 <- "pois"
+    pois$V2 <- r2_func(tw_k10_pred, df_count_wide_test$red_drum)
+    pois$V3 <- RMSE_func(tw_k10_pred, df_count_wide_test$red_drum)
+colnames(pois) <- c("model_type", "R2", "RMSE")
 
-t[1,1]
-
-model_tw_picked <- gam(red_drum~ s(avg_depth, k=5) + s(avg_stemp, k= 5) + s(atlantic_menhaden, k=5) + s(SAVDist_km, k=5) + Sedsize_common, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
-summary(model_tw_picked)
+# model_tw_picked_10km_k5 <- gam(red_drum~ s(avg_depth, k=5) + s(avg_stemp, k= 5) + s(atlantic_menhaden, k=5) + s(SAVDist_km, k=5) + Sedsize_common, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+# summary(model_tw_picked)
+# 
+# model_tw_picked_10km_k10 <- gam(red_drum~ s(avg_depth, k=5) + s(avg_stemp, k= 5) + s(atlantic_menhaden, k=5) + s(SAVDist_km, k=5) + Sedsize_common, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+# summary(model_tw_picked)
+# 
+# model_tw_picked2 <- gam(red_drum~ s(avg_depth, k=5) + s(avg_stemp, k= 5) + s(atlantic_menhaden, k=5) + s(SAVDist_km, k=5) + Sedsize_common, family= tw(link= "log"), method= "REML", data=df_count_wide)
+# summary(model_tw_picked)
 
 #5 km
 compare_var_tw5 <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw5) <- c("formula", "AIC")
 
 for ( i in 1:length(allformulas)) {
-model_tw5 <- gam(as.formula(allformulas[i]), family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+model_tw5 <- gam(as.formula(allformulas[i]), family= tw(link= "log"), method= "REML", data=df_count_wide_train_5km)
 compare_var_tw5[i, 1] <- allformulas[i]
 compare_var_tw5[i, 2] <- AIC(model_tw5)
 }
 
-compare_var_tw5 %>% arrange(AIC)
 
-model_tw5_picked <- gam(red_drum~ s(avg_depth, k=5) + s(InletDist_km, k= 5) + s(atlantic_menhaden, k=5) + s(southern_flounder, k=5) + FishingAll_num, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
-summary(model_tw5_picked)
+tw_k10_5km <- gam(red_drum~s(avg_depth, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+s(atlantic_menhaden, bs= 'ts', k= 10)+s(southern_flounder, bs= 'ts', k= 10), family= tw(link= "log"), method= "REML", data= df_count_wide_train_5km)
+summary(tw_k10_5km)
+gam.check(tw_k10_5km)
+
+# model_tw5_picked <- gam(red_drum~ s(avg_depth, k=5) + s(InletDist_km, k= 5) + s(atlantic_menhaden, k=5) + s(southern_flounder, k=5) + FishingAll_num, family= tw(link= "log"), method= "REML", data=df_count_wide_5km)
+# summary(model_tw5_picked)
+
 ```
 
 ##### Poisson GAM cross-validation
 
+Dealing with overfitting: https://statisticsbyjim.com/regression/overfitting-regression-models/
 ```{r}
 #10 km
 compare_var_pg <- as.data.frame(matrix(ncol = 2, nrow = 0))
@@ -215,18 +226,22 @@ compare_var_pg[i, 1] <- allformulas[i]
 compare_var_pg[i, 2] <- AIC(model_pg)
 }
 
-sel <- compare_var_pg %>% arrange(AIC)
-sel[1,1]
-
-model_picked_10 <- gam(red_drum~ s(avg_depth, bs="ts", k=10) + s(avg_sdo, bs="ts", k=10) + s(SAVDist_km, bs="ts", k=10) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num), family= poisson(), method= "REML", data=df_count_wide)
+model_picked_10 <- gam(red_drum~s(avg_depth, bs= 'ts', k= 10)+s(avg_sdo, bs= 'ts', k= 10)+s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+s(NoFishRest, bs= 'ts', k= 10)+s(atlantic_menhaden, bs= 'ts', k= 10)+s(atlantic_croaker, bs= 'ts', k= 10)+s(spot,bs= 'ts', k= 10)+factor(FishingAll_num), family= poisson(), method= "REML", data=df_count_wide)
 summary(model_picked_10)
-summary(model_pg_picked)
 gam.check(model_picked_10)
 
-model_pg_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide)
+model_pg_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_train)
 summary(model_pg_picked)
 gam.check(model_pg_picked)
+report(model_pg_picked)
+pois_pred <- predict(model_pg_picked, newdata = df_count_wide_test, type = "response")
+ pois <- as.data.frame(matrix(ncol =3))
+    pois$V1 <- "pois"
+    pois$V2 <- r2_func(pois_pred, df_count_wide_test$red_drum)
+    pois$V3 <- RMSE_func(pois_pred, df_count_wide_test$red_drum)
+colnames(pois) <- c("model_type", "R2", "RMSE")
 
+AIC(model_tw_picked, model_tw_picked2, model_pg_picked, model_pg5_picked, model_picked_10)
 ?gam()
 #	If this is TRUE then gam can add an extra penalty to each term so that it can be penalized to zero. This means that the smoothing parameter estimation that is part of fitting can completely remove terms from the model. If the corresponding smoothing parameter is estimated as zero then the extra penalty has no effect. Use gamma to increase level of penalization.
 
@@ -242,10 +257,41 @@ compare_var_pg5[i, 2] <- AIC(model_pg5)
 
 compare_var_pg5 %>% arrange(AIC)
 
-red_drum~avg_depth+avg_stemp+avg_sdo+InletDist_km+atlantic_menhaden+atlantic_croaker+southern_flounder+spot+FishingAll_num+Sedsize_commo
+model_pg5_picked <- gam(red_drum~s(avg_depth, bs= 'ts', k= 10)+s(avg_sdo, bs= 'ts', k= 10)+s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+s(NoFishRest, bs= 'ts', k= 10)+s(atlantic_menhaden, bs= 'ts', k= 10)+s(atlantic_croaker, bs= 'ts', k= 10)+s(southern_flounder, bs= 'ts', k= 10)+s(spot,bs= 'ts', k= 10)+factor(FishingAll_num), family= poisson(), method= "REML", data= df_count_wide_train_5km)
 
-model_pg5_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + s(atlantic_croaker, bs="ts", k=5) + s(southern_flounder, bs="ts", k=5) + s(spot, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_5km)
 summary(model_pg5_picked)
+gam.check(model_pg5_picked)
+report(model_pg5_picked)
+
+pois_pred <- predict(model_pg5_picked, newdata = df_count_wide_test_5km, type = "response")
+ pois <- as.data.frame(matrix(ncol =3))
+    pois$V1 <- "pois"
+    pois$V2 <- r2_func(pois_pred, df_count_wide_test$red_drum)
+    pois$V3 <- RMSE_func(pois_pred, df_count_wide_test$red_drum)
+colnames(pois) <- c("model_type", "R2", "RMSE")
+```
+
+###With multiple datasets 
+```{r}
+#Organize data 
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
+df_count$Speciescommonname <- gsub(" ", "_", df_count$Speciescommonname)
+df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "_")
+
+df_count_wide2 <- df_count %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") #%>% drop_na()
+
+df_count_wide_na <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") %>% drop_na()
+#87 gridIDs with data from all species 
+#143 for P915 and P195
+#281 b/w P120 and P915
+
+smp_size_na <- floor(0.70 * nrow(df_count_wide_na)) #this is how i want to split training and testing data 
+
+allformulas <- dredgeform(pred = "red_drum", covars = c("s(avg_depth, bs="ts", k= 10)", "s(avg_sdo, k= 10)", "s(SAVDist_km, k= 10)", "s(InletDist_km, k= 10)", "s(NoFishRest, k= 10)", "s(atlantic_menhaden, k= 10)", "s(atlantic_croaker, k= 10)", "s(southern_flounder, k= 10)", "s(spot, k= 10)", "factor(FishingAll_num)", "factor(Sedsize_common)", "s(blue_crab_P120"))
+
+
+red_drum_P915 ~ s(avg_depth, bs="ts", k=5) + s(avg_ssal, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(InletDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden_P915, bs="ts", k=5) + s(atlantic_croaker_P915, bs="ts", k=5) + s(southern_flounder_P915, bs="ts", k=5) + s(spot_P915, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common) + s(blue_crab_P120, bs="ts", k=5) + s(weakfish_P120, bs="ts", k=5) + s(brown_shrimp_P120, bs="ts", k=5) + s(atlantic_menhaden_P120, bs="ts", k=5) + s(atlantic_croaker_P120, bs="ts", k=5) + s(pinfish_P120, bs="ts", k=5) + s(pink_shrimp_P120, bs="ts", k=5) + s(southern_flounder_P120, bs="ts", k=5) + s(spot_P120, bs="ts", k=5)
 ```
 
 ```{r}
@@ -306,6 +352,84 @@ gam.check(tester)
 ```
 
 ##### gJam:
+
+gJam: include variables that make ecological sense, dolphin code: cross-validation like bootstrapping- run 1,000 times, get an average of the samples, look at dolphin code, split 70 and 30 in the bootstrap instead of randomly select prey, she randomly selected prey: testing if model w/ prey was better w/ just environment, 4 environmental variables and wanted to select 4 prey randomley out of the 20 
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.70 * nrow(df_count_wide))
+
+offshore_out_perform_gjam <- data.frame(matrix(ncol=8, nrow=1))
+colnames(offshore_out_perform_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" ) #creating dataframe where 
+
+
+cor <- modo[["parameters"]][["corMu"]] #residual correlation calculated from modo, modo as model
+resid <- as.data.frame(cor)
+resid$names <- rownames(cor)
+resid <- resid %>% dplyr::select(AbdPerArea, names) %>% dplyr::filter(names != "AbdPerArea")
+
+for(i in 1:Bootstrap_times) {
+  train_ind <- sample(seq_len(nrow(offshore)), size = smp_size)
+  train <- offshore[train_ind, ]
+  test <- offshore[-train_ind, ]
+  test <- test %>% dplyr::filter(month %in% train$month)
+
+
+  #randomly select fish to use to predict
+  use <- resid %>% top_n(20, AbdPerArea)
+  fish <- sample(use$names, 4, replace = F)
+specs1 <- fish
+ynames <- c(specs1, "AbdPerArea")
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_train <- train %>% dplyr::select(SST, SSAL, depth, month)
+ydata_train <- ydata_train[,colSums(ydata_train != 0) > 5] # I want non-zero rows
+ynames <- colnames(ydata_train)
+
+
+  ml <- list(ng = 60000, burnin = 50000, typeNames = 'CA')
+
+ mod2 <- gjam(~ SST + SSAL + depth + month, xdata = xdata_train, ydata = ydata_train, modelList = ml) #removed effort
+
+xdata_test <- test %>% dplyr::select(SST, SSAL, depth, month)
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ycond <- ydata_test[,colnames(ydata_test) %!in% "AbdPerArea"]
+
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) # conditionally predict in-sample
+
+p6      <- gjamPredict(mod2, newdata = newdata1)
+pred_dolph_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "AbdPerArea"] #get out dolph
+obs_dolph <- ydata_test[,colnames(ydata_test) %in% "AbdPerArea"]#observed dolph
+#colnames(obs_dolph) <- "obs_dolph"
+
+newdata <- list(xdata = xdata_test, nsim = 1000) # unconditionally prediction- in-sample
+
+p7      <- gjamPredict(mod2, newdata = newdata)
+pred_dolph_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "AbdPerArea"]
+pred_dolph_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "AbdPerArea"]
+
+dat <- cbind(pred_dolph_con, obs_dolph, pred_dolph_un)
+dat <- as.data.frame(dat)
+
+r2_con_fall <- r2_general(dat$pred_dolph_con, dat$obs_dolph)
+r2_uncon_fall <- r2_general(dat$pred_dolph_un, dat$obs_dolph)
+rmse_con_fall <-  RMSE_func(actual = dat$obs_dolph, pred = dat$pred_dolph_con)
+rmse_uncon_fall <-  RMSE_func(actual = dat$obs_dolph, pred = dat$pred_dolph_un)
+
+offshore_out_perform_gjam[i,1] <- r2_con_fall
+offshore_out_perform_gjam[i,2] <- r2_uncon_fall
+offshore_out_perform_gjam[i,3] <- rmse_con_fall
+offshore_out_perform_gjam[i,4] <- rmse_uncon_fall
+
+offshore_out_perform_gjam[i,5] <- fish[1]
+offshore_out_perform_gjam[i,6] <- fish[2]
+offshore_out_perform_gjam[i,7] <- fish[3]
+offshore_out_perform_gjam[i,8] <- fish[4]
+
+
+}
+summary(offshore_out_perform_gjam[1:4])
+```
 
 ```{r}
 #Functions
