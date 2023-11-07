@@ -13,8 +13,7 @@ Tune tweedie and poisson GAM using caret() package in R for different variables 
 #Remove InletDist or SAVDist_km 
 
 #Load packages and functions 
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "report")
-
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "gjam", "report")
 invisible(lapply(packages, library, character.only= TRUE))
 
 library(lmtest)
@@ -173,7 +172,7 @@ compare_var_tw[i, 1] <- allformulas[i]
 compare_var_tw[i, 2] <- AIC(model_tw)
 }
 
-tw_k10 <- gam(red_drum~ s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+ s(atlantic_menhaden, bs= 'ts', k= 10)+factor(FishingAll_num)+factor(Sedsize_common), family= tw(link= "log"), method= "REML", data= df_count_wide_train)
+tw_k10 <- gam(reddrum~ s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+ s(atlanticmenhaden, bs= 'ts', k= 10)+factor(FishingAll_num)+factor(Sedsize_common), family= tw(link= "log"), method= "REML", data= df_count_wide_train)
 summary(tw_k10)
 gam.check(tw_k10)
 tw_k10_pred <- predict(tw_k10, newdata = df_count_wide_train, type = "response")
@@ -215,6 +214,7 @@ gam.check(tw_k10_5km)
 ##### Poisson GAM cross-validation
 
 Dealing with overfitting: https://statisticsbyjim.com/regression/overfitting-regression-models/
+
 ```{r}
 #10 km
 compare_var_pg <- as.data.frame(matrix(ncol = 2, nrow = 0))
@@ -226,19 +226,19 @@ compare_var_pg[i, 1] <- allformulas[i]
 compare_var_pg[i, 2] <- AIC(model_pg)
 }
 
-model_picked_10 <- gam(red_drum~s(avg_depth, bs= 'ts', k= 10)+s(avg_sdo, bs= 'ts', k= 10)+s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+s(NoFishRest, bs= 'ts', k= 10)+s(atlantic_menhaden, bs= 'ts', k= 10)+s(atlantic_croaker, bs= 'ts', k= 10)+s(spot,bs= 'ts', k= 10)+factor(FishingAll_num), family= poisson(), method= "REML", data=df_count_wide)
+model_picked_10 <- gam(reddrum~s(avg_depth, bs= 'ts', k= 10)+s(avg_sdo, bs= 'ts', k= 10)+s(SAVDist_km, bs= 'ts', k= 10)+s(InletDist_km, bs= 'ts', k= 10)+s(NoFishRest, bs= 'ts', k= 10)+s(atlanticmenhaden, bs= 'ts', k= 10)+s(atlanticcroaker, bs= 'ts', k= 10)+s(spot,bs= 'ts', k= 10)+factor(FishingAll_num), family= poisson(), method= "REML", data=df_count_wide)
 summary(model_picked_10)
 gam.check(model_picked_10)
 
-model_pg_picked <- gam(red_drum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlantic_menhaden, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_train)
+model_pg_picked <- gam(reddrum~ s(avg_depth, bs="ts", k=5) + s(avg_stemp, bs="ts", k=5) + s(avg_sdo, bs="ts", k=5) + s(SAVDist_km, bs="ts", k=5) + s(NoFishRest, bs="ts", k=5) + s(atlanticmenhaden, bs="ts", k=5) + factor(FishingAll_num) + factor(Sedsize_common), family= poisson(), method= "REML", data=df_count_wide_train)
 summary(model_pg_picked)
 gam.check(model_pg_picked)
 report(model_pg_picked)
 pois_pred <- predict(model_pg_picked, newdata = df_count_wide_test, type = "response")
  pois <- as.data.frame(matrix(ncol =3))
     pois$V1 <- "pois"
-    pois$V2 <- r2_func(pois_pred, df_count_wide_test$red_drum)
-    pois$V3 <- RMSE_func(pois_pred, df_count_wide_test$red_drum)
+    pois$V2 <- r2_func(pois_pred, df_count_wide_test$reddrum)
+    pois$V3 <- RMSE_func(pois_pred, df_count_wide_test$reddrum)
 colnames(pois) <- c("model_type", "R2", "RMSE")
 
 AIC(model_tw_picked, model_tw_picked2, model_pg_picked, model_pg5_picked, model_picked_10)
@@ -271,7 +271,8 @@ pois_pred <- predict(model_pg5_picked, newdata = df_count_wide_test_5km, type = 
 colnames(pois) <- c("model_type", "R2", "RMSE")
 ```
 
-###With multiple datasets 
+###With multiple datasets
+
 ```{r}
 #Organize data 
 df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
@@ -353,7 +354,7 @@ gam.check(tester)
 
 ##### gJam:
 
-gJam: include variables that make ecological sense, dolphin code: cross-validation like bootstrapping- run 1,000 times, get an average of the samples, look at dolphin code, split 70 and 30 in the bootstrap instead of randomly select prey, she randomly selected prey: testing if model w/ prey was better w/ just environment, 4 environmental variables and wanted to select 4 prey randomley out of the 20 
+gJam: include variables that make ecological sense, dolphin code: cross-validation like bootstrapping- run 1,000 times, get an average of the samples, look at dolphin code, split 70 and 30 in the bootstrap instead of randomly select prey, she randomly selected prey: testing if model w/ prey was better w/ just environment, 4 environmental variables and wanted to select 4 prey randomley out of the 20
 
 ```{r}
 df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "")
@@ -381,11 +382,9 @@ edata$columns
 edata$values
 ```
 
-gjam can predict a subset of columns in y conditional on other columns using the function gjamPredict. 
+gjam can predict a subset of columns in y conditional on other columns using the function gjamPredict.
 
 The conditional prediction can differ from the unconditional one, due to the covariances between species.
-
-
 
 ```{r}
 Bootstrap_times <- 100
@@ -394,13 +393,20 @@ smp_size <- floor(0.70 * nrow(df_count_wide_na))
 gjam_test <- data.frame(matrix(ncol=8, nrow=1))
 colnames(gjam_test) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" ) #creating dataframe where 
 
-ml <- list(ng = 1000, burnin = 500, typeNames = 'DA', effort= edata)
 
 modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata, ydata = ydata, modelList = ml) 
  
+# unconditionally predict in-sample
+modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata, ydata = ydata, modelList = ml)
+
+
 cor <- modo[["parameters"]][["corMu"]] #residual correlation calculated from modo, modo as model
 resid <- as.data.frame(cor)
 resid$names <- rownames(cor)
+resid <- resid %>% dplyr::select(reddrumP915,names) %>% dplyr::filter(names!= reddrumP915)
+
+
+
 
 for(i in 1:Bootstrap_times) {
   train_ind <- sample(seq_len(nrow(df_count_wide_na)), size = smp_size)
@@ -411,7 +417,7 @@ for(i in 1:Bootstrap_times) {
   use <- resid %>% top_n(15, reddrumP915) #Sarah did this for all species, idk how her data was setup, let's try to do this for one predator of focus 
 fish <- sample(use$names, 4, replace = F)
 specs1 <- fish
-ynames <- specs1
+ynames <- c(specs1, "reddrumP915")
 ydata_train <- train[,colnames(train) %in% ynames]
 xdata_train <- train %>% dplyr::select(avgstemp, avgssal, avgsdo)
 ydata_train <- ydata_train[,colSums(ydata_train != 0) > 5] # I want non-zero rows
@@ -419,17 +425,17 @@ ynames <- colnames(ydata_train)
 
 ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
-
- mod2 <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata_train, ydata = ydata_train, modelList = ml) #removed effort
+mod2 <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata_train, ydata = ydata_train, modelList = ml) #removed effort
 
 xdata_test <- test %>% dplyr::select(avgstemp, avgssal, avgsdo)
 ydata_test <- test[,colnames(test) %in% ynames]
 
-#ycond <- ydata_test[,colnames(ydata_test) %!in% "AbdPerArea"]
+ycond <- ydata_test %>% dplyr::select(-reddrumP915) #just remove red drum
 
-newdata1 <- list(xdata = xdata_test, nsim = 1000) # conditionally predict in-sample, was ydataCond = ycond
+newdata1 <- list(xdata = xdata_test, ydataCond= ycond, nsim = 1000) # conditionally predict in-sample
 
 p6 <- gjamPredict(mod2, newdata = newdata1)
+view(gjamPredict)
 #output: gjam model w/ 4 prey items 
 #data for prediction 
 #if specify new data, it is either conditional or out of sample
@@ -552,6 +558,52 @@ allformulas <- gsub(pattern = ":", replacement = "*", allformulas)
 savestuff<- as.data.frame(matrix(NA, length(allformulas), 15))
 
 colnames(savestuff) = c("Formula", "DIC", "R2", "RMSE", "Mean_obs", "R2fishing", "R2trawlers","R2pole","R2pots","R2gillnets", "RMSEfishing", "RMSEtrawlers","RMSEpole","RMSEpots","RMSEgillnets")
+```
+
+```{r}
+smp_size <- floor(0.70 * nrow(df_count_wide_na))
+#run outside of the for loop to diagnose the prob
+ml <- list(ng = 1000, burnin = 500, typeNames = 'DA')
+
+# unconditionally predict in-sample
+modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata, ydata = ydata, modelList = ml)
+
+newdata1 <- list(xdata = xdata, nsim = 1000)
+p6 <- gjamPredict(modo, newdata = newdata1)
+
+# conditionally predict in-sample
+modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata, ydata = ydata, modelList = ml)
+ycond <- ydata %>% dplyr::select(-reddrumP915) #just remove red drum
+
+newdata1 <- list(xdata = xdata, ydataCond= ycond, nsim = 1000)
+p6 <- gjamPredict(modo, newdata = newdata1)
+
+#predict on new data (out of sample)
+total <- cbind(ydata, xdata)
+train_ind <- sample(seq_len(nrow(total)), size = smp_size)
+train <- total[train_ind, ]
+test <- total[-train_ind, ]
+
+#randomly select fish to use to predict
+ydata_train <- train[,colnames(train) %in% species]
+xdata_train <- train %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVDistkm, InletDistkm, NoFishRest,  FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
+ydata_train <- ydata_train[,colSums(ydata_train != 0) > 5] # I want non-zero rows
+ynames <- colnames(ydata_train)
+xdata_test <- test %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVDistkm, InletDistkm, NoFishRest,  FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
+ydata_test <- test[,colnames(test) %in% ynames]
+
+
+# unconditionally predict out of-sample
+modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+newdata1 <- list(xdata = xdata_test, nsim = 1000)
+p6 <- gjamPredict(modo, newdata = newdata1)
+
+
+# conditionally predict out of-sample
+ycond <- ydata_test %>% dplyr::select(-reddrumP915) #just remove red drum
+newdata1 <- list(xdata = xdata_test, ydataCond= ycond, nsim = 1000)
+p6 <- gjamPredict(modo, newdata = newdata1) 
 ```
 
 ```{r}
