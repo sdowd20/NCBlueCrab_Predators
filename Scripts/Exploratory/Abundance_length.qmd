@@ -1,0 +1,34 @@
+---
+title: "Abundance_length"
+format: html
+editor: visual
+---
+
+#### Load packages and datasets
+```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+invisible(lapply(packages, library, character.only= TRUE))
+
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
+p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
+
+p915_CPUEedt <- p915_CPUE %>% filter(between(Year, 20001, 2021), Month == c(5,6,9))
+p120_CPUEedt <- p120_CPUE %>% filter(between(Year, 2000, 2021), Month== c(5,6))
+p195_CPUEedt <- p195_CPUE %>%  filter(between(Year, 2000, 2021), Month== c(6,9))
+```
+
+```{r}
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish", "southern kingfish", "striped bass")
+
+p195_nums2 <- p195_CPUEedt %>% filter(Speciescommonname %in% interest_spp, Month %in% c(6,9)) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P195") 
+
+p120_nums <- p120_CPUEedt %>% filter(Speciescommonname %in% interest_spp, Month %in% c(5,6)) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
+
+p915_nums <- p915_CPUEedt %>% filter(Month %in% c(5,6,9), Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
+
+combo <- rbind(p195_nums, p120_nums, p915_nums)
+combo <- combo %>% arrange(Speciescommonname, Month)
+```
+

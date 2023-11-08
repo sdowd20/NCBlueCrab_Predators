@@ -51,7 +51,7 @@ CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 
 ```{r}
 #Number of observations for species of interest: to note- when I redid this (08/06/23), I included bonnethead hammerhead and blue catfish just to look at the #s
-interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish")
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish", "southern kingfish", "striped bass")
 
 unique(p915_CPUEedt$Speciescommonname)
 
@@ -59,7 +59,7 @@ p195_nums <- p195_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interes
 
 p120_nums <- p120_CPUEedt %>% filter(Year > 2008, Speciescommonname %in% interest_spp, Month==6) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
 
-p915_nums <- p915_CPUEedt %>% filter(Year >= 2001,Month==6, Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
+p915_nums <- p915_CPUEedt %>% filter(Year >= 2001,, Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P915")
 
 combo <- rbind(p195_nums, p120_nums, p915_nums)
 combo <- combo %>% arrange(Speciescommonname, Month)
