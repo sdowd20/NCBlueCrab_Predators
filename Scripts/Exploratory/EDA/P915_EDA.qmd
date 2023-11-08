@@ -55,30 +55,23 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 
 p915_CPUE <- read.csv("~/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
+p915_len_f <- p915_len_f %>% dplyr::select(-X)
+
+#Explore differences b/w CPUE and length dataset
+control_spp <- p915_CPUE %>% filter(Year >= 2001) %>% group_by(Sample, Speciescommonname) %>% summarize(count = n())
 
 length(unique(p915_CPUE$Sample))
 length(unique(p915_CPUE$Control1))
-control_spp <- p915_CPUE %>% filter(Year >= 2001) %>% group_by(Control1, Speciescommonname) %>% summarize(count = n())
-unique(control_spp$count)
+length(unique(p915_len_f$Sample)) #336 more Samples in CPUE dataset 
+unique(p915_CPUE$Speciescommonname)
+unique(p915_len_f$Speciescommonname)
 
-p915_biolnew1 <- read.csv("Data/P915/Finalized/p915_biol1new_clean.csv")
-p915_biolnew1 <- p915_biolnew1 %>% select(-c(X, ...1))
-colnames(p915_biolnew1) <- str_to_title(colnames(p915_biolnew1))  
-p915_biolnew2 <- read.csv("Data/P915/Finalized/p915_biol2new_clean.csv")
-p915_biolnew2 <- p915_biolnew2 %>% select(-c(X.1, X))
-colnames(p915_biolnew2) <- str_to_title(colnames(p915_biolnew2))   
-p915_biolnew2 <- type.convert(p915_biolnew2, as.is = TRUE) #converts data to appropriate type, when false it converts character vectors to factors
-p915_bioln <- rbind(p915_biolnew1, p915_biolnew2) #number of rows is 146079 (75496 from biolnew1 + 70583 from biolnew2), before type.convert it cut off at year 2008 
-p915_bioln <- rbind(p915_biolnew1, p915_biolnew2)
-p915_bioln <- p915_bioln %>% filter(!Area %in% "miss")
-
-t <- p915_CPUE %>% filter(Control1 %in% "111797"|Control1 %in% "111796")
-
-t <- unique(p915_bioln$Sample)
-t2 <- unique(p915_CPUE$Sample)
-
-differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_bioln %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
+differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_len_f %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
 unique(differences$Speciescommonname)
+
+#Length data not matching CPUE was because length data were from experimental samples that weren't included in CPUE data --> been removed 
+#CPUE data that doesn't match length: no lengths for individuals in those samples, only includes certain species. If one of these species was not caught in that sample there will be nothing in the length file indicating that was a zero catch.
 ```
 
 ```{r}
@@ -340,19 +333,21 @@ length(unique(P120_bioledt$Station))
 ```
 
 #Length updated: 10/26/23
+
 ```{r}
 #Compare w/ CPUE dataset
-unique(p915_length$Sample) #13955
-unique(p915_CPUE$Sample) #13947
-unique(p915_length$Control1) #13947
-unique(p915_CPUE$Control1) #20482
+length(unique(p915_len_f$Sample)) #13611
+length(unique(p915_CPUE$Sample)) #13947
+length(unique(p915_len_f$Control1)) #19910
+length(unique(p915_CPUE$Control1)) #13947
 
-merged_df <- merge(p915_CPUE, p915_length, by = "Sample")
-length(unique(merged_df$Sample)) #13720 of the same ones 
-unmerged_df <- anti_join(p915_CPUE, p915_length, by = "Sample")
-length(unique(unmerged_df$Sample)) #227 of different ones, 7945 observations, species include
+combo <- p915_len_f %>% dplyr::select(Speciescommonname, Colnum, Length, Sample) 
+merged_df <- merge(p915_CPUE, combo, by = "Sample")
+length(unique(merged_df$Sample)) #13611 same Samples
+unmerged_df <- anti_join(p915_CPUE, combo, by = "Sample")
+length(unique(unmerged_df$Sample)) #336 of different ones that aren't present in p915_len_f
 sample_combo <- merged_df$Sample
-yep <- p915_length %>% filter(!Sample %in% sample_combo)
+yep <- p915_len_f %>% filter(!Sample %in% sample_combo)
 
 values <- 1:310
 breaks <- seq(0, 310, by = 10)
@@ -362,10 +357,14 @@ result_numeric <- as.numeric(as.character(result))
 df <- data.frame(Length = values, Assigned_length = result_numeric)
 
 #Atlantic menhaden example
-tryit <- p915_length %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
-colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% select(Sample, Colnum) %>% distinct(Sample, .keep_all = TRUE)
+tryit <- p915_len_f %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
+colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Colnum)
 p915_prop <- tryit %>% left_join(df, by= "Length")
 length_freq <- p915_prop %>% group_by(Sample, Assigned_length) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count)) %>% left_join(colnum, by= "Sample") %>% mutate(Number2 = Freq*Colnum, Number= round(Freq*Colnum,0))
+
+
+t <- p915_CPUE %>% filter(Sample %in% "1035HYDE320"), Speciescommonname %in% "atlantic menhaden")
+
 
 length_freq %>% summarize(sum= sum(Number)) #865
 length_freq %>% summarize(sum= sum(Number2)) #867

@@ -98,9 +98,13 @@ getwd()
 
 #P915 CPUE NEW #2 
 setwd("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final")
-filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.csv')  
+filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.csv') 
 all <- lapply(filenames, readr::read_csv)
 merged <- do.call(rbind, all)
+filenames2 <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.xlsx')
+all2 <- lapply(filenames2, readxl::read_excel)
+merged2 <- do.call(rbind, all2)
+merged <- rbind(merged, merged2)
 colnames(merged) <- str_to_title(colnames(merged))
 merged$Species <- tolower(merged$Species)
 merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Spring", ifelse(merged$Month==9 |merged$Month==10 | merged$Month==11 | merged$Month==12, "Fall", ifelse(merged$Month==7 |merged$Month==8, "Summer", "Winter")))
@@ -127,8 +131,9 @@ p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predator
 P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species") %>% left_join(p915_sppnames, by= "Speciescommonname")
 
 ##Add in other predictor variables
+library(geosphere)
 P915_CPUE$doy <- yday(P915_CPUE$Date)
-P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
+#P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
 P915_CPUE <- P915_CPUE %>% rename("Secchi"= "Depthend")
@@ -196,6 +201,26 @@ p915_length$Photoperiod <- daylength(lat= p915_length$Latitude, doy= p915_length
 p915_length$Wbdytype <- ifelse(p915_length$Area %in% "PUNGO" | p915_length$Area %in% "NEUSE" | p915_length$Area %in% "NEWR"| p915_length$Area %in% "CAPEF" | p915_length$Area %in% "CAPEF", "River", "Sound")
 p915_length$Wbd <- ifelse(p915_length$Area %in% "DARE1" | p915_length$Area %in% "DARE2" | p915_length$Area %in% "DARE3"| p915_length$Area %in% "DARE4" | p915_length$Area %in% "HYDE1"| p915_length$Area %in% "HYDE2"| p915_length$Area %in% "HYDE3"| p915_length$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(p915_length$Area %in% "MHDC1"| p915_length$Area %in% "MHDC2"| p915_length$Area %in% "MHDC3", "MHDC", p915_length$Area))
 write.csv(p915_length, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_length_new.csv")
+
+#P915 LENGTH FINAL
+length_p915 <- read_csv("~/Desktop/Ch1Data/P915/P915_Lengths_UPDATED_20231030.csv")
+colnames(length_p915) <- str_to_title(colnames(length_p915))
+length_p915$Season <- ifelse(length_p915$Month==4 | length_p915$Month==5 | length_p915$Month==6, "Spring", ifelse(length_p915$Month==9 |length_p915$Month==10 | length_p915$Month==11 | length_p915$Month==12, "Fall", ifelse(length_p915$Month==7 |length_p915$Month==8, "Summer", "Winter")))
+length_p915$Date <- as.Date(paste(length_p915$Month, length_p915$Day, length_p915$Year, sep= "-"), "%m-%d-%Y")
+length_p915$Ym_date <- format(length_p915$Date, "%Y-%m")
+
+#Scientific name, just do species names!
+p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/p915_sppnames.csv")
+length_p915$Species <- str_to_lower(length_p915$Species)
+p <- length_p915 %>% dplyr::rename("Speciescommonname"= "Species") %>% left_join(p915_sppnames, by= "Speciescommonname") #no NAs for species (works!)
+unique(p$Sciname) #no NAs, this worked
+
+p$doy <- yday(p$Date)
+p$Photoperiod <- daylength(lat= p$Latitude, doy= p$doy)
+p$Wbdytype <- ifelse(p$Area %in% "PUNGO" | p$Area %in% "NEUSE" | p$Area %in% "NEWR"| p$Area %in% "CAPEF" | p$Area %in% "CAPEF", "River", "Sound")
+p$Wbd <- ifelse(p$Area %in% "DARE1" | p$Area %in% "DARE2" | p$Area %in% "DARE3"| p$Area %in% "DARE4" | p$Area %in% "HYDE1"| p$Area %in% "HYDE2"| p$Area %in% "HYDE3"| p$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(p$Area %in% "MHDC1"| p$Area %in% "MHDC2"| p$Area %in% "MHDC3", "MHDC", p$Area))
+
+write.csv(p, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_length_final.csv")
 
 #######P120########
 #P120 OLD
