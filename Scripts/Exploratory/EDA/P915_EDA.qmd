@@ -332,8 +332,7 @@ length(unique(P120_bioledt$Station))
 #centroid shifts by size class 
 ```
 
-#Length updated: 10/26/23
-
+#### Length CPUE dataset: 11/08/23
 ```{r}
 #Compare w/ CPUE dataset
 length(unique(p915_len_f$Sample)) #13611
@@ -361,6 +360,12 @@ tryit <- p915_len_f %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in
 colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Colnum)
 p915_prop <- tryit %>% left_join(df, by= "Length")
 length_freq <- p915_prop %>% group_by(Sample, Assigned_length) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count)) %>% left_join(colnum, by= "Sample") %>% mutate(Number2 = Freq*Colnum, Number= round(Freq*Colnum,0))
+
+tryit <- p915_len_f %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum,Length, Linenum)
+
+tryit$Age_class <- ifelse(tryit$Length <= 250, "J", "A")
+test <- tryit %>% group_by(Sample, Colnum, Age_class) %>% summarize(count= n())
+
 
 
 t <- p915_CPUE %>% filter(Sample %in% "1035HYDE320"), Speciescommonname %in% "atlantic menhaden")

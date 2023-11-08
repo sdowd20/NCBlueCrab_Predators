@@ -5,24 +5,28 @@ editor: visual
 ---
 
 #### Load packages and datasets
+
 ```{r}
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
 invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
 p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-p915_CPUEedt <- p915_CPUE %>% filter(between(Year, 20001, 2021), Month == c(5,6,9))
-p120_CPUEedt <- p120_CPUE %>% filter(between(Year, 2000, 2021), Month== c(5,6))
-p195_CPUEedt <- p195_CPUE %>%  filter(between(Year, 2000, 2021), Month== c(6,9))
+p915_CPUEedt <- p915_CPUE %>% filter(between(Year, 2001, 2021), Month %in% c(5,6,9))
+p120_CPUEedt <- p120_CPUE %>% filter(between(Year, 2000, 2021), Month %in% c(5,6))
+p195_CPUEedt <- p195_CPUE %>%  filter(between(Year, 2000, 2021), Month %in% c(6,9))
 ```
 
+#### Abundance
 ```{r}
-interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish", "southern kingfish", "striped bass")
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish", "southern kingfish", "striped bass", "bay anchovy", "striped anchovy")
 
-p195_nums2 <- p195_CPUEedt %>% filter(Speciescommonname %in% interest_spp, Month %in% c(6,9)) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P195") 
+p195_nums <- p195_CPUEedt %>% filter(Speciescommonname %in% interest_spp, Month %in% c(6,9)) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P195") 
 
 p120_nums <- p120_CPUEedt %>% filter(Speciescommonname %in% interest_spp, Month %in% c(5,6)) %>% group_by(Speciescommonname, Month) %>% drop_na(Colnum) %>% summarise(Sum_colnum= sum(Colnum)) %>% mutate(Survey= "P120") 
 
@@ -30,5 +34,27 @@ p915_nums <- p915_CPUEedt %>% filter(Month %in% c(5,6,9), Speciescommonname %in%
 
 combo <- rbind(p195_nums, p120_nums, p915_nums)
 combo <- combo %>% arrange(Speciescommonname, Month)
+11
+```
+
+#### Length
+```{r}
+#P195
+p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
+
+p195_lengthfreq %>% filter(Speciescommonname %in% interest_spp) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p195_length.png", width= 10, height= 10)
+
+#P120
+P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
+
+P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Year >=2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p120_length.png", width= 10, height= 10)
+
+#P915
+p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
+
+p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% interest_spp) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+ggsave("~/Desktop/p915_length.png", width= 10, height= 10)
 ```
 
