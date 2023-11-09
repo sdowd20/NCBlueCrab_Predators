@@ -333,6 +333,7 @@ length(unique(P120_bioledt$Station))
 ```
 
 #### Length CPUE dataset: 11/08/23
+
 ```{r}
 #Compare w/ CPUE dataset
 length(unique(p915_len_f$Sample)) #13611
@@ -348,45 +349,30 @@ length(unique(unmerged_df$Sample)) #336 of different ones that aren't present in
 sample_combo <- merged_df$Sample
 yep <- p915_len_f %>% filter(!Sample %in% sample_combo)
 
-values <- 1:310
-breaks <- seq(0, 310, by = 10)
-assigned_values <- seq(0, 300, by = 10)
-result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
-result_numeric <- as.numeric(as.character(result))
-df <- data.frame(Length = values, Assigned_length = result_numeric)
-
 #Atlantic menhaden example
-tryit <- p915_len_f %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
-colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Colnum)
-p915_prop <- tryit %>% left_join(df, by= "Length")
-length_freq <- p915_prop %>% group_by(Sample, Assigned_length) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count)) %>% left_join(colnum, by= "Sample") %>% mutate(Number2 = Freq*Colnum, Number= round(Freq*Colnum,0))
+tryit2 <- p915_len_f %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum,Length, Linenum)
+tryit2$Age_class <- ifelse(tryit2$Length <= 250, "J", "A") #assign age class
+test2 <- tryit2 %>% group_by(Sample, Colnum, Age_class) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count), Number= Freq*Colnum) #counted # of observations in each age class for a sample, computed a frequency, multiplied frequency by total Colnum
+test2_edt <- test2 %>% group_by(Sample, Age_class) %>% summarize(Num_sum = sum(Number)) #sum number of individuals in each age class, 10797 samples 
 
-tryit <- p915_len_f %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum,Length, Linenum)
+length_test <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("J", "A"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
+combo <- length_test %>% filter(Speciescommonname %in% "atlantic menhaden") %>% left_join(test2_edt, by= c("Sample", "Age_class"))
+combo$Num_sum[combo$Num_sum %in% NA] <- 0
 
-tryit$Age_class <- ifelse(tryit$Length <= 250, "J", "A")
-test <- tryit %>% group_by(Sample, Colnum, Age_class) %>% summarize(count= n())
+#Check if worked: 
+##Joining 
+sel_to_combo <- to_combo %>% filter(!Num_sum %in% NA) #10797 samples with no NA, the joining worked
+length(unique(sel_to_combo$Sample))
 
+##Create length CPUE
+check <- combo %>% group_by(Sample) %>% mutate(sum_count = sum(Num_sum)) %>% distinct(sum_count, .keep_all= TRUE) %>% select(Sample, sum_count) %>% rename("Colnum"= "sum_count")
+with <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% select(Sample, Colnum)
+differences <- anti_join(check, with, by = "Sample") #0, same samples 
+unique(differences$Speciescommonname) 
 
-
-t <- p915_CPUE %>% filter(Sample %in% "1035HYDE320"), Speciescommonname %in% "atlantic menhaden")
-
-
-length_freq %>% summarize(sum= sum(Number)) #865
-length_freq %>% summarize(sum= sum(Number2)) #867
-
-#Red drum example
-tryit2 <- p915_length %>% filter(Speciescommonname %in% "red drum", Sample %in% "7515DARE120.") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
-
-p915_length %>% filter(Speciescommonname %in% "red drum", Sample %in% "7515DARE120.") %>% ggplot() + geom_histogram(aes(x= Length))
-#Deal with this differently, show example to Janet 
-
-p915_CPUE %>% filter(Speciescommonname %in% "red drum", Colnum > 0) %>% summarize(uni= length(unique(Sample))) 
-p915_length %>% filter(Speciescommonname %in% "red drum") %>% summarize(uni= length(unique(Sample)))
-
-t <- p915_length %>% filter(Speciescommonname %in% "red drum") %>% select(Sample) %>% left_join(p915_CPUE %>% filter(Speciescommonname %in% "red drum", Colnum > 0) %>% select(Sample, Colnum))
-
-
-p915_length %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, y= after_stat(count)), bins= 20) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + xlim(c(0,1000))
+ t <- tryit2 %>% filter(Sample %in% "631PAMLI2300.")
+merged_df <- inner_join(check, with, by = 'Sample')
+merged_df$Colnum_match <- merged_df$Colnum.x == merged_df$Colnum.y #there are a bunch of differences
 ```
 
 #### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code
@@ -496,3 +482,18 @@ t <- p915_bioln %>% filter(Area %in% "MHDC4")
 length(unique(t$Area))
 #the record \# represents the control ID and the species ID combined so joining by area and date might be the way to go.
 ```
+
+```{r}
+# values <- 1:310
+# breaks <- seq(0, 310, by = 10)
+# assigned_values <- seq(0, 300, by = 10)
+# result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+# result_numeric <- as.numeric(as.character(result))
+# df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+tryit <- p915_len_f %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum:Length)
+colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Colnum)
+p915_prop <- tryit %>% left_join(df, by= "Length")
+length_freq <- p915_prop %>% group_by(Sample, Assigned_length) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count)) %>% left_join(colnum, by= "Sample") %>% mutate(Number2 = Freq*Colnum, Number= round(Freq*Colnum,0))
+```
+
