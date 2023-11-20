@@ -21,7 +21,7 @@ setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-#Filter datasets:
+#Filter datasets: leave it as year-around!
 p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021)) 
 p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021)) %>% dplyr::select(-Photoperiod)
 p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021)) %>% dplyr::select(-Photoperiod)
@@ -50,7 +50,7 @@ lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
 lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE)
 ```
 
-####Form grids
+####Form grids 
 ##### Grid: From 10 x 10 km grid
 
 ```{r}
@@ -77,7 +77,11 @@ fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #th
 
 fish_extract_2_2$gridID <- fish_extract_2_2$ID
 fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
+
 write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv") #updated on 11/20/23
+
+lat_lon_pts_g <- fish_extract_2_2edt %>% separate(lat_lon, c("lat", "lon"), sep= "_")
+ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = lat_lon_pts_g, aes(x = as.numeric(lon), y = as.numeric(lat), color= gridID)) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) #works
 ```
 
 ##### Grid: Form 5 x 5 km grid
@@ -125,15 +129,19 @@ fish_extract_comboedt <- fish_extract_combo[,-c(2,3, 4)]
 #ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_comboedt, fill = NA) + geom_sf(data= fish_spat) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 ```
 
-#### Predictor datasets
+#### Structure grid dataset
 
 ```{r}
+gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv")
+gridded_coords <- gridded_coords %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% dplyr::select(-...1)
 
+#Does this line up? yes!
+selected_grids <- unique(gridded_coords$gridID)
+globe_grid_30_test <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID %in% selected_grids)
+
+#Join grid geometry to gridded dataset
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
+gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
+gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% dplyr::select(gridID, geometry)
+write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.11.20.23.csv")
 ```
-
-#### Combine gridded, predictors, and biological datasets
-
-```{r}
-
-```
-
