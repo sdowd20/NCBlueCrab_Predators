@@ -4,8 +4,6 @@ format: html
 editor: visual
 ---
 
-############### 5 KM in JUNE
-
 #### Load packages, functions, and datasets
 
 ```{r}
@@ -50,6 +48,9 @@ p195_CPUEedt$Survey <- "P195"
 CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
 CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
+
+############### 5 KM in JUNE
+
 
 #### Combine gridded, predictors, and biological datasets
 
