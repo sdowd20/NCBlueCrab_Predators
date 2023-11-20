@@ -60,7 +60,6 @@ gridded_coords5km <- gridded_coords5km[,-1]
 #Join gridded coordinates with predictors 
 gridpred_lat_lon <- gridded_coords %>% left_join(predictors_df, by= "gridID") %>% filter(!gridID %in% 543) #Removing gridIDs 543 as it only had 4 observations, see clarification in Predictor_calcs.qmd
 
-
 ##Join gridded coordinates with predictors to CPUE data
 CPUE_all_grid_pred <- CPUE_all %>% left_join(gridpred_lat_lon, by= "lat_lon") %>% dplyr::select(lat_lon, everything()) #1208 rows with NA for gridID
 #compared with dataset where I did not remove gridIDs outside study area
