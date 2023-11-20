@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-#### Load packages, functions, and datasets
+#### Load packages, functions, and CPUE datasets
 
 ```{r}
 #Load packages and functions 
@@ -13,20 +13,9 @@ invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 world <- ne_countries(scale = "medium", returnclass = "sf")
-globe_bb <- matrix(c(-78.900147,33.802938,
-                      -78.900147,36.672128,
-                      -75.263672,36.672128,
-                     -75.263672, 33.802938,
-                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-globe_grid_60 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
+```
 
-#Datasets 
-predictors_df <-read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/grid_predictors_5km.10.03.23.csv")
-predictors_df <- predictors_df[,-1]
-
-gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
-gridded_coords <- gridded_coords[,-1]
-
+```{r}
 #Load CPUE datasets
 p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
@@ -34,9 +23,9 @@ p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 #Filter datasets: Add back in Secchi size once get P195 data
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== 6) #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month==6)
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month==6)
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== c(5,6,9)) #added in species of focus for now (still waiting on data)
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month== c(5,6))
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm, -Photoperiod) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month== c(5,6,9))
 
 p915_CPUEedt <- p915_CPUEedt %>% drop_na(Latitude, Longitude)
 p915_CPUEedt$Survey <- "P915"
@@ -49,11 +38,56 @@ CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
 CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
-############### 5 KM in JUNE
+```{r}
+#Gridded datasets
+##10 km
+predictors_df <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/Grid_predictors_10km.11.20.23.csv")
+predictors_df <- predictors_df[,-1]
+gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv")
+gridded_coords <- gridded_coords[,-1]
 
+##5 km 
+predictors_df5km <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/grid_predictors_5km.10.03.23.csv")
+predictors_df5km <- predictors_df5km[,-1]
+gridded_coords5km <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
+gridded_coords5km <- gridded_coords5km[,-1]
+```
 
 #### Combine gridded, predictors, and biological datasets
 
+########################## 10 KM in May, June, & September ##########################
+```{r}
+#Join gridded coordinates with predictors 
+gridpred_lat_lon <- gridded_coords %>% left_join(predictors_df, by= "gridID") %>% filter(!gridID %in% 543) #Removing gridIDs 543 as it only had 4 observations, see clarification in Predictor_calcs.qmd
+
+
+##Join gridded coordinates with predictors to CPUE data
+CPUE_all_grid_pred <- CPUE_all %>% left_join(gridpred_lat_lon, by= "lat_lon") %>% dplyr::select(lat_lon, everything()) #1208 rows with NA for gridID
+#compared with dataset where I did not remove gridIDs outside study area
+CPUE_all_grid_pred %>% group_by(gridID, Survey) %>% summarize(count= n())
+
+summary(is.na(CPUE_all_grid_pred))
+#143 rows with NA for gridID, 7 latitude and longitude points, all P915
+
+CPUE_all_grid_pred <- CPUE_all_grid_pred %>% drop_na(gridID)
+CPUE_all_grid_pred <- CPUE_all_grid_pred %>% separate(lat_lon, into= c("Latitude", "Longitude"), sep = "_", convert= TRUE, remove=FALSE) %>% filter(!gridID %in% c(706, 757, 1576, 2165, 2655, 3530, 258)) #get rid of grid cells that are outliers, gets rid of 323 rows 
+
+ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_60, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_all_grid_pred, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
+
+#Outlier analysis: there are some is.extreme outliers here and there but I've decided not to remove any (e.g: outlier for CPUE makes sense)
+colnames(CPUE_all_grid_pred)
+cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "GillPound_aA", "InletDist_km", "SAV_km", "Latitude", "Longitude")
+t <- list()
+for(col in cn){
+t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
+}
+
+write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5km.10.04.23.csv") 
+```
+
+########################## 5 KM in May, June, & September ##########################
+
+To edit! 
 ```{r}
 gridpred_lat_lon <- gridded_coords %>% left_join(predictors_df, by= "gridID")
 

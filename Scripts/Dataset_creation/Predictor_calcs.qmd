@@ -38,6 +38,7 @@ CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
 #### Load gridded datasets
+
 ```{r}
 #Background grid
 globe_bb <- matrix(c(-78.900147,33.802938,
@@ -122,7 +123,7 @@ ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + th
 ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid10km) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
 ```
 
-### 10 km^2 
+### 10 km\^2
 
 ##### Grid: Percent Area Covered
 
@@ -235,7 +236,8 @@ merged_df4 <- merged_df3 %>% mutate(FishingAll_num= rowSums(merged_df3[c("Shrimp
 write_sf(grid10km_edt, "~/Desktop/grid10km_edt.shp") #To QGIS! 
 #Grid_predictors_edt2 <- merged_df4 %>% filter(gridID %in% c(706, 757, 1576, 2165, 2655, 3530, 258)), this was for 5km 
 
-Grid_predictors_edt2 <- merged_df4 %>% filter(!gridID %in% c(543, 668, 678, 679, 707, 895, 398, 173, 199, 35)) #Now there's 117
+Grid_predictors_edt2 <- merged_df4 %>% filter(!gridID %in% 543) #Now there's 117
+#Original: filter(!gridID %in% c(543, 668, 678, 679, 707, 895, 398, 173, 199, 35)), but these all had (except 543), at least 39 observations, they are all associated with one survey- will get removed eventually for gJam
 ```
 
 ```{r}
