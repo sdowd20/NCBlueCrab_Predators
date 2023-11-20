@@ -12,6 +12,29 @@ packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnatura
 invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+#Should be same as Griding dataset:
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
+p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
+
+#Filter datasets: leave this as year-around, will filter below for Sediment size
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021)) 
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021)) %>% dplyr::select(-Photoperiod)
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021)) %>% dplyr::select(-Photoperiod)
+
+p915_CPUEedt <- p915_CPUEedt %>% drop_na(Latitude, Longitude)
+p915_CPUEedt$Survey <- "P915"
+p120_CPUEedt <- p120_CPUEedt  %>% drop_na(Latitude, Longitude)
+p120_CPUEedt$Survey <- "P120"
+p195_CPUEedt <- p195_CPUEedt  %>% drop_na(Latitude, Longitude)
+p195_CPUEedt$Survey <- "P195"
+
+CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
+CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
 #### Load gridded datasets
@@ -23,8 +46,6 @@ globe_bb <- matrix(c(-78.900147,33.802938,
                      -75.263672, 33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
 globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
-
-
 ```
 
 ```{r}
@@ -98,7 +119,7 @@ grid10km_edt <- st_transform(grid10km, crs= 32119)
 #Checked the first two and it looked fine 
 ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = Inlet_coords_edt) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
 
-ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
+ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid10km) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
 ```
 
 ### 10 km^2 
@@ -110,7 +131,7 @@ ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = 
 # mean(st_area(grid_edt)), this was 29276995 for 5km
 mean(st_area(grid10km_edt))
 sd(st_area(grid10km_edt))
-grid_A <- 117055715/1000000 #area is 10 x 10 km
+grid_A <- 117143781/1000000 #area is 10 x 10 km
 perc_A <- function(df1, df2){
 df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% dplyr::select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
 return(df_new)
@@ -151,6 +172,7 @@ Waterbodi <- All_waterbodies %>% st_union()
 Waterbody_A <- perc_A(grid10km_edt, Waterbodi) #this worked! QGIS
 Waterbody_A <- grid10km_edt %>% left_join(Waterbody_A) %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("Waterbody_A"= "column") %>% mutate(Waterbody_A= ifelse(Waterbody_A > 100, 100, Waterbody_A)) 
 
+#To compare
 Grid_predictors_edt2final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/gridded_predictors_final.csv")
 ```
 
@@ -195,36 +217,28 @@ for (df in dataframes){
 
 #Most common sediment size 
 ##Organize datasets: 
-datasets_Sedsize <- CPUE_all %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na()
+datasets_Sedsize <- CPUE_all %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na() 
+#%>% dplyr::filter(Month %in% c(5,6), Survey %in% c("P915", "P120"))
 datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
 gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
 datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr::select(gridID, lat_lon), by= "lat_lon") 
-Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID) #only 299 not 340 grid cells 
+Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID) #only 104 grid cells not 127, was 299 not 340 grid cells for 5km
 merged_df2 <- merged_df %>% left_join(Sedsize_common, by= "gridID")
-
-length(unique(CPUE_all$lat_lon))
-length(unique(datasets_Sedsize$lat_lon))
-length(unique(gridded_coords1$lat_lon))
 
 #Fishing predictors: 
 merged_df3 <- merged_df2 %>% mutate(ShrimpTrawl_aA= Waterbody_A - ShrimpTrawl_pA, TrawlDredge_aA = Waterbody_A - TrawlDredge_pA, GillPound_aA = Waterbody_A - GillPound_pA)
 
 merged_df4 <- merged_df3 %>% mutate(FishingAll_num= rowSums(merged_df3[c("ShrimpTrawl_aA", "TrawlDredge_aA", "GillPound_aA", "DPA_aA")] > 0), NoFishRest= Waterbody_A - RestrictedArea_pA, NoFishRest= ifelse(NoFishRest < 0, 100, NoFishRest)) #Max was -6 for NoFishRest, fixed this by putting 0 
-
-
-#706
-#757
-#1576
-#2165
-#2655
-#3530
+#if restricted area is greater than water body, that means the entire body of water is restricted so NoFishRest is 0 not 100 (fixed this mistake on 11/20/23)
 
 #Manually get rid of gridIDs in QGIS that are outside of study zone 
-#write_sf(grid_edt, "~/Desktop/grid_edt.shp")
-Grid_predictors_edt2 <- merged_df4 %>% filter(!gridID %in% c(706, 757, 1576, 2165, 2655, 3530, 258))
+write_sf(grid10km_edt, "~/Desktop/grid10km_edt.shp") #To QGIS! 
+#Grid_predictors_edt2 <- merged_df4 %>% filter(gridID %in% c(706, 757, 1576, 2165, 2655, 3530, 258)), this was for 5km 
+
+Grid_predictors_edt2 <- merged_df4 %>% filter(!gridID %in% c(543, 668, 678, 679, 707, 895, 398, 173, 199, 35)) #Now there's 117
 ```
 
 ```{r}
 #Save as CSV
-write.csv(Grid_predictors_edt2, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/grid_predictors_5km.10.03.23.csv")
+write.csv(Grid_predictors_edt2, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/grid_predictors_10km.11.20.23.csv")
 ```
