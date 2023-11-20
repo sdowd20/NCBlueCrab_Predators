@@ -74,42 +74,25 @@ unique(differences$Speciescommonname)
 #CPUE data that doesn't match length: no lengths for individuals in those samples, only includes certain species. If one of these species was not caught in that sample there will be nothing in the length file indicating that was a zero catch.
 ```
 
-```{r}
-length <- read_excel("/Users/sallydowd/Desktop/P915LengthData_20231003.xlsx", sheet=1)
-
-t <- length %>% filter(SAMPLE %in% "1035HYDE320.")
-write.csv(t, "~/Desktop/length.example.csv")
-t2 <- p915_CPUE %>% filter(Sample %in% "1035HYDE320.", Speciescommonname %in% "atlantic menhaden")
-write.csv(t2, "~/Desktop/CPUE.example.csv")
-```
-
 ##### General
 
 ```{r}
 #Spatial orientation
-ggplot(data = world) + geom_sf() + geom_point(data = p915_CPUEold, aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
-
-ggplot(data = world) + geom_sf() + geom_point(data = p915_bioln, aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #Biological
-
-unique(p915_CPUEold$Area)
-unique(p915_bioln$Area)
+ggplot(data = world) + geom_sf() + geom_point(data = p915_CPUE, aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") #CPUE
 
 #Sampling effort 
-ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme 
-ggplot() + geom_histogram(data = p915_CPUEold, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Area)
+ggplot() + geom_histogram(data = p915_CPUE, stat="count", aes(x=Ym_date)) + standard_theme 
+ggplot() + geom_histogram(data = p915_CPUE, stat="count", aes(x=Ym_date)) + standard_theme + facet_wrap(~Area)
 
-p915_CPUEold %>% group_by(Date, Latitude, Longitude) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme
+p915_CPUE %>% group_by(Date, Latitude, Longitude) %>% summarize(abundance= mean(Colnum)) %>% ggplot() + geom_point(aes(x= Date, y= abundance)) + standard_theme
 
-ggplot() + geom_sf(data = world) + geom_point(data = p915_CPUEOld, aes(x = Longitude, y = Latitude)) + scale_size_area() + facet_wrap(Year, nrow = 6) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
+ggplot() + geom_sf(data = world) + geom_point(data = p915_CPUE, aes(x = Longitude, y = Latitude)) + scale_size_area() + facet_wrap(Year, nrow = 6) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black"))
 ggsave("/users/sallydowd/desktop/P915.sampl.yearsjpg", width=25, height= 25, units= c("cm")) #look at by year
 
 #Environmental variables
 #Presence of NAs
 summary(is.na(p915_CPUE)) #NAs present in Latitude, Longitude, Sedsize, Btmcomp, Winddir, Windspd
 summary(is.na(p915_CPUE)) #NAs present in Station, Quad, Time, Duration, G1_parm1, G1_parm2, environmental variables, Colnum, biological variables
-
-p915_CPUE_test <- p915_CPUE %>% filter(Year > 2008) %>% drop_na(Sedsize) #drops 5489 points (out of 175320) when drop_na w/ Sedsize, drops way too many w/ Btmcomp
-
 ```
 
 EDA revealed sampling consistency throughout the years (except 2020) for all areas except MHC. Sampling in MHC (Back and Core Sounds) began in 2018. One thing that I don't understand is why there are more coordinates for the biological dataset over the CPUE dataset. As all areas (except MHC) didn't overlap until 2008, it is recommended to divide by region when analyzing metrics.
@@ -179,7 +162,6 @@ CPUE_graph <- function(df, species, CPUE_metricn){
 df %>% filter(Species %in% species) %>% ggplot(aes(x= Year, y= CPUE_avg)) +
 geom_line() + geom_point() + xlab("Year") + ylab(CPUE_metricn) + standard_theme
 }
-
 
 #By year: doesn't produce clear trends 
 p915_CPUEfoc_yr <- p915_CPUEfoc %>% group_by(Species, Year) %>% summarise(CPUE_avg = mean(CPUE)) %>% distinct(CPUE_avg, .keep_all= TRUE)
@@ -350,10 +332,11 @@ sample_combo <- merged_df$Sample
 yep <- p915_len_f %>% filter(!Sample %in% sample_combo)
 
 #Atlantic menhaden example
-tryit2 <- p915_len_f %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum,Length, Linenum)
+tryit2 <- p915_len_f %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
 tryit2$Age_class <- ifelse(tryit2$Length <= 250, "J", "A") #assign age class
-test2 <- tryit2 %>% group_by(Sample, Colnum, Age_class) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count), Number= Freq*Colnum) #counted # of observations in each age class for a sample, computed a frequency, multiplied frequency by total Colnum
-test2_edt <- test2 %>% group_by(Sample, Age_class) %>% summarize(Num_sum = sum(Number)) #sum number of individuals in each age class, 10797 samples 
+test2 <- tryit2 %>% group_by(Sample, Colnum, Age_class, Control2) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2) %>% mutate(sum_count= sum(count))
+test2_freq <- test2 %>% group_by(Sample, Colnum, Control2) %>% mutate(Freq= count/sum_count) %>% ungroup() %>% mutate(Number= Freq*Colnum) #counted # of observations in each age class for a sample, computed a frequency, multiplied frequency by total Colnum
+test2_edt <- test2_freq %>% group_by(Sample, Age_class) %>% summarize(Num_sum = sum(Number)) #sum number of individuals in each age class, 10797 samples 
 
 length_test <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("J", "A"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
 combo <- length_test %>% filter(Speciescommonname %in% "atlantic menhaden") %>% left_join(test2_edt, by= c("Sample", "Age_class"))
@@ -366,13 +349,23 @@ length(unique(sel_to_combo$Sample))
 
 ##Create length CPUE
 check <- combo %>% group_by(Sample) %>% mutate(sum_count = sum(Num_sum)) %>% distinct(sum_count, .keep_all= TRUE) %>% select(Sample, sum_count) %>% rename("Colnum"= "sum_count")
+# check$Colnum <- format(check$Colnum, nsmall = 0)
 with <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% select(Sample, Colnum)
 differences <- anti_join(check, with, by = "Sample") #0, same samples 
-unique(differences$Speciescommonname) 
+#unique(differences$Speciescommonname) 
 
- t <- tryit2 %>% filter(Sample %in% "631PAMLI2300.")
+combo %>% filter(Sample %in% "17117NEUSE2260.")
+test2_edt %>% filter(Sample %in% "17117NEUSE2260.")
+t2 <- p915_CPUE %>% filter(Sample %in% "17117NEUSE2260.", Speciescommonname %in% "atlantic menhaden")
+write.csv(t2, "~/Desktop/p915_CPUE.csv")
+t <- p915_len_f %>% filter(Speciescommonname %in% "atlantic menhaden", Sample %in% "17117NEUSE2260.")
+write.csv(t, "~/Desktop/p915_len_f.csv")
 merged_df <- inner_join(check, with, by = 'Sample')
+merged_df$Colnum.x <- gsub("\\s", "", merged_df$Colnum.x)
+merged_df$Colnum.y <- gsub("\\s", "", merged_df$Colnum.y)
 merged_df$Colnum_match <- merged_df$Colnum.x == merged_df$Colnum.y #there are a bunch of differences
+merged_df <- merged_df %>% mutate(across(c(Colnum.x, Colnum.y), as.numeric))
+merged_df$diff <- merged_df$Colnum.x - merged_df$Colnum.y
 ```
 
 #### Spatial seperation: maybe could do this by age class, showing thorughout the years where they are located--\> centroid? in Sarah's code
@@ -496,4 +489,3 @@ colnum <- p915_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>% d
 p915_prop <- tryit %>% left_join(df, by= "Length")
 length_freq <- p915_prop %>% group_by(Sample, Assigned_length) %>% summarize(count= n()) %>% mutate(Freq= count/sum(count)) %>% left_join(colnum, by= "Sample") %>% mutate(Number2 = Freq*Colnum, Number= round(Freq*Colnum,0))
 ```
-

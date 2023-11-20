@@ -1,5 +1,5 @@
 ---
-title: "Abundance_length"
+title: "Abundance_length_environmental"
 format: html
 editor: visual
 ---
@@ -59,3 +59,23 @@ p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
 p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% interest_spp, ! Speciescommonname %in% c("cownose ray", "bonnethead shark", "striped bass", "pinfish"), Length < 900) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p915_length.png", width= 10, height= 10)
 ```
+
+#### Environmental
+```{r}
+p915_CPUEedt %>% ggplot() + geom_histogram(aes(x= Ssal)) + standard_theme
+p915_CPUEedt %>% ggplot() + geom_histogram(aes(x= Depth)) + standard_theme
+p915_CPUEedt %>% ggplot() + geom_histogram(aes(x= Stemp)) + standard_theme
+p915_CPUEedt %>% ggplot() + geom_histogram(aes(x= Sdo)) + standard_theme
+
+p120_CPUEedt %>% ggplot() + geom_histogram(aes(x= Ssal)) + standard_theme
+p120_CPUEedt %>% ggplot() + geom_histogram(aes(x= Depth)) + standard_theme
+p120_CPUEedt %>% ggplot() + geom_histogram(aes(x= Stemp)) + standard_theme
+p120_CPUEedt %>% ggplot() + geom_histogram(aes(x= Sdo)) + standard_theme
+
+p195_CPUEedt %>% ggplot() + geom_histogram(aes(x= Salinitysurface)) + standard_theme
+p195_CPUEedt %>% ggplot() + geom_histogram(aes(x= Depthstart)) + standard_theme
+p195_CPUEedt %>% ggplot() + geom_histogram(aes(x= Tempsurface)) + standard_theme
+p195_CPUEedt %>% ggplot() + geom_histogram(aes(x= Sdo)) + standard_theme
+```
+
+Conclusion here is that the values are consistent throughout the surveys in May, June and September. My main concern was that surface salinity reached 0 in P915, but this is consistent throughout surveys. 
