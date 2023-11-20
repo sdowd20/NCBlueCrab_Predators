@@ -51,6 +51,7 @@ lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE)
 ```
 
 ####Form grids 
+
 ##### Grid: From 10 x 10 km grid
 
 ```{r}
@@ -132,6 +133,7 @@ fish_extract_comboedt <- fish_extract_combo[,-c(2,3, 4)]
 #### Structure grid dataset
 
 ```{r}
+#10 km 
 gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv")
 gridded_coords <- gridded_coords %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% dplyr::select(-...1)
 
@@ -143,5 +145,5 @@ globe_grid_30_test <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID
 globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
 gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
 gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% dplyr::select(gridID, geometry)
-write.csv(gridded_coords_geom, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.11.20.23.csv")
+write.csv(gridded_coords_geom_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.11.20.23.csv")
 ```

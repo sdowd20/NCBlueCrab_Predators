@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-#### Load packages, functions, and datasets
+#### Load packages & fncs
 
 ```{r}
 #Load packages and functions 
@@ -12,39 +12,36 @@ packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnatura
 invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
-world <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+#### Load gridded datasets
+```{r}
+#Background grid
 globe_bb <- matrix(c(-78.900147,33.802938,
                       -78.900147,36.672128,
                       -75.263672,36.672128,
                      -75.263672, 33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-globe_grid_60 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.)))
 
-#Load CPUE datasets
-p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
-setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
-p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-#Filter datasets: Add back in Secchi size once get P195 data
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021)) #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021))
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021))
+```
 
-p915_CPUEedt <- p915_CPUEedt %>% drop_na(Latitude, Longitude)
-p915_CPUEedt$Survey <- "P915"
-p120_CPUEedt <- p120_CPUEedt  %>% drop_na(Latitude, Longitude)
-p120_CPUEedt$Survey <- "P120"
-p195_CPUEedt <- p195_CPUEedt  %>% drop_na(Latitude, Longitude)
-p195_CPUEedt$Survey <- "P195"
+```{r}
+#10 km 
+gridded_coords <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv")
+gridded_coords <- gridded_coords %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% dplyr::select(-...1)
 
-CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
-CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
-
-#Gridded dataset with grid geometry 
+#Join grid geometry to gridded dataset
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
+gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "gridID")
+gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% dplyr::select(gridID, geometry)
+grid10km <- st_as_sf(gridded_coords_geom_edt)
+  
+#5 km 
 gridded_coords1 <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
 gridded_coords <- gridded_coords1 %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% dplyr::select(-...1)
-globe_grid_60_edt <- globe_grid_60 %>% rename("gridID"= "ID")
+globe_grid_60_edt <- globe_grid_30 %>% rename("gridID"= "ID")
 gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_60_edt, by= "gridID")
 gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% dplyr::select(gridID, geometry)
 grid <- st_as_sf(gridded_coords_geom_edt)
@@ -92,7 +89,7 @@ SAV_edt <- st_transform(SAV, crs = 32119)
 SAV2_edt <- st_transform(SAV2, crs = 32119)
 Estuarine_shoreline_edt <- st_transform(Estuarine_shoreline, crs= 32119)
 All_waterbodies <- st_transform(All_waterbodies, crs= 32119)
-grid_edt <- st_transform(grid, crs= 32119)
+grid10km_edt <- st_transform(grid10km, crs= 32119)
 ```
 
 ##### Visualization Check
@@ -104,13 +101,16 @@ ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + th
 ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = grid) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + standard_theme
 ```
 
-#### Grid: Percent Area Covered
+### 10 km^2 
+
+##### Grid: Percent Area Covered
 
 ```{r}
 #Function: 
-mean(st_area(grid_edt))
-sd(st_area(grid_edt))
-grid_A <- 29276995/1000000 #km^2, so only 0.15 km^2 off
+# mean(st_area(grid_edt)), this was 29276995 for 5km
+mean(st_area(grid10km_edt))
+sd(st_area(grid10km_edt))
+grid_A <- 117055715/1000000 #area is 10 x 10 km
 perc_A <- function(df1, df2){
 df_new <- st_intersection(df1, df2) %>% cbind(as.data.frame(st_area(.))) %>% dplyr::select(gridID, st_area..., geometry) %>% mutate(st_area...= as.numeric(st_area...)) %>% group_by(gridID) %>% mutate(st_area_km= st_area.../1000000, sum_area_km2= sum(st_area_km), column= (sum_area_km2/grid_A)*100) %>% distinct(gridID, .keep_all = TRUE) %>% st_drop_geometry()
 return(df_new)
@@ -119,50 +119,50 @@ return(df_new)
 #Fishing
 ##Allowed
 ###Crab pots allowed (open):
-DPA_aA <- perc_A(DPA_a, grid_edt)
-DPA_aA <- grid_edt %>% left_join(DPA_aA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("DPA_aA"= "column") %>% mutate(DPA_aA= ifelse(DPA_aA > 100, 100, DPA_aA)) #if it is over 100 (100.02) then make it only 100
+DPA_aA <- perc_A(DPA_a, grid10km_edt)
+DPA_aA <- grid10km_edt %>% left_join(DPA_aA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("DPA_aA"= "column") %>% mutate(DPA_aA= ifelse(DPA_aA > 100, 100, DPA_aA)) #if it is over 100 (100.02) then make it only 100
 
 ###ITP Management Area: Area overlap, take area with largest overlap
-ITP <- st_intersection(ITP_Management, grid_edt) %>% cbind(as.data.frame(st_area(.))) %>% dplyr::select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry() %>% dplyr::select(-st_area...) %>% rename("ITP"= "area")
-ITP <- grid_edt %>% left_join(ITP, by= "gridID") %>% st_drop_geometry()
+ITP <- st_intersection(ITP_Management, grid10km_edt) %>% cbind(as.data.frame(st_area(.))) %>% dplyr::select(gridID, area, st_area...) %>% group_by(gridID) %>% mutate(st_area...= as.numeric(st_area...)) %>% filter(st_area... %in% max(st_area...)) %>% st_drop_geometry() %>% dplyr::select(-st_area...) %>% rename("ITP"= "area")
+ITP <- grid10km_edt %>% left_join(ITP, by= "gridID") %>% st_drop_geometry()
 
 ##Restricted 
 ###Shrimp trawling prohibited
-ShrimpTrawl_pA <- perc_A(grid_edt, ShrimpTrawl_p)
-ShrimpTrawl_pA <- grid_edt %>% left_join(ShrimpTrawl_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("ShrimpTrawl_pA"= "column")
+ShrimpTrawl_pA <- perc_A(grid10km_edt, ShrimpTrawl_p)
+ShrimpTrawl_pA <- grid10km_edt %>% left_join(ShrimpTrawl_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("ShrimpTrawl_pA"= "column")
 
 ###Trawling, dredging prohibited
 TrawlDredge_p_edt <- TrawlDredge_p %>% st_union()
-TrawlDredge_pA <- perc_A(grid_edt, TrawlDredge_p_edt)
-TrawlDredge_pA <- grid_edt %>% left_join(TrawlDredge_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("TrawlDredge_pA"= "column")
+TrawlDredge_pA <- perc_A(grid10km_edt, TrawlDredge_p_edt)
+TrawlDredge_pA <- grid10km_edt %>% left_join(TrawlDredge_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("TrawlDredge_pA"= "column")
 
 ###Passive gear prohibited
-GillPound_pA <- perc_A(GillPound_p_edt, grid_edt)
-GillPound_pA <- grid_edt %>% left_join(GillPound_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("GillPound_pA"= "column")
+GillPound_pA <- perc_A(GillPound_p_edt, grid10km_edt)
+GillPound_pA <- grid10km_edt %>% left_join(GillPound_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("GillPound_pA"= "column")
 
 ###Total restricted area
 RestrictedArea_sf <- RestrictedArea %>% st_union()%>%
 st_sf() #sf is a sfc geometry that has data columns, sfc only has geometry 
-RestrictedArea_pA <- perc_A(RestrictedArea_sf, grid_edt)
-RestrictedArea_pA <- grid_edt %>% left_join(RestrictedArea_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("RestrictedArea_pA"= "column")
+RestrictedArea_pA <- perc_A(RestrictedArea_sf, grid10km_edt)
+RestrictedArea_pA <- grid10km_edt %>% left_join(RestrictedArea_pA, by= "gridID") %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("RestrictedArea_pA"= "column")
 
 #Waterbody
 Waterbodi <- All_waterbodies %>% st_union()
-Waterbody_A <- perc_A(grid_edt, Waterbodi) #this worked! QGIS
-Waterbody_A <- grid_edt %>% left_join(Waterbody_A) %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("Waterbody_A"= "column") %>% mutate(Waterbody_A= ifelse(Waterbody_A > 100, 100, Waterbody_A)) 
+Waterbody_A <- perc_A(grid10km_edt, Waterbodi) #this worked! QGIS
+Waterbody_A <- grid10km_edt %>% left_join(Waterbody_A) %>% replace(is.na(.), 0) %>% arrange(gridID) %>% st_drop_geometry() %>% dplyr::select(gridID, column) %>% rename("Waterbody_A"= "column") %>% mutate(Waterbody_A= ifelse(Waterbody_A > 100, 100, Waterbody_A)) 
 
 Grid_predictors_edt2final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Predictor_variables/gridded_predictors_final.csv")
 ```
 
-#### Centroid
+##### Centroid
 
 ```{r}
-sf_cent <- st_centroid(grid_edt)
+sf_cent <- st_centroid(grid10km_edt)
 nearest_dist <- function(df1, df2){
 nearest <- st_nearest_feature(df1, df2)
 dist <- st_distance(df1, df2[nearest,], by_element= TRUE)
 dist <- as.numeric(dist)
-df_new <- grid_edt %>% mutate(dist_km = dist/1000)
+df_new <- grid10km_edt %>% mutate(dist_km = dist/1000)
 }
 
 #Environmental 
@@ -177,12 +177,12 @@ options(scipen = 0)
 ##Shoreline type
 nearest_shoreline <- st_nearest_feature(sf_cent, Estuarine_shoreline_edt)
 nearest <- as.numeric(nearest_shoreline)
-ShorelineType <- grid_edt %>% mutate(row_num= nearest)
+ShorelineType <- grid10km_edt %>% mutate(row_num= nearest)
 ESE <- Estuarine_shoreline_edt %>% mutate(row_num= 1:74937) %>% st_drop_geometry()
 ShorelineType <- ShorelineType %>% left_join(ESE, by= "row_num") %>% dplyr::select(gridID, SHORE_NAM) %>% rename("ShorelineType"= "SHORE_NAM") %>% st_drop_geometry() #21 differences in 120 gridIDs in common b/w old dataset and new, might be due to different calculation distances 
 ```
 
-#### Other calculation
+##### Other calculation
 
 ```{r}
 #Merge grid and centroid calculated datasets
