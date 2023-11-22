@@ -98,7 +98,7 @@ getwd()
 
 #P915 CPUE NEW #2 
 setwd("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final")
-filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.csv') 
+filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.csv') #update on 11/21/23: deleted duplicate files of hickory shad and sheepshead
 all <- lapply(filenames, readr::read_csv)
 merged <- do.call(rbind, all)
 filenames2 <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.xlsx')

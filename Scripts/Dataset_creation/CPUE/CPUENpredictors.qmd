@@ -19,7 +19,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 #Load CPUE datasets
 p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
-p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
+p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv") #98472 rows/14 species = 7053 unique sampling events 
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 #Filter datasets: Add back in Secchi size once get P195 data
@@ -60,7 +60,8 @@ gridded_coords5km <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/grid
 gridded_coords5km <- gridded_coords5km[,-1]
 ```
 
-### 10 km: 
+### 10 km:
+
 May, June and September
 
 ##### Combine gridded, predictors, and biological datasets
@@ -78,11 +79,12 @@ CPUE_all_grid_pred <- CPUE_all_grid_pred %>% drop_na(gridID)
 CPUE_all_grid_pred <- CPUE_all_grid_pred %>% separate(lat_lon, into= c("Latitude", "Longitude"), sep = "_", convert= TRUE, remove=FALSE) 
 
 ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_all_grid_pred, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
+
+#write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.11.21.23.csv")
 ```
 
 ```{r}
 base_plot <- ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme 
-
 #Outlier analysis
 colnames(CPUE_all_grid_pred)
 cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "GillPound_aA", "InletDist_km", "SAV_km", "Latitude", "Longitude")
@@ -90,7 +92,7 @@ t <- list()
 for(col in cn){
 t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% select(col, is.extreme, Speciescommonname)
 }
-#No outliers for year, month, day, surface salinity, bottom salinity, inlet distance
+#No outliers for year, month, day, surface salinity, bottom salinity, inlet distance, latitude and longitude 
 
 ##depth: outliers range from 5.3 to 8.8 m 
 t[4] 
@@ -126,26 +128,26 @@ max(CPUE_all_grid_pred$SAV_km, na.rm= TRUE) #45.4
 min(t[[14]]$SAV_km) #25.7
 max(t[[14]]$SAV_km) #45.7
 ggplot() + geom_histogram(data= CPUE_all_grid_pred, aes(x= SAV_km)) + standard_theme
-base_plot + geom_point(data = subset(CPUE_all_grid_pred, SAV_km >= 25.7), aes(x = Longitude, y = Latitude, color= SAV_km)) + scale_color_gradient(low = "lightblue", high = "darkblue")
-
-
-t[15]
-t[16]
-t[17]
+ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = subset(CPUE_all_grid_pred, SAV_km >= 25.7), aes(x = Longitude, y = Latitude, color= Survey)) + coord_sf(xlim=c(-80, -75), ylim=c(33.5,37), expand = TRUE)
+subset(CPUE_all_grid_pred, SAV_km >= 25.7 & Survey == "P120") #39 rows with P915, 1,169 rows for P120 
 
 ##Colnum
 t[11]
-min(CPUE_all_grid_pred$Sdo, na.rm= TRUE) #0 
-max(CPUE_all_grid_pred$Sdo, na.rm= TRUE) #15.9
-
-
-write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5km.10.04.23.csv") 
+min(CPUE_all_grid_pred$Colnum, na.rm= TRUE) #0 
+max(CPUE_all_grid_pred$Colnum, na.rm= TRUE) #8323
+min(t[[11]]$Colnum) #5
+max(t[[11]]$Colnum) #8323
+ggplot() + geom_histogram(data= CPUE_all_grid_pred, aes(x= Colnum)) + standard_theme +
+facet_wrap(~Speciescommonname) + xlim(0, 1000) + ylim(0,750)
+ggplot() + geom_histogram(data= subset(CPUE_all_grid_pred, Colnum > 100), aes(x= Colnum)) + standard_theme +
+facet_wrap(~Speciescommonname) + xlim(0, 1000) + ylim(0,250)
 ```
 
-##### Calculate CPUE
+##### CPUE dataset
+
 ```{r}
 #Form CPUE dataset 
-CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5km.10.04.23.csv")
+CPUE_dfs_gridded_final <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.11.21.23.csv")
 CPUE_dfs_gridded_final <- CPUE_dfs_gridded_final[,-1]
 
 #Effort by survey: this works 
@@ -155,46 +157,59 @@ CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P12
 CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort
 
 CPUE_grid <- CPUE_grid %>% group_by(Survey) %>% mutate(CPUE_stdzd= normalize(CPUE, method= "range", range= c(0,1))) ##min-max scaling:
-CPUE_grid <- CPUE_grid %>% group_by(gridID, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd))
+CPUE_grid <- CPUE_grid %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd))
 
-#Add a few more environmental predictors: exclude 0 values for stemp, sdo, or ssal by turning them to NAs and then
-CPUE_grid_avg <- CPUE_grid %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid$Stemp==0.0, NA, CPUE_grid$Stemp), Ssal= ifelse(CPUE_grid$Ssal==0.0, NA, CPUE_grid$Ssal), Sdo= ifelse(CPUE_grid$Sdo==0.0, NA, CPUE_grid$Sdo)) %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), avg_photoperiod= mean(Photoperiod), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Photoperiod, -Depth, -avg_photoperiod, -na.rm, -avg_latitude, -avg_longitude)
-CPUE_grid_avg <- CPUE_grid_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 835 rows, 757 NA for avg_do, 114 NA for avg_stemp, 179 NA for avg_ssal
+#Remove outliers! Turn into NAs and then remove them 
+CPUE_grid_avg <- CPUE_grid %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid$Stemp <= 9.3, NA, CPUE_grid$Stemp), Ssal= ifelse(CPUE_grid$Ssal==0.0, NA, CPUE_grid$Ssal), Sdo= ifelse(CPUE_grid$Sdo==0.0, NA, CPUE_grid$Sdo)) %>% group_by(Month, Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude)
+CPUE_grid_avg <- CPUE_grid_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 1324 rows
 
 #Correlation plot to see what to remove
 cor <- cor(CPUE_grid_avg[, c(17, 19:25, 28:31)])
 corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
-
-colnames(CPUE_grid_avg)
+cor1 <- cor(CPUE_grid_avg[, c(24:25, 38:41)])
+corrplot(cor1) #maybe remove inlet distance 
 
 #Remove latitude, longitude, all fishing variables except NofishRest and FishingAll_num 
 CPUE_grid_avg_edt <- CPUE_grid_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -CPUE, -CPUE_stdzd, -mean_CPUE, -Month, -Control1)
 
-colnames(CPUE_grid_avg_edt)                                    
-summary(is.na(CPUE_grid_avg_edt))                                              
-
+summary(is.na(CPUE_grid_avg_edt)) #no NAs                                           
 ##Make there be one column for each CPUE
-CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% group_by(Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE_stdzd, .keep_all= TRUE)
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE_stdzd, .keep_all= TRUE)
 
-write.csv(CPUE_grid_avg_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.5km.10.04.23.csv")          
-
-#Form count dataset 
-CPUE_grid_count <- CPUE_grid %>% group_by(gridID, Survey, Year, Speciescommonname) %>% mutate(avg_count= round(mean(Colnum),0)) #doesn't round any down to 0
-
-CPUE_grid_count_avg <- CPUE_grid_count %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid_count$Stemp==0.0, NA, CPUE_grid_count$Stemp), Ssal= ifelse(CPUE_grid_count$Ssal==0.0, NA, CPUE_grid_count$Ssal), Sdo= ifelse(CPUE_grid_count$Sdo==0.0, NA, CPUE_grid_count$Sdo)) %>% group_by(Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), avg_photoperiod= mean(Photoperiod), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Photoperiod, -Depth, -avg_photoperiod, -na.rm, -avg_latitude, -avg_longitude)
-
-CPUE_grid_count_avg <- CPUE_grid_count_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 835 rows, 757 NA for avg_do, 114 NA for avg_stemp, 179 NA for avg_ssal        
-
-colnames(CPUE_grid_count_avg)
-CPUE_grid_count_avg_edt <- CPUE_grid_count_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -Month, -Control1)
-CPUE_grid_count_avg_edt <- CPUE_grid_count_avg_edt %>% group_by(Year, gridID, Speciescommonname, Survey) %>% distinct(avg_count, .keep_all= TRUE)
-
-write.csv(CPUE_grid_count_avg_edt,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.5km.10.04.23.csv") 
+write.csv(CPUE_grid_avg_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.11.21.23.csv")
 ```
 
-########################## 5 KM in May, June, & September ##########################
+##### Count dataset
 
-To edit for 5 km 
+```{r}
+CPUE_grid_count <- CPUE_grid %>% group_by(Month, gridID, Survey, Year, Speciescommonname) %>% mutate(avg_count= round(mean(Colnum),0)) #doesn't round any down to 0
+
+CPUE_grid_count_avg <- CPUE_grid_count %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid_count$Stemp <= 9.3, NA, CPUE_grid_count$Stemp), Ssal= ifelse(CPUE_grid_count$Ssal==0.0, NA, CPUE_grid_count$Ssal), Sdo= ifelse(CPUE_grid_count$Sdo==0.0, NA, CPUE_grid_count$Sdo)) %>% group_by(Year, gridID, Month) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude)
+
+CPUE_grid_count_avg <- CPUE_grid_count_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #dropped 1324 rows, same as before 
+
+CPUE_grid_count_avg_edt <- CPUE_grid_count_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -Month, -Control1)
+CPUE_grid_count_avg_edt <- CPUE_grid_count_avg_edt %>% group_by(Year, gridID, Speciescommonname, Survey, Month) %>% distinct(avg_count, .keep_all= TRUE)
+
+#write.csv(CPUE_grid_count_avg_edt,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.11.21.23.csv")
+
+t <- CPUE_grid_count_avg %>% filter(Survey %in% "P120") %>% dplyr::select(-c(CPUE, mean_CPUE, CPUE_stdzd, Colnum)) %>% ungroup() %>% pivot_wider(values_from = "avg_count", names_from = "Speciescommonname")
+
+```
+
+##### Presence-absence dataset
+
+```{r}
+##Binary dataset (0 or 1):  
+CPUE_grid_binary_edt <- CPUE_grid_count_avg_edt %>% mutate(binary = ifelse(avg_count > 0, 1, 0))
+
+#write.csv(CPUE_grid_binary_edt,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_binary_edt.11.22.23.csv") 
+```
+
+### 5 km
+########################## 5 KM in May, June, & September
+
+To edit for 5 km
 
 ```{r}
 gridpred_lat_lon <- gridded_coords %>% left_join(predictors_df, by= "gridID")
@@ -218,7 +233,9 @@ t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme=
 write.csv(CPUE_all_grid_pred,"~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_all_grid_pred.5km.10.04.23.csv") 
 ```
 
-####CPUE calculation
+############# 5 km
+
+CPUE calculation
 
 ```{r}
 #Form CPUE dataset 

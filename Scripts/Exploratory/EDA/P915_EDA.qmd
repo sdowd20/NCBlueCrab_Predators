@@ -61,10 +61,11 @@ p915_len_f <- p915_len_f %>% dplyr::select(-X)
 #Explore differences b/w CPUE and length dataset
 control_spp <- p915_CPUE %>% filter(Year >= 2001) %>% group_by(Sample, Speciescommonname) %>% summarize(count = n())
 
+p915_CPUE %>% group_by(Speciescommonname) %>% summarize(count= n())
 length(unique(p915_CPUE$Sample))
 length(unique(p915_CPUE$Control1))
 length(unique(p915_len_f$Sample)) #336 more Samples in CPUE dataset 
-unique(p915_CPUE$Speciescommonname)
+length(unique(p915_CPUE$Speciescommonname))
 unique(p915_len_f$Speciescommonname)
 
 differences <- anti_join(p915_CPUE %>% filter(Year >= 2001), p915_len_f %>% filter(Year >= 2001), by = c("Sample" = "Sample"))
