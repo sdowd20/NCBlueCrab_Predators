@@ -5,6 +5,7 @@ editor: visual
 ---
 
 #### Load datasets and packages
+
 ```{r}
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "tidyr")
 invisible(lapply(packages, library, character.only= TRUE))
@@ -13,8 +14,10 @@ p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finali
 P120_bioledt <- read_csv("Ch1Data/P120/p120_biol_new.csv")
 ```
 
-#### CPUE no length 
+#### CPUE no length
+
 ##### P120
+
 ```{r}
 select_spp <- c("atlantic menhaden", "atlantic croaker", "bay anchovy", "blue crab", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "southern flounder", "spot", "spotted seatrout", "striped anchovy", "weakfish")
 
@@ -59,6 +62,7 @@ p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 ```
 
 ##### P195 CPUE
+
 ```{r}
 p195_abundedt <- p195_abund %>% drop_na(Sciname) #1 NA for Sciname
 length(unique(p195_abundedt$Eventname)) #2012
@@ -93,8 +97,8 @@ p195_CPUE$Speciesscientificname <- ifelse(p195_CPUE$Speciescommonname %in% "juv 
 write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```
 
-####CPUE length
-#####P120
+####CPUE length #####P120
+
 ```{r}
 #After EDA, we know we want a dataset with only Core stations and in May and June
 P120_bioledt <- P120_bioledt %>% filter(Core== 1|Core==2, Month==5|Month==6) #only want cores sampled year around
@@ -120,4 +124,3 @@ P120_bc_prop <- P120_bc_prop %>% group_by(Control1, Age_class, Colnum) %>% mutat
 P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0))
 P120_bc_prop$Number[P120_bc_prop$Number==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
 ```
-

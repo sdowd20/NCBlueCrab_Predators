@@ -31,8 +31,8 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 df_CPUE <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.11.21.23.csv")
 df_CPUE <- df_CPUE[,-1]
 df_CPUE <- df_CPUE %>% mutate_at(c("Sedsize_common", "ShorelineType", "Survey"), as.factor)
-df_CPUE$Speciescommonname <- gsub(" ", "", df_CPUE$Speciescommonname)
-colnames(df_CPUE) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE))
+df_CPUE$Speciescommonname <- gsub(" ", ".", df_CPUE$Speciescommonname)
+# colnames(df_CPUE) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE))
 
 ##Count dataset 
 df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.11.21.23.csv")  
@@ -58,7 +58,11 @@ df_binary_wide_P915 <- df_binary %>% filter(Survey %in% "P915") %>% ungroup() %>
 
 #Pivot-wider datasets: P915 and P120 
 ##CPUE
+df_CPUE$SpeciesSurvey <- paste(df_CPUE$Speciescommonname, df_CPUE$Survey, sep= ".")
+df_CPUE$mean_CPUE_stdzd <- as.numeric(df_CPUE$mean_CPUE_stdzd)
+df_CPUE_wide_both <- df_CPUE %>% filter(Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "mean_CPUE_stdzd") %>% drop_na()
 
+colnames(df_CPUE)
 ##Count
 df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "")
 df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
@@ -85,3 +89,8 @@ CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", ".", CPUE_grid_avg_edt$Speciesc
 CPUE_grid_avg_edt$SpeciesSurvey <- paste(CPUE_grid_avg_edt$Speciescommonname, CPUE_grid_avg_edt$Survey, sep= ".")
 
 CPUE_wide_na <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915"|Survey %in% "P195") %>%  dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "mean_CPUE_stdzd") %>% drop_na()
+
+
+
+df_CPUE$SpeciesSurvey <- paste(df_CPUE$Speciescommonname, df_CPUE$Survey, sep= "")
+CPUE_wide_na <- df_CPUE %>% filter(Survey %in% "P915") %>%  dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUEstdzd") %>% drop_na()
