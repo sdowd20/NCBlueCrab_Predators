@@ -69,3 +69,15 @@ df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120")
 ##Binary 
 df_binary$SpeciesSurvey <- paste(df_binary$Speciescommonname, df_binary$Survey, sep= "")
 df_binary_wide_both <- df_binary %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "binary") %>% drop_na()
+
+#Add on forage index to count data 
+##P915 
+df_count_wide_P915 <- df_count_wide_P915 %>% mutate(reddrumforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, pinfish, spot)), southernkingfishforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, spot))) #. allows you to reference dataframe 
+
+##P915 and P120 
+df_count_wide_both <- df_count_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, bluecrabP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120, weakfishP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, bluecrabP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., bluecrabP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), bonnetheadsharkP915forage = rowSums(dplyr::select(., bluecrabP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
+df_count_wide_both <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, bluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120)
+#Red drum: atlantic menhaden, atlantic croaker, blue crab, white shrimp, brown shrimp, pink shrimp, pinfish, southern flounder, spot, weakfish, removed southern flounder b/c could be large
+#Black drum: blue crab, white, brown and pink shrimp
+#Southern kingfish: Atlantic brief squid, atlantic menhaden, atlantic croaker, blue crab, white, brown and pink shrimp, spot
+#Bonnethead shark: atlantic brief squid, blue crab, white, brown and pink shrimp 
