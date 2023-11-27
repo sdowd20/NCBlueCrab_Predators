@@ -1,0 +1,398 @@
+---
+title: "cross_valid_allpredators"
+format: html
+editor: visual
+date: 11/27/23
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
+
+#Train and test dataset
+##P915
+sample_size_P915 = floor(0.8*nrow(df_count_wide_P915))
+picked_P915 = sample(seq_len(nrow(df_count_wide_P915)),size = sample_size) 
+df_count_wide_P915_test = df_count_wide_P915[-picked_P915,]
+df_count_wide_P915_train = df_count_wide_P915[picked_P915,]
+
+##P915, P120 
+sample_size_both = floor(0.8*nrow(df_count_wide_both))
+picked_both = sample(seq_len(nrow(df_count_wide_both)),size = sample_size) 
+df_count_wide_both_test = df_count_wide_both[-picked_both,]
+df_count_wide_both_train = df_count_wide_both[picked_both,]
+```
+
+```{r}
+#Load cross-validation functions 
+library(gtools)
+
+pastePerm<- function(row, names){
+  keep<- which(row==1)
+  if(length(keep)==0){
+    return('1')
+  }else{
+    return(paste(names[keep],collapse='+'))
+  }
+}
+my_sqrt <- function(var1){
+  sqrt(var1) #take square root of variable 
+} #construct model formulas 
+
+dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty string
+  p<- length(covars) #number of independent variables
+  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T) #for different combinations of predictor variables
+  myforms<- NULL #store formulas 
+  for(j in 1:nrow(perm.tab)){
+    myforms[j]<- pastePerm(perm.tab[j,], covars) #function above
+  }
+  myforms<- paste0(pred, '~',myforms) #predicted variable and formula
+  return(myforms)
+}
+```
+
+### P915 GAMs
+
+#### Formulas 
+```{r}
+#Load formulas
+##Red drum
+allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_reddrum <- dredgeform(pred = "log(reddrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_reddrum <- dredgeform(pred = "reddrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##Black drum
+allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+colnames(df_count_wide_P915)
+allformulaslog_blackdrum <- dredgeform(pred = "log(blackdrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_blackdrum <- dredgeform(pred = "blackdrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##Southern kingfish
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_southernkingfish <- dredgeform(pred = "log(southernkingfish+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_southernkingfish <- dredgeform(pred = "southernkingfish^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##Bonnethead shark 
+allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadshark", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_bonnetheadshark <- dredgeform(pred = "log(bonnetheadshark+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_bonnetheadshark <- dredgeform(pred = "bonnetheadshark^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+```
+
+#### Cross-validation 
+```{r}
+#Red drum
+#Gaussian
+compare_var_gaus_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_gaus_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_gaus_reddrum[i, 2] <- AIC(model_gaus_reddrum)
+}
+
+#Gaussian w/ log + 1 transformation
+compare_var_gaus_log_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_log_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaslog_reddrum)) {
+model_gaus_log_reddrum <- gam(as.formula(allformulaslog_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_log_reddrum[i, 1] <- allformulaslog_reddrum[i]
+compare_var_gaus_log_reddrum[i, 2] <- AIC(model_gaus_log_reddrum)
+}
+
+#Gaussian w/ power transformation
+compare_var_gaus_pow_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_pow_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_reddrum)) {
+model_gaus_pow_reddrum <- gam(as.formula(allformulaspow_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_pow_reddrum[i, 1] <- allformulaspow_reddrum[i]
+compare_var_gaus_pow_reddrum[i, 2] <- AIC(model_gaus_pow_reddrum)
+}
+
+#Tweedie
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+}
+
+#Tweedie w/ power transformation
+compare_var_tw_pow_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_pow_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_reddrum)) {
+model_tw_pow_reddrum <- gam(as.formula(allformulaspow_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_tw_pow_reddrum[i, 1] <- allformulaspow_reddrum[i]
+compare_var_tw_pow_reddrum[i, 2] <- AIC(model_tw_pow_reddrum)
+}
+
+#Negative binomial 
+compare_var_nb_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_nb_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_nb_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_nb_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_nb_reddrum[i, 2] <- AIC(model_nb_reddrum)
+}
+
+#Poisson
+compare_var_pois_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pois_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_pois_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_pois_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_pois_reddrum[i, 2] <- AIC(model_pois_reddrum)
+}
+
+compare_var_gaus_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_reddrum %>% arrange(AIC)
+compare_var_gaus_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_reddrum %>% arrange(AIC)
+```
+
+```{r}
+#Black drum 
+#Gaussian
+compare_var_gaus_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_gaus_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_gaus_blackdrum[i, 2] <- AIC(model_gaus_blackdrum)
+}
+
+#Gaussian w/ log + 1 transformation
+compare_var_gaus_log_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_log_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaslog_blackdrum)) {
+model_gaus_log_blackdrum <- gam(as.formula(allformulaslog_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_log_blackdrum[i, 1] <- allformulaslog_blackdrum[i]
+compare_var_gaus_log_blackdrum[i, 2] <- AIC(model_gaus_log_blackdrum)
+}
+
+#Gaussian w/ power transformation
+compare_var_gaus_pow_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_pow_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_blackdrum)) {
+model_gaus_pow_blackdrum <- gam(as.formula(allformulaspow_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_pow_blackdrum[i, 1] <- allformulaspow_blackdrum[i]
+compare_var_gaus_pow_blackdrum[i, 2] <- AIC(model_gaus_pow_blackdrum)
+}
+
+#Tweedie
+compare_var_tw_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_tw_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_tw_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
+}
+
+#Tweedie w/ power transformation
+compare_var_tw_pow_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_pow_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_blackdrum)) {
+model_tw_pow_blackdrum <- gam(as.formula(allformulaspow_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_tw_pow_blackdrum[i, 1] <- allformulaspow_blackdrum[i]
+compare_var_tw_pow_blackdrum[i, 2] <- AIC(model_tw_pow_blackdrum)
+}
+
+#Negative binomial 
+compare_var_nb_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_nb_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_nb_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_nb_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_nb_blackdrum[i, 2] <- AIC(model_nb_blackdrum)
+}
+
+#Poisson
+compare_var_pois_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pois_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_pois_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), data=df_count_wide_P915_train)
+compare_var_pois_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_pois_blackdrum[i, 2] <- AIC(model_pois_blackdrum)
+}
+
+compare_var_gaus_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_blackdrum %>% arrange(AIC)
+compare_var_gaus_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_blackdrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_blackdrum %>% arrange(AIC)
+```
+
+```{r}
+#Southern kingfish
+#Gaussian
+compare_var_gaus_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_gaus_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_gaus_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_gaus_southernkingfish[i, 2] <- AIC(model_gaus_southernkingfish)
+}
+
+#Gaussian w/ log + 1 transformation
+compare_var_gaus_log_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_log_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulaslog_southernkingfish)) {
+model_gaus_log_southernkingfish <- gam(as.formula(allformulaslog_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_gaus_log_southernkingfish[i, 1] <- allformulaslog_southernkingfish[i]
+compare_var_gaus_log_southernkingfish[i, 2] <- AIC(model_gaus_log_southernkingfish)
+}
+
+#Gaussian w/ power transformation
+compare_var_gaus_pow_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_pow_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_southernkingfish)) {
+model_gaus_pow_southernkingfish <- gam(as.formula(allformulaspow_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_gaus_pow_southernkingfish[i, 1] <- allformulaspow_southernkingfish[i]
+compare_var_gaus_pow_southernkingfish[i, 2] <- AIC(model_gaus_pow_southernkingfish)
+}
+
+#Tweedie
+compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_tw_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
+}
+
+#Tweedie w/ power transformation
+compare_var_tw_pow_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_pow_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_southernkingfish)) {
+model_tw_pow_southernkingfish <- gam(as.formula(allformulaspow_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_tw_pow_southernkingfish[i, 1] <- allformulaspow_southernkingfish[i]
+compare_var_tw_pow_southernkingfish[i, 2] <- AIC(model_tw_pow_southernkingfish)
+}
+
+#Negative binomial 
+compare_var_nb_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_nb_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_nb_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_nb_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_nb_southernkingfish[i, 2] <- AIC(model_nb_southernkingfish)
+}
+
+#Poisson
+compare_var_pois_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pois_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_pois_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), data=df_count_wide_P915_train)
+compare_var_pois_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_pois_southernkingfish[i, 2] <- AIC(model_pois_southernkingfish)
+}
+
+compare_var_gaus_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_southernkingfish %>% arrange(AIC)
+compare_var_gaus_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_southernkingfish %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_southernkingfish %>% arrange(AIC)
+```
+
+```{r}
+#Bonnethead shark 
+#Gaussian
+compare_var_gaus_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulas_bonnetheadshark)) {
+model_gaus_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_gaus_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
+compare_var_gaus_bonnetheadshark[i, 2] <- AIC(model_gaus_bonnetheadshark)
+}
+
+#Gaussian w/ log + 1 transformation
+compare_var_gaus_log_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_log_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulaslog_bonnetheadshark)) {
+model_gaus_log_bonnetheadshark <- gam(as.formula(allformulaslog_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_gaus_log_bonnetheadshark[i, 1] <- allformulaslog_bonnetheadshark[i]
+compare_var_gaus_log_bonnetheadshark[i, 2] <- AIC(model_gaus_log_bonnetheadshark)
+}
+
+#Gaussian w/ power transformation
+compare_var_gaus_pow_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_pow_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_bonnetheadshark)) {
+model_gaus_pow_bonnetheadshark <- gam(as.formula(allformulaspow_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_gaus_pow_bonnetheadshark[i, 1] <- allformulaspow_bonnetheadshark[i]
+compare_var_gaus_pow_bonnetheadshark[i, 2] <- AIC(model_gaus_pow_bonnetheadshark)
+}
+
+#Tweedie
+compare_var_tw_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulas_bonnetheadshark)) {
+model_tw_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_tw_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
+compare_var_tw_bonnetheadshark[i, 2] <- AIC(model_tw_bonnetheadshark)
+}
+
+#Tweedie w/ power transformation
+compare_var_tw_pow_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_pow_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_bonnetheadshark)) {
+model_tw_pow_bonnetheadshark <- gam(as.formula(allformulaspow_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_tw_pow_bonnetheadshark[i, 1] <- allformulaspow_bonnetheadshark[i]
+compare_var_tw_pow_bonnetheadshark[i, 2] <- AIC(model_tw_pow_bonnetheadshark)
+}
+
+#Negative binomial 
+compare_var_nb_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_nb_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulas_bonnetheadshark)) {
+model_nb_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_nb_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
+compare_var_nb_bonnetheadshark[i, 2] <- AIC(model_nb_bonnetheadshark)
+}
+
+#Poisson
+compare_var_pois_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pois_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulas_bonnetheadshark)) {
+model_pois_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), data=df_count_wide_P915_train)
+compare_var_pois_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
+compare_var_pois_bonnetheadshark[i, 2] <- AIC(model_pois_bonnetheadshark)
+}
+
+compare_var_gaus_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_bonnetheadshark %>% arrange(AIC)
+compare_var_gaus_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_bonnetheadshark %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_bonnetheadshark %>% arrange(AIC)
+```
+
+#### Final formulas 
+### P915 & P120 GAMs
