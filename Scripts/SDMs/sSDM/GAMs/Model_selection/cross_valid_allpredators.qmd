@@ -66,7 +66,6 @@ allformulaspow_reddrum <- dredgeform(pred = "reddrum^0.25", covars = c("s(avgdep
 ##Black drum
 allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-colnames(df_count_wide_P915)
 allformulaslog_blackdrum <- dredgeform(pred = "log(blackdrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 allformulaspow_blackdrum <- dredgeform(pred = "blackdrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
@@ -177,6 +176,8 @@ compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
 compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
 }
 
+write.csv(compare_var_tw_reddrum, "~/Desktop/compare_var_tw_reddrum.csv")
+
 ##Black drum
 compare_var_tw_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw_blackdrum) <- c("formula", "AIC")
@@ -185,6 +186,8 @@ model_tw_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), family= tw(link=
 compare_var_tw_blackdrum[i, 1] <- allformulas_blackdrum[i]
 compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
 }
+
+write.csv(compare_var_tw_blackdrum, "~/Desktop/compare_var_tw_blackdrum.csv")
 
 ##Southern kingfish
 compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
@@ -195,6 +198,8 @@ compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
 compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
 }
 
+write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish.csv")
+
 ##Bonnethead shark
 compare_var_tw_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw_bonnetheadshark) <- c("formula", "AIC")
@@ -203,6 +208,8 @@ model_tw_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), fami
 compare_var_tw_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
 compare_var_tw_bonnetheadshark[i, 2] <- AIC(model_tw_bonnetheadshark)
 }
+
+write.csv(compare_var_tw_bonnetheadshark, "~/Desktop/compare_var_tw_bonnetheadshark.csv")
 ```
 
 ```{r}
