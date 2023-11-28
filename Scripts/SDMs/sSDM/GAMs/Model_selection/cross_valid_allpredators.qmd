@@ -11,13 +11,13 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 #Train and test dataset
 ##P915
 sample_size_P915 = floor(0.8*nrow(df_count_wide_P915))
-picked_P915 = sample(seq_len(nrow(df_count_wide_P915)),size = sample_size) 
+picked_P915 = sample(seq_len(nrow(df_count_wide_P915)),size = sample_size_P915) 
 df_count_wide_P915_test = df_count_wide_P915[-picked_P915,]
 df_count_wide_P915_train = df_count_wide_P915[picked_P915,]
 
 ##P915, P120 
 sample_size_both = floor(0.8*nrow(df_count_wide_both))
-picked_both = sample(seq_len(nrow(df_count_wide_both)),size = sample_size) 
+picked_both = sample(seq_len(nrow(df_count_wide_both)),size = sample_size_both) 
 df_count_wide_both_test = df_count_wide_both[-picked_both,]
 df_count_wide_both_train = df_count_wide_both[picked_both,]
 ```
@@ -56,33 +56,33 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 ```{r}
 #Load formulas
 ##Red drum
-allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaslog_reddrum <- dredgeform(pred = "log(reddrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaslog_reddrum <- dredgeform(pred = "log(reddrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaspow_reddrum <- dredgeform(pred = "reddrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaspow_reddrum <- dredgeform(pred = "reddrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Black drum
-allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 colnames(df_count_wide_P915)
-allformulaslog_blackdrum <- dredgeform(pred = "log(blackdrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaslog_blackdrum <- dredgeform(pred = "log(blackdrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaspow_blackdrum <- dredgeform(pred = "blackdrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaspow_blackdrum <- dredgeform(pred = "blackdrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Southern kingfish
-allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaslog_southernkingfish <- dredgeform(pred = "log(southernkingfish+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaslog_southernkingfish <- dredgeform(pred = "log(southernkingfish+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaspow_southernkingfish <- dredgeform(pred = "southernkingfish^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaspow_southernkingfish <- dredgeform(pred = "southernkingfish^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Bonnethead shark 
-allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadshark", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadshark", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaslog_bonnetheadshark <- dredgeform(pred = "log(bonnetheadshark+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaslog_bonnetheadshark <- dredgeform(pred = "log(bonnetheadshark+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
-allformulaspow_bonnetheadshark <- dredgeform(pred = "bonnetheadshark^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVDistkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulaspow_bonnetheadshark <- dredgeform(pred = "bonnetheadshark^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 ```
 
 #### Cross-validation 
