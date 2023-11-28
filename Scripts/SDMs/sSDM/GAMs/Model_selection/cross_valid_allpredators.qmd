@@ -189,6 +189,10 @@ compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
 
 write.csv(compare_var_tw_blackdrum, "~/Desktop/compare_var_tw_blackdrum.csv")
 
+compare_var_tw_blackdrum %>% arrange(AIC) %>% .[1,1]
+
+test <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, famiy= tw(link= "log"))
+
 ##Southern kingfish
 compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
