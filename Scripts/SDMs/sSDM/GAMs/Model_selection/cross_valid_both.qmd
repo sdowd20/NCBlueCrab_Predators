@@ -49,16 +49,16 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 ```{r}
 #Load formulas
 ##Red drum
-allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhadenP915)", "s(atlanticcroakerP915)", "s(spotP915)", "s(blackdrumP915)", "s(pinfishP915)", "s(atlanticcroakerP120)", "s(atlanticmenhadenP120)", "s(pinfishP120)", "s(spotP120)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "s(southernflounderP120)", "s(weakfishP120)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhadenP915)", "s(atlanticcroakerP915)", "s(spotP915)", "s(blackdrumP915)", "s(pinfishP915)", "s(atlanticcroakerP120)", "s(atlanticmenhadenP120)", "s(pinfishP120)", "s(spotP120)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "s(southernflounderP120)", "s(weakfishP120)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Black drum
-allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrumP915)", "s(blackdrumP915forage)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_blackdrum <- dredgeform(pred = "blackdrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrumP915)", "s(blackdrumP915forage)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Southern kingfish
-allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhadenP915)", "s(atlanticcroakerP915)", "s(spotP915)", "s(southernkingfishforageP915)", "s(atlanticmenhadenP120)", "s(atlanticcroakerP120)", "s(spotP120)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfishP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhadenP915)", "s(atlanticcroakerP915)", "s(spotP915)", "s(southernkingfishforageP915)", "s(atlanticmenhadenP120)", "s(atlanticcroakerP120)", "s(spotP120)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Bonnethead shark 
-allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadshark", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(bonnetheadsharkP915forage)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadsharkP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(bonnetheadsharkP915forage)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 ```
 
 ```{r}
