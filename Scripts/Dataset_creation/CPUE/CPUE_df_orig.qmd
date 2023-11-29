@@ -11,7 +11,7 @@ packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnatura
 invisible(lapply(packages, library, character.only= TRUE))
 
 p195_abund <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_abund.csv")
-P120_bioledt <- read_csv("Ch1Data/P120/p120_biol_new.csv")
+P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
 ```
 
 #### CPUE no length
@@ -97,7 +97,8 @@ p195_CPUE$Speciesscientificname <- ifelse(p195_CPUE$Speciescommonname %in% "juv 
 write.csv(p195_CPUE, "~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_CPUE.csv")
 ```
 
-####CPUE length #####P120
+####CPUE length 
+#####P120
 
 ```{r}
 #After EDA, we know we want a dataset with only Core stations and in May and June

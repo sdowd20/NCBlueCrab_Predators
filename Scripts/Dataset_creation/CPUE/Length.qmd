@@ -138,3 +138,28 @@ combo2 <- combo %>% filter(!(Sample %in% diff_samples & Colnum > 0))
 combo2$Num_sum[combo2$Num_sum %in% NA] <- 0 #dataset size of 334716 makes sense 
 #once filtered CPUE dataset for species of interest, had 167363 observations, *2 (A and J) to get 334728, 334728- 334716= 12, removed 12 rows
 ```
+
+#### P120 
+```{r}
+#Form blue crab dataset and make sure each blue crab in the subsample has their own row
+P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
+P120_bc_edt <- P120_bc %>% group_by(Control1, Colnum, Length) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #duplicates rows according to Frequency 
+#Bin length: define the breaks for the intervals
+values <- 1:300
+breaks <- seq(0, 300, by = 10)
+assigned_values <- seq(10, 300, by = 10)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+#Calculate proportion of juveniles and adults in each Eventname
+P120_bc_prop <- P120_bc_edt %>% left_join(df, by= "Length")
+P120_bc_prop$Age_class <- ifelse(P120_bc_prop$Assigned_length < 50, "J", "A") #assign juvenile if under 50 mm, 50.8 mm (2 inches) is harvestable length, blue crabs should reach this length in ~1 year when they become sexually mature
+P120_bc_prop <- P120_bc_prop %>% group_by(Control1, Age_class, Colnum) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion) #don't need to group_by Date/Location/Station here as blue crabs weren't in the diff_values below after 2008
+
+#Now apply proportion to Colnum 
+P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0))
+P120_bc_prop$Number[P120_bc_prop$Number==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
+```
+
+
