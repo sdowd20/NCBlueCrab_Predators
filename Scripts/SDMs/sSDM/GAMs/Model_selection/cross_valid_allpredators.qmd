@@ -446,5 +446,111 @@ compare_var_tw_pow_bonnetheadshark %>% arrange(AIC)
 ```
 
 #### Final formulas
+```{r}
+#Red drum
+
+
+#Black drum
+black_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_blackdrum.csv")
+black_drum %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_black_drum)
+gam.check(gaus_black_drum)
+
+##Gaussian w/ log transformation 
+gaus_log_black_drum <- gam(log(blackdrum+1)~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_log_black_drum)
+gam.check(gaus_log_black_drum)
+
+##Gaussian w/ power transformation 
+gaus_pow_black_drum <- gam(blackdrum^0.25~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_pow_black_drum)
+gam.check(gaus_pow_black_drum)
+
+##Tweedie
+tw_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_black_drum)
+gam.check(tw_black_drum)
+
+##Negative binomial 
+nb_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "nb")
+summary(nb_black_drum)
+gam.check(nb_black_drum)
+
+##Poisson 
+pois_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_black_drum)
+gam.check(pois_black_drum)
+
+#Bonnethead shark
+bonnethead_shark <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_bonnetheadshark.csv")
+bonnethead_shark %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_bonnethead_shark <- gam(bonnetheadshark~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_bonnethead_shark)
+gam.check(gaus_bonnethead_shark)
+
+##Gaussian w/ log transformation 
+gaus_log_bonnethead_shark <- gam(log(bonnetheadshark+1)~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_log_bonnethead_shark)
+gam.check(gaus_log_bonnethead_shark)
+
+##Gaussian w/ power transformation 
+gaus_pow_bonnethead_shark <- gam(bonnetheadshark^0.25~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_pow_bonnethead_shark)
+gam.check(gaus_pow_bonnethead_shark)
+
+##Tweedie
+tw_bonnethead_shark <- gam(bonnetheadshark~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_bonnethead_shark)
+gam.check(tw_bonnethead_shark)
+
+##Negative binomial 
+nb_bonnethead_shark <- gam(bonnetheadshark~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= "nb")
+summary(nb_bonnethead_shark)
+gam.check(nb_bonnethead_shark)
+
+##Poisson 
+pois_bonnethead_shark <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_bonnethead_shark)
+gam.check(pois_bonnethead_shark)
+
+#Southern kingfish
+southern_kingfish <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_southernkingfish.csv")
+southern_kingfish %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_southern_kingfish)
+gam.check(gaus_southern_kingfish)
+
+##Gaussian w/ log transformation 
+gaus_log_southern_kingfish <- gam(log(southernkingfish+1)~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_log_southern_kingfish)
+gam.check(gaus_log_southern_kingfish)
+
+##Gaussian w/ power transformation 
+gaus_pow_southern_kingfish <- gam(southernkingfish^0.25~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_pow_southern_kingfish)
+gam.check(gaus_pow_southern_kingfish)
+
+##Tweedie
+tw_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_southern_kingfish)
+gam.check(tw_southern_kingfish)
+
+##Negative binomial 
+nb_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= "nb")
+summary(nb_southern_kingfish)
+gam.check(nb_southern_kingfish)
+
+##Poisson 
+pois_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_southern_kingfish)
+gam.check(pois_southern_kingfish)
+```
 
 ### P915 & P120 GAMs

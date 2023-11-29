@@ -5,6 +5,7 @@ editor: visual
 ---
 
 #### Load packages, functions, datasets
+
 ```{r}
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
 invisible(lapply(packages, library, character.only= TRUE))
@@ -25,6 +26,7 @@ p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/F
 ```
 
 #### P915
+
 ```{r}
 #Diagnostics 
 ##Compare w/ CPUE dataset
@@ -38,6 +40,7 @@ merged_df <- merge(p915_CPUE, combo, by = "Sample")
 length(unique(merged_df$Sample)) #13611 same Samples
 unmerged_df <- anti_join(p915_CPUE, combo, by = "Sample")
 length(unique(unmerged_df$Sample)) #336 of different ones that aren't present in p915_len_f
+diff_samples <- unique(unmerged_df$Sample)
 sample_combo <- merged_df$Sample
 yep <- p915_len_f %>% filter(!Sample %in% sample_combo)
 ```
@@ -104,10 +107,10 @@ combo$Num_sum[combo$Num_sum %in% NA] <- 0
 
 ```{r}
 #Non-subsampled data
-other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "bonnethead shark", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
+other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "bonnethead shark", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
 
 ##Assign age class: this needs to be generously refined
-other_species <- other_species %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "black drum" & Length <= 640.5, "J", ifelse(Speciescommonname %in% "bonnethead shark" & Length <= 850, "J", ifelse(Speciescommonname %in% "red drum" & Length <= 820, "J", ifelse(Speciescommonname %in% "sheepshead" & Length <= 250, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 408, "J", ifelse(Speciescommonname %in% "southern kingfish" & Length <= 170.7, "J", ifelse(Speciescommonname %in% "spot" & Length <= 250, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", ifelse(Speciescommonname %in% "striped bass" & Length <= 250, "J", ifelse(Speciescommonname %in% "striped mullet" & Length <= 250, "J", "A"))))))))))))
+other_species <- other_species %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "J", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "black drum" & Length <= 640.5, "J", ifelse(Speciescommonname %in% "bonnethead shark" & Length <= 850, "J", ifelse(Speciescommonname %in% "red drum" & Length <= 820, "J", ifelse(Speciescommonname %in% "sheepshead" & Length <= 250, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 408, "J", ifelse(Speciescommonname %in% "southern kingfish" & Length <= 170.7, "J", ifelse(Speciescommonname %in% "spot" & Length <= 250, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", ifelse(Speciescommonname %in% "striped bass" & Length <= 250, "J", ifelse(Speciescommonname %in% "striped mullet" & Length <= 250, "J", "A")))))))))))))
                                 
 ##Count # of individuals in an age class for a mesh size, sum_count as # of individuals in both age classes 
 other_species2 <- other_species %>% group_by(Sample, Colnum, Age_class, Control2, Speciescommonname) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(sum_count= sum(count)) 
@@ -118,7 +121,20 @@ other_species2_freq <- other_species2_freq %>% group_by(Sample, Age_class, Speci
 
 ##Make each Sample have juvenile and adult associated with it in CPUE file
 length_samples <- unique(p915_len_f$Sample)
-other_species_CPUE <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "bonnethead shark", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet")) %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("J", "A"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
-combo <- other_species_CPUE %>% left_join(other_species2_freq, by= c("Sample", "Age_class", "Speciescommonname")) %>% filter(!Sample %in% length_samples) #306834 --> 299442 when sample (drops 7392 rows) #DON'T FILTER OUT SAMPLES WITH ALL 0s
-combo$Num_sum[combo$Num_sum %in% NA] <- 0
+other_species_CPUE <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "black drum", "bonnethead shark", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet")) %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("J", "A"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
+
+##Join together CPUE and length-frequency analysis
+combo <- other_species_CPUE %>% left_join(other_species2_freq, by= c("Sample", "Age_class", "Speciescommonname"))
+
+##Filter for true 0s only
+combo %>% filter(! Sample %in% length_samples)
+#8064 rows with missing Sample IDs for length data, most of these are where Colnum= 0 (8052)
+combo %>% filter(!Sample %in% length_samples & Colnum > 0)
+#12 rows with Colnum = 1 or 2 
+#Only remove rows where Sample that wasn't there in length dataset has Colnum > 0 (remove 12 rows), assign everything
+combo2 <- combo %>% filter(!(Sample %in% diff_samples & Colnum > 0)) 
+
+##Once you've established 0s are true, fill the NAs with 0
+combo2$Num_sum[combo2$Num_sum %in% NA] <- 0 #dataset size of 334716 makes sense 
+#once filtered CPUE dataset for species of interest, had 167363 observations, *2 (A and J) to get 334728, 334728- 334716= 12, removed 12 rows
 ```
