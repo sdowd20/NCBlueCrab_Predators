@@ -116,8 +116,10 @@ compare_var_chunk[i, 2] <- AIC(model_tw_bonnetheadshark)
 print(i)
 }
 print(chunk)
-write.csv(compare_var_chunk, paste0("/Users/sallydowd/Desktop/Ch1Data/GAMs/model_selection/P915.P120/bonnethead/","bonnethead_chunk", chunk, ".csv"), row.names = FALSE)
+write.csv(compare_var_chunk, paste0("/Users/sallydowd/Desktop/Ch1Data/GAMs/model_selection/P915.P120/bonnethead/","bonnethead_", chunk, ".csv"), row.names = FALSE)
 rm(compare_var_chunk, model_tw_bonnetheadshark)
 }
+library(beepr)
+beep(sound= 8)
 ```
 

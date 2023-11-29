@@ -139,7 +139,9 @@ combo2$Num_sum[combo2$Num_sum %in% NA] <- 0 #dataset size of 334716 makes sense
 #once filtered CPUE dataset for species of interest, had 167363 observations, *2 (A and J) to get 334728, 334728- 334716= 12, removed 12 rows
 ```
 
-#### P120 
+### P120
+
+##### Blue crabs
 ```{r}
 #Form blue crab dataset and make sure each blue crab in the subsample has their own row
 P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
@@ -158,8 +160,23 @@ P120_bc_prop$Age_class <- ifelse(P120_bc_prop$Assigned_length < 50, "J", "A") #a
 P120_bc_prop <- P120_bc_prop %>% group_by(Control1, Age_class, Colnum) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion) #don't need to group_by Date/Location/Station here as blue crabs weren't in the diff_values below after 2008
 
 #Now apply proportion to Colnum 
-P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0))
-P120_bc_prop$Number[P120_bc_prop$Number==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
+P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0)) %>% group_by(Control1, Age_class) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) #this is an important change: sometimes there were multiple Colnums for one sample, processed them differently but in the end added the numbers up from same age class 
+P120_bc_prop$Number_new[P120_bc_prop$Number_new==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
 ```
 
+##### All species 
+```{r}
+P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "white shrimp", "pink shrimp", "brown shrimp", "southern flounder", "spot", "spotted seatrout", "weakfish")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #removed anchovies and pinfish b/c they had a large amount of NAs for length, this drops only 88 rows 
+
+P120_other_species_edt <- P120_other_species %>% group_by(Control1, Colnum, Length, Speciescommonname) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #duplicates rows according to Frequency
+
+#assign length 
+P120_other_species_edt <- P120_other_species_edt %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "J", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "white shrimp" & Length <= 640.5, "J", ifelse(Speciescommonname %in% "pink shrimp" & Length <= 850, "J", ifelse(Speciescommonname %in% "brown shrimp" & Length <= 820, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 408, "J", ifelse(Speciescommonname %in% "weakfish" & Length <= 170.7, "J", ifelse(Speciescommonname %in% "spot" & Length <= 250, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", "A"))))))))))
+
+P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Age_class, Colnum, Speciescommonname) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum, Speciescommonname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion) #don't need to group_by Date/Location/Station here as blue crabs weren't in the diff_values below after 2008
+
+#Now apply proportion to Colnum 
+P120_os_prop <- P120_os_prop %>% mutate(Number= round(Colnum*Proportion,0)) %>% group_by(Control1, Age_class, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) #this is an important change: sometimes there were multiple Colnums for one sample, processed them differently but in the end added the numbers up from same age class 
+P120_os_prop$Number_new[P120_os_prop$Number_new==0] <- 0.5 #Will have to check over this move, want it to be sampled but
+```
 
