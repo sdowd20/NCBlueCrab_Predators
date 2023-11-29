@@ -58,7 +58,9 @@ allformulas_blackdrum <- dredgeform(pred = "blackdrumP915", covars = c("s(avgdep
 allformulas_southernkingfish <- dredgeform(pred = "southernkingfishP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhadenP915)", "s(atlanticcroakerP915)", "s(spotP915)", "s(southernkingfishforageP915)", "s(atlanticmenhadenP120)", "s(atlanticcroakerP120)", "s(spotP120)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
 
 ##Bonnethead shark 
-allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadsharkP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(bonnetheadsharkP915forage)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(pinkshrimpP120)", "s(brownshrimpP120)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadsharkP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(bonnetheadsharkP915forage)", "s(bluecrabP120)", "s(whiteshrimpP120)", "s(brownshrimpP120)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##removed pink shrimp b/c fewer unique combinations 
 ```
 
 ```{r}
@@ -80,8 +82,42 @@ for (i in 1:length(allformulas_bonnetheadshark)) {
 model_tw_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), family= tw(link= "log"), data=df_count_wide_both_train)
 compare_var_tw_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
 compare_var_tw_bonnetheadshark[i, 2] <- AIC(model_tw_bonnetheadshark)
+print(i)
 }
 
+chunk_size <- 1000
+num_chunks <- ceiling(length(allformulas_bonnetheadshark) / chunk_size)
+
 write.csv(compare_var_tw_bonnetheadshark_both, "~/Desktop/compare_var_tw_bonnetheadshark.csv")
+```
+
+
+```{r}
+chunk_size <- 1000
+num_chunks <- ceiling(length(allformulas_bonnetheadshark) / chunk_size)
+
+#Loop through chunks
+for (chunk in 1:num_chunks) {
+#start and end point 
+start_index <- (chunk - 1) * chunk_size + 1
+end_index <- min(chunk * chunk_size, length(allformulas_bonnetheadshark))
+
+#Extract formulas for the current chunk
+current_chunk_formulas <- allformulas_bonnetheadshark[start_index:end_index]
+
+compare_var_chunk <- as.data.frame(matrix(ncol = 2, nrow = length(current_chunk_formulas)))
+colnames(compare_var_chunk) <- c("formula", "AIC")
+
+#Loop through formulas in the current chunk
+for (i in seq_along(current_chunk_formulas)) {
+model_tw_bonnetheadshark <- gam(as.formula(current_chunk_formulas[i]), family= tw(link= "log"), data=df_count_wide_both_train)
+compare_var_chunk[i, 1] <- current_chunk_formulas[i]
+compare_var_chunk[i, 2] <- AIC(model_tw_bonnetheadshark)
+print(i)
+}
+print(chunk)
+write.csv(compare_var_chunk, paste0("/Users/sallydowd/Desktop/Ch1Data/GAMs/model_selection/P915.P120/bonnethead/","bonnethead_chunk", chunk, ".csv"), row.names = FALSE)
+rm(compare_var_chunk, model_tw_bonnetheadshark)
+}
 ```
 
