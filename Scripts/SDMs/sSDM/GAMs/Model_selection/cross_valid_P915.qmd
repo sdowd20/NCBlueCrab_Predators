@@ -14,12 +14,6 @@ sample_size_P915 = floor(0.8*nrow(df_count_wide_P915))
 picked_P915 = sample(seq_len(nrow(df_count_wide_P915)),size = sample_size_P915) 
 df_count_wide_P915_test = df_count_wide_P915[-picked_P915,]
 df_count_wide_P915_train = df_count_wide_P915[picked_P915,]
-
-##P915, P120 
-sample_size_both = floor(0.8*nrow(df_count_wide_both))
-picked_both = sample(seq_len(nrow(df_count_wide_both)),size = sample_size_both) 
-df_count_wide_both_test = df_count_wide_both[-picked_both,]
-df_count_wide_both_train = df_count_wide_both[picked_both,]
 ```
 
 ```{r}
@@ -446,6 +440,7 @@ compare_var_tw_pow_bonnetheadshark %>% arrange(AIC)
 ```
 
 #### Final formulas
+
 ```{r}
 #Red drum
 
@@ -552,5 +547,3 @@ pois_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+
 summary(pois_southern_kingfish)
 gam.check(pois_southern_kingfish)
 ```
-
-### P915 & P120 GAMs
