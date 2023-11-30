@@ -142,6 +142,7 @@ combo2$Num_sum[combo2$Num_sum %in% NA] <- 0 #dataset size of 334716 makes sense
 ### P120
 
 ##### Blue crabs
+
 ```{r}
 #Form blue crab dataset and make sure each blue crab in the subsample has their own row
 P120_bc <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
@@ -164,7 +165,8 @@ P120_bc_prop <- P120_bc_prop %>% mutate(Number= round(Colnum*Proportion,0)) %>% 
 P120_bc_prop$Number_new[P120_bc_prop$Number_new==0] <- 0.5 #Will have to check over this move, want it to be sampled but 
 ```
 
-##### All species 
+##### All species
+
 ```{r}
 P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "white shrimp", "pink shrimp", "brown shrimp", "southern flounder", "spot", "spotted seatrout", "weakfish")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #removed anchovies and pinfish b/c they had a large amount of NAs for length, this drops only 88 rows 
 
@@ -179,4 +181,3 @@ P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Age_class, Colnum,
 P120_os_prop <- P120_os_prop %>% mutate(Number= round(Colnum*Proportion,0)) %>% group_by(Control1, Age_class, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) #this is an important change: sometimes there were multiple Colnums for one sample, processed them differently but in the end added the numbers up from same age class 
 P120_os_prop$Number_new[P120_os_prop$Number_new==0] <- 0.5 #Will have to check over this move, want it to be sampled but
 ```
-

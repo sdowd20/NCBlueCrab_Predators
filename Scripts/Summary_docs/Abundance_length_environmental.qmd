@@ -53,14 +53,62 @@ P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Year >=2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p120_length.png", width= 10, height= 10)
 
+P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker"), Year >= 2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme + xlim(0,300)
 #P915
 p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
 
-p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% interest_spp, ! Speciescommonname %in% c("cownose ray", "bonnethead shark", "striped bass", "pinfish"), Length < 900) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme
+p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% interest_spp, ! Speciescommonname %in% c("cownose ray", "striped bass", "pinfish"), Length < 900) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + scale_x_continuous(breaks=seq(0, 500, 50))
 ggsave("~/Desktop/p915_length.png", width= 10, height= 10)
 ```
 
+##### P915 length division 
+```{r}
+#Black drum
+min(p915_len_f %>% filter(Speciescommonname %in% "black drum") %>% dplyr::select(Length))
+max(p915_len_f %>% filter(Speciescommonname %in% "black drum", Length < 9999) %>% dplyr::select(Length))
+
+values <- 1:883
+breaks <- seq(0, 883, by = 50)
+assigned_values <- seq(50, 850, by = 50)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+t2 <- p915_len_f %>% filter(Speciescommonname %in% "black drum")  %>% left_join(df, by= "Length")
+t2_summary <- t2 %>% group_by(Assigned_length) %>% summarize(count= n())
+
+ggplot(t2, aes(x = Assigned_length)) +
+  geom_histogram(binwidth = 50) + standard_theme
+
+#Red drum
+min(p915_len_f %>% filter(Speciescommonname %in% "red drum") %>% dplyr::select(Length))
+max(p915_len_f %>% filter(Speciescommonname %in% "red drum", Length < 9999) %>% dplyr::select(Length))
+
+values <- 1:883
+breaks <- seq(0, 883, by = 50)
+assigned_values <- seq(50, 850, by = 50)
+
+values <- 114:1257
+breaks <- seq(0, 1300, by = 50)
+assigned_values <- seq(50, 1300, by = 50)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+t2 <- p915_len_f %>% filter(Speciescommonname %in% "red drum")  %>% left_join(df, by= "Length")
+t2_summary <- t2 %>% group_by(Assigned_length) %>% summarize(count= n())
+
+ggplot(t2, aes(x = Assigned_length)) +
+  geom_histogram(binwidth = 50) + standard_theme
+
+
+ggplot(p915_len_f %>% filter(Speciescommonname %in% "spotted seatrout"), aes(x = Length)) +
+  geom_histogram(binwidth = 50) + standard_theme
+
+```
+
 #### Environmental
+
 ```{r}
 p915_CPUEedt %>% ggplot() + geom_histogram(aes(x= Ssal)) + standard_theme
 p915_CPUEedt %>% ggplot() + geom_histogram(aes(x= Depth)) + standard_theme
@@ -78,4 +126,4 @@ p195_CPUEedt %>% ggplot() + geom_histogram(aes(x= Tempsurface)) + standard_theme
 p195_CPUEedt %>% ggplot() + geom_histogram(aes(x= Sdo)) + standard_theme
 ```
 
-Conclusion here is that the values are consistent throughout the surveys in May, June and September. My main concern was that surface salinity reached 0 in P915, but this is consistent throughout surveys. 
+Conclusion here is that the values are consistent throughout the surveys in May, June and September. My main concern was that surface salinity reached 0 in P915, but this is consistent throughout surveys.

@@ -45,6 +45,7 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 ```
 
 ### Data exploration
+
 ```{r}
 #Number of sampling events with > 0 caught, 2001-2021
 t <- df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage"), avgcount > 0) %>% group_by(Speciescommonname, Year) %>% mutate(count= n()) %>% distinct(count)
@@ -224,7 +225,14 @@ write.csv(compare_var_tw_bonnetheadshark, "~/Desktop/compare_var_tw_bonnetheadsh
 #Deleted cross-validation for different distributions on 11/29/23
 
 #Red drum
+red_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/P915/compare_var_tw_reddrum.csv")
+red_drum %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
 
+tw_red_drum <- gam(reddrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "nb")
+summary(tw_red_drum)
+gam.check(tw_red_drum)
+
+"reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum)"
 
 #Black drum
 black_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_blackdrum.csv")

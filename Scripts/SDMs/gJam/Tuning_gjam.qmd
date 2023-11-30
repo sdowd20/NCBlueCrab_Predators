@@ -12,22 +12,16 @@ invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
-#Count dataset 
-df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
-df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd))
-colnames(df_count) <- gsub(pattern = "_", replacement = "", colnames(df_count))
-df_count$Speciescommonname <- gsub(" ", "", df_count$Speciescommonname)
-df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "")
-df_count_wide_na <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 ```
 
 #### Setup data
-```{r}
-xdata <- df_count_wide_na %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVDistkm, InletDistkm, NoFishRest, FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
-ydata <- df_count_wide_na %>% dplyr::select(alewifeP915:whiteshrimpP120) 
-colnames(df_count_wide_na)
 
-smp_size <- floor(0.70 * nrow(df_count_wide_na)) #this is how i want to split training and testing data 
+```{r}
+xdata <- df_count_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm, InletDistkm, NoFishRest, FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
+ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:bonnetheadsharkP915forage) 
+
+smp_size <- floor(0.70 * nrow(df_count_wide_both)) #this is how i want to split training and testing data 
 
 #Reduce # of species included 
 species  <- gjamTrimY(ydata, 30, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 20 
@@ -42,15 +36,27 @@ RMSE_func <- function(preds, actual){
 }
 ```
 
-#### Out-of-sample prediction 
+#### In-sample prediction: reduced env. variables, red drum 
 ```{r}
+ydata_reddrum <- ydata[, -c(26, 28:30)]
+
 #Original gJam model: 
-formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
-modo <- gjam(as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+formula_str <- paste("~", paste(colnames(xdata)[c(2,4,6,7)], collapse = " + "))
+
+modo <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata_reddrum, modelList = ml)
+#only lets you run with 26 variables 
+
+save(modo, file= "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/Initial_models/modo1.RData")
+```
+
+```{r}
+load("~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/Initial_models/modo1.RData")
 
 #Set up for loop 
 Bootstrap_times <- 100
-smp_size <- floor(0.70 * nrow(df_count_wide_na))
+smp_size <- floor(0.70 * nrow(df_count_wide_both))
 model_compare <- data.frame(matrix(ncol=8, nrow=1))
 colnames(model_compare) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" )
 
@@ -61,9 +67,9 @@ resid <- resid %>% dplyr::select(reddrumP915, names) %>% dplyr::filter(names != 
 
 #Start for loop 
 for(i in 1:Bootstrap_times) {
-  train_ind <- sample(seq_len(nrow(df_count_wide_na)), size = smp_size)
-  train <- df_count_wide_na[train_ind, ]
-  test <- df_count_wide_na[-train_ind, ]
+  train_ind <- sample(seq_len(nrow(df_count_wide_both)), size = smp_size)
+  train <- df_count_wide_both[train_ind, ]
+  test <- df_count_wide_both[-train_ind, ]
 
 #randomly select fish to use to predict
 use <- resid %>% top_n(20, reddrumP915)
@@ -71,16 +77,110 @@ fish <- sample(use$names, 4, replace = F)
 specs1 <- fish
 ynames <- c(specs1, "reddrumP915")
 ydata_train <- train[,colnames(train) %in% ynames]
-xdata_train <- train %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVDistkm)
+xdata_train <- train %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm)
 ydata_train <- ydata_train[,colSums(ydata_train != 0) > 5] # I want non-zero rows
 ynames <- colnames(ydata_train)
 
 ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
-mod2 <- gjam(formula= ~ avgdepth + avgstemp + avgssal + avgsdo + SAVDistkm, xdata = xdata_train, ydata = ydata_train, modelList = ml) #this worked when I said formula= 
+mod2 <- gjam(formula= ~ avgdepth + avgstemp + avgssal + avgsdo + SAVkm, xdata = xdata_train, ydata = ydata_train, modelList = ml) #this worked when I said formula= 
 
 #conditionally predict out-of-sample: using other species to inform red drum
-xddata_test <- test %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVDistkm)
+xddata_test <- test %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm)
+ydata_test <- test[,colnames(test) %in% ynames]
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) # conditionally predict in-sample
+p6  <- gjamPredict(mod2, newdata = newdata1)
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"] #get out dolph
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"]#observed dolph
+colnames(obs_reddrum) <- "obs_reddrum"
+
+#unconditionally predict out-of-sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+r2_con <- r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_uncon <- r2_general(dat$pred_reddrum_un, dat$obs_reddrum)
+rmse_con <-  RMSE_func(actual = dat$obs_reddrum, pred = dat$pred_reddrum_con)
+rmse_uncon <-  RMSE_func(actual = dat$obs_reddrum, pred = dat$pred_reddrum_un)
+
+model_compare[i,1] <- r2_con
+model_compare[i,2] <- r2_uncon
+model_compare[i,3] <- rmse_con
+model_compare[i,4] <- rmse_uncon
+
+model_compare[i,5] <- fish[1]
+model_compare[i,6] <- fish[2]
+model_compare[i,7] <- fish[3]
+model_compare[i,8] <- fish[4]
+} 
+
+write.csv(model_compare, "~/Desktop/reddrum_out_perform_gjam.csv")
+
+#conditional prediction: 
+model_compare %>% arrange(-r2_con)
+model_compare %>% arrange(-r2_uncon)
+
+model_compare %>% arrange(rmse_con)
+model_compare %>% arrange(rmse_uncon)
+
+library(dplyr)
+library(gt)
+tbl2 <- model_compare %>% arrange(-r2_uncon) %>% dplyr::select(r2_uncon, fish1, fish2, fish3, fish4) %>% .[1:3,] %>% gt() %>% cols_width(everything() ~ px(175)) %>% cols_align(align= "left")
+gtsave(tbl2, "~/Desktop/tbl4.png")
+
+colnames(model_compare)
+tbl3 <- model_compare %>% arrange(-r2_uncon) %>% dplyr::select(r2_uncon, fish1, fish2, fish3, fish4) %>% .[1:3,] %>% gt() %>% cols_width(everything() ~ px(175)) %>% cols_align(align= "left")
+gtsave(tbl3, "~/Desktop/tbl3.png")
+
+
+```
+
+#### Out-of-sample prediction
+
+```{r}
+#Original gJam model: 
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+modo <- gjam(as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+
+#Set up for loop 
+Bootstrap_times <- 100
+smp_size <- floor(0.70 * nrow(df_count_wide_both))
+model_compare <- data.frame(matrix(ncol=8, nrow=1))
+colnames(model_compare) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" )
+
+cor <- modo[["parameters"]][["corMu"]] #residual
+resid <- as.data.frame(cor)
+resid$names <- rownames(cor)
+resid <- resid %>% dplyr::select(reddrumP915, names) %>% dplyr::filter(names != "reddrumP915")
+
+#Start for loop 
+for(i in 1:Bootstrap_times) {
+  train_ind <- sample(seq_len(nrow(df_count_wide_both)), size = smp_size)
+  train <- df_count_wide_both[train_ind, ]
+  test <- df_count_wide_both[-train_ind, ]
+
+#randomly select fish to use to predict
+use <- resid %>% top_n(20, reddrumP915)
+fish <- sample(use$names, 4, replace = F)
+specs1 <- fish
+ynames <- c(specs1, "reddrumP915")
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_train <- train %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm)
+ydata_train <- ydata_train[,colSums(ydata_train != 0) > 5] # I want non-zero rows
+ynames <- colnames(ydata_train)
+
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+mod2 <- gjam(formula= ~ avgdepth + avgstemp + avgssal + avgsdo + SAVkm, xdata = xdata_train, ydata = ydata_train, modelList = ml) #this worked when I said formula= 
+
+#conditionally predict out-of-sample: using other species to inform red drum
+xddata_test <- test %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm)
 ydata_test <- test[,colnames(test) %in% ynames]
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
 newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) # conditionally predict in-sample
@@ -138,7 +238,7 @@ ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
 #Highest
 ydata_sel <- ydata %>% dplyr::select(reddrumP915, bluecrabP120, stripedmulletP915, brownshrimpP120, spottedseatroutP120, whiteshrimpP120, blackdrumP915, atlanticmenhadenP915, cownoserayP915)
-model_choose_out_con <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + SAVDistkm, xdata= xdata, ydata= ydata_sel, modelList= ml)
+model_choose_out_con <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + SAVkm, xdata= xdata, ydata= ydata_sel, modelList= ml)
 
 View(model_choose_out_con$parameters$betaStandXWTable)
 save(model_choose_out_con, file='~/Desktop/Ch1Data/gJam/10km/model_choose_out_con.Rdata')
@@ -158,7 +258,7 @@ md <- ggplot() +
   labs(x = "observed", y = "predicted", title = paste0(colnames(model_choose_out_con$inputs$y)[1], ", common"))
 
 ydata_edt2 <- ydata %>% dplyr::select(reddrumP915,whiteshrimpP120, blackdrumP915, atlanticmenhadenP915,cownoserayP915)
-model_choose_out_uncon <- gjam(formula= ~avgdepth + avgstemp + avgssal + avgsdo + SAVDistkm, xdata= xdata, ydata= ydata_edt2, modelList= ml)
+model_choose_out_uncon <- gjam(formula= ~avgdepth + avgstemp + avgssal + avgsdo + SAVkm, xdata= xdata, ydata= ydata_edt2, modelList= ml)
 
 View(model_choose_out_uncon$parameters$betaStandXWTable)
 save(model_choose_out_uncon, file='~/Desktop/Ch1Data/gJam/10km/model_choose_out_uncon.Rdata')
@@ -170,6 +270,7 @@ gjamPlot(output = model_choose_out_uncon, plotPars = plot)
 ```
 
 #### Out-of-sample prediction with less environmental variables
+
 ```{r}
 #Original gJam model: 
 formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
@@ -177,7 +278,7 @@ modo <- gjam(as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = 
 
 #Set up for loop 
 Bootstrap_times <- 100
-smp_size <- floor(0.70 * nrow(df_count_wide_na))
+smp_size <- floor(0.70 * nrow(df_count_wide_both))
 model_compare2 <- data.frame(matrix(ncol=8, nrow=1))
 colnames(model_compare2) <- c("r2_con2", "r2_uncon2", "rmse_con2", "rmse_uncon2","fish12", "fish22", "fish32", "fish42" )
 
@@ -188,9 +289,9 @@ resid2 <- resid2 %>% dplyr::select(reddrumP915, names) %>% dplyr::filter(names !
 
 #Start for loop 
 for(i in 1:Bootstrap_times) {
-  train_ind2 <- sample(seq_len(nrow(df_count_wide_na)), size = smp_size)
-  train2 <- df_count_wide_na[train_ind2, ]
-  test2 <- df_count_wide_na[-train_ind2, ]
+  train_ind2 <- sample(seq_len(nrow(df_count_wide_both)), size = smp_size)
+  train2 <- df_count_wide_both[train_ind2, ]
+  test2 <- df_count_wide_both[-train_ind2, ]
 
 #randomly select fish to use to predict
 use2 <- resid2 %>% top_n(20, reddrumP915)
@@ -198,16 +299,16 @@ fish2 <- sample(use2$names, 4, replace = F)
 specs2 <- fish
 ynames2 <- c(specs2, "reddrumP915")
 ydata_train2 <- train2[,colnames(train2) %in% ynames2]
-xdata_train2 <- train2 %>% dplyr::select(avgstemp, avgsdo, SAVDistkm)
+xdata_train2 <- train2 %>% dplyr::select(avgstemp, avgsdo, SAVkm)
 ydata_train2 <- ydata_train2[,colSums(ydata_train2 != 0) > 5] # I want non-zero rows
 ynames2 <- colnames(ydata_train2)
 
 ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
-mod22 <- gjam(formula= ~ avgstemp + avgsdo + SAVDistkm, xdata = xdata_train2, ydata = ydata_train2, modelList = ml) #this worked when I said formula= 
+mod22 <- gjam(formula= ~ avgstemp + avgsdo + SAVkm, xdata = xdata_train2, ydata = ydata_train2, modelList = ml) #this worked when I said formula= 
 
 #conditionally predict out-of-sample: using other species to inform red drum
-xdata_test2 <- test2 %>% dplyr::select(avgstemp, avgsdo, SAVDistkm)
+xdata_test2 <- test2 %>% dplyr::select(avgstemp, avgsdo, SAVkm)
 ydata_test2 <- test2[,colnames(test2) %in% ynames2]
 ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "reddrumP915"]
 newdata2 <- list(xdata = xdata_test2, ydataCond = ycond2, nsim = 1000) # conditionally predict in-sample
