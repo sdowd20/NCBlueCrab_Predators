@@ -16,17 +16,15 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 ```
 
 #### Setup data
-
 ```{r}
 xdata <- df_count_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm, InletDistkm, NoFishRest, FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
 
 ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:bonnetheadsharkP915forage) 
 
-smp_size <- floor(0.70 * nrow(df_count_wide_both)) #this is how i want to split training and testing data 
-
 #Reduce # of species included 
-species  <- gjamTrimY(ydata, 30, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 30 
+species <- gjamTrimY(ydata, 20, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 20
 ydata <- ydata[, species] %>% as.data.frame()
+#Take out species that don't make sense 
 
 r2_general <-function(preds,actual){ 
   return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
@@ -40,7 +38,8 @@ RMSE_func <- function(preds, actual){
 #### In-sample prediction: reduced env. variables, red drum
 
 ```{r}
-ydata_reddrum <- ydata[, -c(26, 28:30)]
+#Take out species that don't make sense/forage 
+ydata_reddrum <- ydata[, -c(3, 28:31)]
 
 #Original gJam model:
 ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
@@ -49,7 +48,6 @@ formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 
 modo <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata_reddrum, modelList = ml)
 #only lets you run with 26 variables
-
 save(modo, file= "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/modo1.RData")
 ```
 
@@ -98,7 +96,7 @@ p6 <- gjamPredict(modo, newdata = newdata1)
 
 pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"] #get out red drum
 obs_reddrum <- ydata_insample[,colnames(ydata_insample) %in% "reddrumP915"] #observed red drum
-colnames(obs_reddrum) <- "obs_reddrum"
+#colnames(obs_reddrum) <- "obs_reddrum"
 
 #unconditionally predict in sample: not letting other species inform red drum
 newdata <- list(xdata = xdata, nsim = 1000)
