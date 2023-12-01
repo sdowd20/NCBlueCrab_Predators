@@ -18,8 +18,7 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 #### Setup data
 
 ```{r}
-xdata <- df_count_wide_both %>% dplyr::select(avgstemp, avgssal, NoFishRest, avgsdo) 
-#%>% mutate_at(vars(c(Sedsizecommon)), as.factor)
+xdata <- df_count_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm, InletDistkm, NoFishRest, FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
 
 ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:bonnetheadsharkP915forage) 
 
@@ -52,7 +51,6 @@ modo <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata_redd
 #only lets you run with 26 variables
 
 save(modo, file= "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/modo1.RData")
-
 ```
 
 ```{r}
@@ -65,7 +63,7 @@ Bootstrap_times <- 100
 model_compare <- data.frame(matrix(ncol=8, nrow=1))
 colnames(model_compare) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" )
 
-cor <- modo[["parameters"]][["corMu"]] #residual
+cor <- modo1[["parameters"]][["corMu"]] #residual
 resid <- as.data.frame(cor)
 resid$names <- rownames(cor)
 resid <- resid %>% dplyr::select(reddrumP915, names) %>% dplyr::filter(names != "reddrumP915")
@@ -78,7 +76,7 @@ fish <- sample(use$names, 4, replace = F)
 specs1 <- fish
 ynames <- c(specs1, "reddrumP915")
 # xdata_insample <- df %>% dplyr::select(avgstemp, avgsdo, InletDistkm, NoFishRest)
-ydata_insample <- df[, colnames(df) %in% ynames]
+ydata_insample <- ydata_reddrum[, colnames(ydata_reddrum) %in% ynames]
 
 # ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
@@ -90,22 +88,20 @@ mod2 <- gjam(formula = ~ avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata
 ycond <- ydata_insample[,!colnames(ydata_insample) %in% "reddrumP915"]
 newdata1 <- list(xdata = xdata, ydataCond = ycond, nsim = 1000)
 p6 <- gjamPredict(mod2, newdata = newdata1)
-}
 
 # conditionally predict in-sample
-modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata, ydata = ydata, modelList = ml)
-ycond <- ydata %>% dplyr::select(-reddrumP915) #just remove red drum
+modo <- gjam(~ avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata, ydata = ydata_insample, modelList = ml)
+ycond <- ydata_insample %>% dplyr::select(-reddrumP915) #just remove red drum
 
 newdata1 <- list(xdata = xdata, ydataCond= ycond, nsim = 1000)
 p6 <- gjamPredict(modo, newdata = newdata1)
-
 
 pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"] #get out red drum
 obs_reddrum <- ydata_insample[,colnames(ydata_insample) %in% "reddrumP915"] #observed red drum
 colnames(obs_reddrum) <- "obs_reddrum"
 
 #unconditionally predict in sample: not letting other species inform red drum
-newdata <- list(xdata = xdata_insample, nsim = 1000)
+newdata <- list(xdata = xdata, nsim = 1000)
 p7 <- gjamPredict(mod2, newdata = newdata)
 pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
 pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
