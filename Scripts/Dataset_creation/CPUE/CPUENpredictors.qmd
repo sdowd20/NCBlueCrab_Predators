@@ -171,7 +171,7 @@ CPUE_grid_avg <- CPUE_grid %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid$Stem
 CPUE_grid_avg <- CPUE_grid_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 2426 rows
 
 #Correlation plot to see what to remove
-cor <- cor(CPUE_grid_avg[, c(17, 19:25, 28:31)])
+cor <- cor(CPUE_grid_avg[, c(17, 19:25, 28:32)])
 corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
 cor1 <- cor(CPUE_grid_avg[, c(24:25, 38:41)])
 corrplot(cor1) #maybe remove inlet distance 
@@ -264,6 +264,7 @@ CPUE_grid_avg <- CPUE_grid_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% dro
 cor <- cor(CPUE_grid_avg[, c(17, 19:25, 28:31)])
 corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
 
+unique(CPUE_grid_avg$NoFishRest)
 colnames(CPUE_grid_avg)
 
 #Remove latitude, longitude, all fishing variables except NofishRest and FishingAll_num 

@@ -18,7 +18,9 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 #### Setup data
 
 ```{r}
-xdata <- df_count_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm, InletDistkm, NoFishRest, FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
+xdata <- df_count_wide_both %>% dplyr::select(avgstemp, avgssal, NoFishRest, avgsdo) 
+#%>% mutate_at(vars(c(Sedsizecommon)), as.factor)
+
 ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:bonnetheadsharkP915forage) 
 
 smp_size <- floor(0.70 * nrow(df_count_wide_both)) #this is how i want to split training and testing data 
@@ -41,15 +43,16 @@ RMSE_func <- function(preds, actual){
 ```{r}
 ydata_reddrum <- ydata[, -c(26, 28:30)]
 
-# #Original gJam model: 
-# ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
-# 
-# formula_str <- paste("~", paste(colnames(xdata)[c(2,4,6,7)], collapse = " + "))
-# 
-# modo <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata_reddrum, modelList = ml)
-# #only lets you run with 26 variables 
-# 
-# save(modo, file= "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/Initial_models/modo1.RData")
+#Original gJam model:
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+modo <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata_reddrum, modelList = ml)
+#only lets you run with 26 variables
+
+save(modo, file= "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/modo1.RData")
+
 ```
 
 ```{r}
@@ -74,19 +77,28 @@ use <- resid %>% top_n(20, reddrumP915)
 fish <- sample(use$names, 4, replace = F)
 specs1 <- fish
 ynames <- c(specs1, "reddrumP915")
-xdata_insample <- df %>% dplyr::select(avgstemp, avgsdo, InletDistkm, NoFishRest)
+# xdata_insample <- df %>% dplyr::select(avgstemp, avgsdo, InletDistkm, NoFishRest)
 ydata_insample <- df[, colnames(df) %in% ynames]
 
 # ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
 ml <- list(ng = 600, burnin = 500, typeNames = 'DA')
 
-mod2 <- gjam(formula=~ avgstemp + avgsdo + InletDistkm + NoFishRest, xdata = xdata, ydata = ydata_insample, modelList = ml)
+mod2 <- gjam(formula = ~ avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata, ydata = ydata_insample, modelList = ml)
 
 #conditionally predict in-sample: using other species to inform red drum
 ycond <- ydata_insample[,!colnames(ydata_insample) %in% "reddrumP915"]
 newdata1 <- list(xdata = xdata, ydataCond = ycond, nsim = 1000)
 p6 <- gjamPredict(mod2, newdata = newdata1)
+}
+
+# conditionally predict in-sample
+modo <- gjam(~ avgstemp + avgssal + avgsdo, xdata = xdata, ydata = ydata, modelList = ml)
+ycond <- ydata %>% dplyr::select(-reddrumP915) #just remove red drum
+
+newdata1 <- list(xdata = xdata, ydataCond= ycond, nsim = 1000)
+p6 <- gjamPredict(modo, newdata = newdata1)
+
 
 pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"] #get out red drum
 obs_reddrum <- ydata_insample[,colnames(ydata_insample) %in% "reddrumP915"] #observed red drum
