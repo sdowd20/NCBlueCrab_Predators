@@ -15,6 +15,26 @@ df_count_wide_both_test = df_count_wide_both[-picked_both,]
 df_count_wide_both_train = df_count_wide_both[picked_both,]
 ```
 
+### Data exploration
+
+```{r}
+#Number of sampling events with > 0 caught, 2001-2021
+t <- pivot_longer(
+  data = df_count_wide_both, cols= atlanticcroakerP915:bonnetheadsharkP915forage, 
+  names_to = c("Speciescommonname"),
+  values_to = "avg_count")
+t <- t %>% filter(avg_count > 0) %>% filter(Speciescommonname %in% c("bonnetheadsharkP915", "southernkingfishP915", "reddrumP915", "blackdrumP915", "spotP915", "atlanticcroakerP915", "atlanticmenhadenP915", "southernkingfishforageP915"))
+
+t2 <- t %>% group_by(Speciescommonname) %>% mutate(count= n()) %>% distinct(count) %>% arrange(-count) 
+write.csv(t2, "~/Desktop/counts_both.csv")
+
+#Avg. annual sample size
+t %>% group_by(Speciescommonname) %>% mutate(avg_ss= mean(avg_count)) %>% distinct(avg_ss)
+unique(df_count$Speciescommonname)
+
+t %>% ggplot() + geom_histogram(aes(x= avg_count)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free_x") + xlim(0,250) + ylim(0,125)
+```
+
 ```{r}
 #Load cross-validation functions 
 library(gtools)
@@ -44,6 +64,7 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 ```
 
 ### P915, P120 GAMs
+
 #### Formulas
 
 ```{r}
@@ -74,7 +95,6 @@ dev.off()
 ```
 
 ```{r}
-
 ##Bonnethead shark
 compare_var_tw_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw_bonnetheadshark) <- c("formula", "AIC")
@@ -90,7 +110,6 @@ num_chunks <- ceiling(length(allformulas_bonnetheadshark) / chunk_size)
 
 write.csv(compare_var_tw_bonnetheadshark_both, "~/Desktop/compare_var_tw_bonnetheadshark.csv")
 ```
-
 
 ```{r}
 chunk_size <- 1000
@@ -123,3 +142,41 @@ library(beepr)
 beep(sound= 8)
 ```
 
+#Processing bonnethead csvs
+```{r}
+setwd("/Users/sallydowd/Desktop/Ch1Data/GAMs/Model_selection/P915.P120/bonnethead")
+filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/GAMs/Model_selection/P915.P120/bonnethead", pattern= '*.csv')  
+all <- lapply(filenames, read.csv)
+merged <- do.call(rbind, all)
+merged %>% arrange(AIC) %>% .[1,1]
+
+##Gaussian 
+gaus_bonnethead_shark <- gam(bonnetheadsharkP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(InletDistkm)+s(bonnetheadsharkP915forage)+s(bluecrabP120)+s(whiteshrimpP120)+s(brownshrimpP120)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_both_train)
+summary(gaus_bonnethead_shark)
+gam.check(gaus_bonnethead_shark)
+
+##Gaussian w/ log transformation 
+gaus_log_bonnethead_shark <- gam(log(bonnetheadsharkP915+1)~s(avgdepth)+s(avgssal)+s(avgstemp)+s(InletDistkm)+s(bonnetheadsharkP915forage)+s(bluecrabP120)+s(whiteshrimpP120)+s(brownshrimpP120)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_both_train)
+summary(gaus_log_bonnethead_shark)
+gam.check(gaus_log_bonnethead_shark)
+
+##Gaussian w/ power transformation 
+gaus_pow_bonnethead_shark <- gam(bonnetheadsharkP915^0.25~s(avgdepth)+s(avgssal)+s(avgstemp)+s(InletDistkm)+s(bonnetheadsharkP915forage)+s(bluecrabP120)+s(whiteshrimpP120)+s(brownshrimpP120)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_both_train)
+summary(gaus_pow_bonnethead_shark)
+gam.check(gaus_pow_bonnethead_shark)
+
+##Tweedie
+tw_bonnethead_shark <- gam(bonnetheadsharkP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(InletDistkm)+s(bonnetheadsharkP915forage)+s(bluecrabP120)+s(whiteshrimpP120)+s(brownshrimpP120)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_both_train, family= tw(link= "log"))
+summary(tw_bonnethead_shark)
+gam.check(tw_bonnethead_shark)
+
+##Negative binomial 
+nb_bonnethead_shark <- gam(bonnetheadsharkP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(InletDistkm)+s(bonnetheadsharkP915forage)+s(bluecrabP120)+s(whiteshrimpP120)+s(brownshrimpP120)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_both_train, family= "nb")
+summary(nb_bonnethead_shark)
+gam.check(nb_bonnethead_shark)
+
+##Poisson 
+pois_bonnethead_shark <- gam(bonnetheadsharkP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(InletDistkm)+s(bonnetheadsharkP915forage)+s(bluecrabP120)+s(whiteshrimpP120)+s(brownshrimpP120)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_both_train, family= "poisson")
+summary(pois_bonnethead_shark)
+gam.check(pois_bonnethead_shark)
+```

@@ -48,11 +48,13 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 
 ```{r}
 #Number of sampling events with > 0 caught, 2001-2021
-t <- df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage"), avgcount > 0) %>% group_by(Speciescommonname, Year) %>% mutate(count= n()) %>% distinct(count)
+t <- df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage"), avgcount > 0) %>% group_by(Speciescommonname) %>% mutate(count= n()) %>% distinct(count)
 
 #Avg. annual sample size
 t %>% group_by(Speciescommonname) %>% mutate(avg_ss= mean(count)) %>% distinct(avg_ss)
 unique(df_count$Speciescommonname)
+
+df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage")) %>% ggplot() + geom_histogram(aes(x= avgcount)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free") + xlim(0,400) + ylim(0,125)
 ```
 
 ### P915 GAMs
@@ -228,11 +230,36 @@ write.csv(compare_var_tw_bonnetheadshark, "~/Desktop/compare_var_tw_bonnetheadsh
 red_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/P915/compare_var_tw_reddrum.csv")
 red_drum %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
 
-tw_red_drum <- gam(reddrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "nb")
+##Gaussian 
+gaus_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_red_drum)
+gam.check(gaus_red_drum)
+
+##Gaussian w/ log transformation 
+gaus_log_red_drum <- gam(log(reddrum+1)~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_log_red_drum)
+gam.check(gaus_log_red_drum)
+
+##Gaussian w/ power transformation 
+gaus_pow_red_drum <- gam(reddrum^0.25~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_pow_red_drum)
+gam.check(gaus_pow_red_drum)
+
+##Tweedie
+tw_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train, family= tw(link= "log"))
 summary(tw_red_drum)
 gam.check(tw_red_drum)
 
-"reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum)"
+##Negative binomial 
+nb_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "nb")
+summary(nb_red_drum)
+gam.check(nb_red_drum)
+
+##Poisson 
+pois_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_red_drum)
+gam.check(pois_red_drum)
+
 
 #Black drum
 black_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_blackdrum.csv")
@@ -339,6 +366,4 @@ summary(pois_southern_kingfish)
 gam.check(pois_southern_kingfish)
 
 AIC(nb_southern_kingfish, pois_southern_kingfish, tw_southern_kingfish, gaus_pow_southern_kingfish, gaus_southern_kingfish, gaus_log_southern_kingfish) %>% arrange(AIC)
-
-df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage")) %>% ggplot() + geom_histogram(aes(x= avgcount)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free") + xlim(0,400) + ylim(0,125)
 ```
