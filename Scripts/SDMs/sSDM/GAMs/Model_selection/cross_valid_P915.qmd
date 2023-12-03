@@ -6,8 +6,8 @@ date: 11/27/23
 ---
 
 Changes on 12/03/23: 
--Remove InletDist, FishingAllNum
--Created GAM models with environment only and forage only 
+-Remove InletDist, FishingAllNum 
+-Created GAM models with environment only and forage only
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
@@ -62,6 +62,7 @@ df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshar
 ```
 
 ### Env
+
 ```{r}
 #Formulas 
 allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
@@ -110,6 +111,7 @@ write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkin
 ```
 
 ### Env + forage
+
 ```{r}
 #Formulas 
 allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(reddrumforage)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
@@ -157,7 +159,8 @@ print(i)
 write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish_env_forage.csv")
 ```
 
-### Env + prey 
+### Env + prey
+
 ```{r}
 #Load formulas
 ##Red drum
