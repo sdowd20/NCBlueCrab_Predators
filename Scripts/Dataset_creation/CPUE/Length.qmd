@@ -36,12 +36,12 @@ length(unique(p915_len_f$Control1)) #19910
 length(unique(p915_CPUE$Control1)) #13947
 
 combo <- p915_len_f %>% dplyr::select(Speciescommonname, Colnum, Length, Sample) 
-merged_df <- merge(p915_CPUE, combo, by = "Sample")
-length(unique(merged_df$Sample)) #13611 same Samples
+# merged_df <- merge(p915_CPUE, combo, by = "Sample")
+# length(unique(merged_df$Sample)) #13611 same Samples
 unmerged_df <- anti_join(p915_CPUE, combo, by = "Sample")
 length(unique(unmerged_df$Sample)) #336 of different ones that aren't present in p915_len_f
 diff_samples <- unique(unmerged_df$Sample)
-sample_combo <- merged_df$Sample
+#sample_combo <- merged_df$Sample
 yep <- p915_len_f %>% filter(!Sample %in% sample_combo)
 ```
 
@@ -90,7 +90,6 @@ ggplot() + geom_histogram(data= merged_df, aes(x= diff)) + standard_theme
 menhaden <- p915_len_f %>% filter(Speciescommonname %in% "atlantic menhaden") %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
 ##Assign age class
 menhaden$Age_class <- ifelse(menhaden$Length <= 250, "J", "A") 
-
 ##Count # of individuals in an age class for a mesh size, sum_count as # of individuals in both age classes 
 menhaden2 <- menhaden %>% group_by(Sample, Colnum, Age_class, Control2) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2) %>% mutate(sum_count= sum(count))
 
@@ -105,12 +104,14 @@ combo <- mehnaden_CPUE %>% filter(Speciescommonname %in% "atlantic menhaden") %>
 combo$Num_sum[combo$Num_sum %in% NA] <- 0
 ```
 
+##### Divide length
+
 ```{r}
 #Non-subsampled data
 other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "bonnethead shark", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
 
 ##Assign age class: this needs to be generously refined
-other_species <- other_species %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "J", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "black drum" & Length <= 640.5, "J", ifelse(Speciescommonname %in% "bonnethead shark" & Length <= 850, "J", ifelse(Speciescommonname %in% "red drum" & Length <= 820, "J", ifelse(Speciescommonname %in% "sheepshead" & Length <= 250, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 408, "J", ifelse(Speciescommonname %in% "southern kingfish" & Length <= 170.7, "J", ifelse(Speciescommonname %in% "spot" & Length <= 250, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", ifelse(Speciescommonname %in% "striped bass" & Length <= 250, "J", ifelse(Speciescommonname %in% "striped mullet" & Length <= 250, "J", "A")))))))))))))
+other_species <- other_species %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "J", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "black drum" & Length <= 400, "J", ifelse(Speciescommonname %in% "red drum" & Length <= 400, "J", ifelse(Speciescommonname %in% "sheepshead" & Length <= 250, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 345.44, "J", ifelse(Speciescommonname %in% "southern kingfish" & Length <= 177, "J", ifelse(Speciescommonname %in% "spot" & Length <= 203.2, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", ifelse(Speciescommonname %in% "striped bass" & Length <= 500, "J", ifelse(Speciescommonname %in% "striped mullet" & Length <= 380, "J", "A"))))))))))))
                                 
 ##Count # of individuals in an age class for a mesh size, sum_count as # of individuals in both age classes 
 other_species2 <- other_species %>% group_by(Sample, Colnum, Age_class, Control2, Speciescommonname) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(sum_count= sum(count)) 
@@ -121,22 +122,80 @@ other_species2_freq <- other_species2_freq %>% group_by(Sample, Age_class, Speci
 
 ##Make each Sample have juvenile and adult associated with it in CPUE file
 length_samples <- unique(p915_len_f$Sample)
-other_species_CPUE <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "black drum", "bonnethead shark", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet")) %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("J", "A"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
+other_species_CPUE <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet")) %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("J", "A"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
 
 ##Join together CPUE and length-frequency analysis
 combo <- other_species_CPUE %>% left_join(other_species2_freq, by= c("Sample", "Age_class", "Speciescommonname"))
 
 ##Filter for true 0s only
 combo %>% filter(! Sample %in% length_samples)
-#8064 rows with missing Sample IDs for length data, most of these are where Colnum= 0 (8052)
+#7,392 rows with missing Sample IDs for length data, most of these are where Colnum= 0 (8052)
 combo %>% filter(!Sample %in% length_samples & Colnum > 0)
 #12 rows with Colnum = 1 or 2 
-#Only remove rows where Sample that wasn't there in length dataset has Colnum > 0 (remove 12 rows), assign everything
-combo2 <- combo %>% filter(!(Sample %in% diff_samples & Colnum > 0)) 
+#Only remove Samples that wasn't there in length dataset has Colnum > 0, need to remove these for all species, assign everything
+off_samples <- combo %>% filter(Sample %in% diff_samples & Colnum > 0)
+off_samplesID <- unique(off_samples$Sample)
+combo2 <- combo %>% filter(!(Sample %in% off_samplesID)) #drops 132 rows 
 
 ##Once you've established 0s are true, fill the NAs with 0
 combo2$Num_sum[combo2$Num_sum %in% NA] <- 0 #dataset size of 334716 makes sense 
 #once filtered CPUE dataset for species of interest, had 167363 observations, *2 (A and J) to get 334728, 334728- 334716= 12, removed 12 rows
+```
+
+##### Verification
+
+```{r}
+#Check if it worked
+check <- combo2 %>% group_by(Sample, Speciescommonname) %>% mutate(sum_count = sum(Num_sum)) %>% distinct(sum_count, .keep_all= TRUE) %>% select(Sample, sum_count, Speciescommonname) %>% rename("Colnum"= "sum_count")
+with <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet")) %>% select(Sample, Colnum, Speciescommonname)
+differences <- anti_join(check, with, by = c("Sample")) #0 differences in Sample (same samples), this is b/c you joined datasets and dealt w/ different samples already
+
+check$Sample <- trimws(check$Sample)
+check$Speciescommonname <- trimws(check$Speciescommonname)
+check$Colnum <- trimws(check$Colnum)
+with$Sample <- trimws(with$Sample)
+with$Speciescommonname <- trimws(with$Speciescommonname)
+with$Colnum <- trimws(with$Colnum) #remove white space 
+
+merged_df <- inner_join(check, with, by = c('Sample', "Speciescommonname"))
+merged_df$Colnum.x <- gsub("\\s", "", merged_df$Colnum.x)
+merged_df$Colnum.y <- gsub("\\s", "", merged_df$Colnum.y)
+merged_df$Colnum_match <- merged_df$Colnum.x == merged_df$Colnum.y #there are a bunch of differences
+merged_df <- merged_df %>% mutate(across(c(Colnum.x, Colnum.y), as.numeric))
+merged_df$diff <- merged_df$Colnum.x - merged_df$Colnum.y
+
+#Number of sampling events by Species with different values 
+length_diff <- merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) %>% summarize(count= n())
+write.csv(length_diff, "~/Desktop/length_diff.csv")
+
+#Magnitude of difference by species 
+merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) %>% ggplot() + geom_histogram(aes(x= diff)) + facet_wrap(~Speciescommonname)
+merged_df %>% ungroup() %>% filter(!diff %in% 0) %>% distinct(Sample) %>% summarize(count= n())
+
+#Mean difference for species
+mean_diff <- merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) %>% summarize(mean_diff= mean(diff))
+```
+
+#### Final dataset formation
+
+```{r}
+#combo2 is length dataset only with species in length dataset, need to relabel species here as juvenile and adult 
+length(unique(combo2$Sample))
+length(unique(combo2$Speciescommonname)) #11 species, 2 age classes, 13947 Samples, 11*2*13947= 306822, number of rows
+
+combo2_edt <- combo2 %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("juvenile", Speciescommonname), paste("adult", Speciescommonname))) %>% select(-c(Colnum, Age_class)) %>% rename("Colnum"= "Num_sum")
+
+#Check to see if same # of Sample IDs for P915 and length dataset
+p915_no_length <- p915_CPUE %>% filter(!Speciescommonname %in% other_species, !Sample %in% off_samplesID) #remove those Sample IDs that were not true 0s, drops 222 rows 
+
+length(unique(p915_no_length$Sample)) #13941 
+length(unique(combo2_edt$Sample)) #13941       
+test <- rbind(p915_no_length, combo2_edt)
+
+#Did this work? 
+length(unique(test$Sample)) #13941
+length(unique(test$Speciescommonname)) #59
+#59*13941= 822519, # of rows in this dataset 
 ```
 
 ### P120

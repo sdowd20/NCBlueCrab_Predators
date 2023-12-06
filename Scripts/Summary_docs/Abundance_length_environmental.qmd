@@ -17,6 +17,7 @@ setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
+unique(p915_CPUE$Speciescommonname)
 p915_CPUEedt <- p915_CPUE %>% filter(between(Year, 2001, 2021), Month %in% c(5,6,9))
 p120_CPUEedt <- p120_CPUE %>% filter(between(Year, 2000, 2021), Month %in% c(5,6))
 p195_CPUEedt <- p195_CPUE %>%  filter(between(Year, 2000, 2021), Month %in% c(6,9))
@@ -55,13 +56,18 @@ ggsave("~/Desktop/p120_length.png", width= 10, height= 10)
 
 P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker"), Year >= 2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme + xlim(0,300)
 #P915
+P120_bioledt %>% filter(Speciescommonname %in% c("spotted seatrout"), Year >= 2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme + xlim(0,300)
+#P915
 p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
 
 p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% interest_spp, ! Speciescommonname %in% c("cownose ray", "striped bass", "pinfish"), Length < 900) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + scale_x_continuous(breaks=seq(0, 500, 50))
 ggsave("~/Desktop/p915_length.png", width= 10, height= 10)
+
+p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% "spotted seatrout") %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + xlim(0,1000)
 ```
 
-##### P915 length division 
+##### Length division for special cases 
+
 ```{r}
 #Black drum
 min(p915_len_f %>% filter(Speciescommonname %in% "black drum") %>% dplyr::select(Length))
@@ -101,10 +107,37 @@ t2_summary <- t2 %>% group_by(Assigned_length) %>% summarize(count= n())
 ggplot(t2, aes(x = Assigned_length)) +
   geom_histogram(binwidth = 50) + standard_theme
 
+#Blue crab 
+min(P120_bioledt %>% filter(Speciescommonname %in% "blue crab", !Length %in% NA) %>% dplyr::select(Length))
+max(P120_bioledt %>% filter(Speciescommonname %in% "blue crab", Length < 9999) %>% dplyr::select(Length))
+values <- 1:300
+breaks <- seq(0, 300, by = 50)
+assigned_values <- seq(50, 300, by = 50)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
 
-ggplot(p915_len_f %>% filter(Speciescommonname %in% "spotted seatrout"), aes(x = Length)) +
+t2 <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab")  %>% left_join(df, by= "Length")
+t2_summary <- t2 %>% group_by(Assigned_length) %>% summarize(count= n())
+
+ggplot(P120_bioledt %>% filter(Speciescommonname %in% "blue crab"), aes(x = Length)) + geom_histogram(binwidth = 50) + standard_theme
+
+#Striped bass 
+min(p915_len_f %>% filter(Speciescommonname %in% "striped bass") %>% dplyr::select(Length))
+max(p915_len_f %>% filter(Speciescommonname %in% "striped bass", Length < 9999) %>% dplyr::select(Length))
+
+values <- 1:1200
+breaks <- seq(0, 1200, by = 50)
+assigned_values <- seq(50, 1200, by = 50)
+result <- cut(values, breaks, labels = assigned_values) #cut values based on cut points (breaks), labels for resulting category, default is (a, b)
+result_numeric <- as.numeric(as.character(result))
+df <- data.frame(Length = values, Assigned_length = result_numeric)
+
+t2 <- p915_len_f %>% filter(Speciescommonname %in% "striped bass")  %>% left_join(df, by= "Length")
+t2_summary <- t2 %>% group_by(Assigned_length) %>% summarize(count= n())
+
+ggplot(t2, aes(x = Assigned_length)) +
   geom_histogram(binwidth = 50) + standard_theme
-
 ```
 
 #### Environmental

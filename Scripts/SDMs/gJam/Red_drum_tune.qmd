@@ -4,6 +4,9 @@ format: html
 editor: visual
 ---
 
+Changes on 12/03/23: 
+-Forage for each predator should include blue crabs for gJam, changes made to script to load in, dataset now: df_count_wide_both_gJam
+
 #### Load packages, functions and datasets
 
 ```{r}
@@ -16,10 +19,10 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 ```
 
 #### Setup data
-```{r}
-xdata <- df_count_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm, InletDistkm, NoFishRest, FishingAllnum, Sedsizecommon) %>% mutate_at(vars(c(Sedsizecommon, FishingAllnum)), as.factor)
 
-ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:bonnetheadsharkP915forage) 
+```{r}
+xdata <- df_count_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, SAVkm, NoFishRest, Sedsizecommon) %>% mutate_at(vars(Sedsizecommon), as.factor)
+ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:blackdrumP915forage) 
 
 #Reduce # of species included 
 species <- gjamTrimY(ydata, 20, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 20
@@ -61,13 +64,13 @@ Bootstrap_times <- 100
 model_compare <- data.frame(matrix(ncol=8, nrow=1))
 colnames(model_compare) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" )
 
-cor <- modo1[["parameters"]][["corMu"]] #residual
+cor <- modo[["parameters"]][["corMu"]] #residual
 resid <- as.data.frame(cor)
 resid$names <- rownames(cor)
 resid <- resid %>% dplyr::select(reddrumP915, names) %>% dplyr::filter(names != "reddrumP915")
 
 #Start for loop 
-for(i in 1:1) {
+for(i in 1:Bootstrap_times) {
 #randomly select fish to use to predict
 use <- resid %>% top_n(20, reddrumP915)
 fish <- sample(use$names, 4, replace = F)
@@ -76,9 +79,7 @@ ynames <- c(specs1, "reddrumP915")
 # xdata_insample <- df %>% dplyr::select(avgstemp, avgsdo, InletDistkm, NoFishRest)
 ydata_insample <- ydata_reddrum[, colnames(ydata_reddrum) %in% ynames]
 
-# ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
-
-ml <- list(ng = 600, burnin = 500, typeNames = 'DA')
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
 
 mod2 <- gjam(formula = ~ avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata, ydata = ydata_insample, modelList = ml)
 
@@ -121,9 +122,99 @@ model_compare[i,5] <- fish[1]
 model_compare[i,6] <- fish[2]
 model_compare[i,7] <- fish[3]
 model_compare[i,8] <- fish[4]
+print(i)
 } 
 
 write.csv(model_compare, "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/reddrum_in_perform_gjam.csv")
+```
+
+#### In-sample prediction for southern kingfish
+```{r}
+#Take out species that don't make sense/forage 
+ydata_sk <- ydata[, -c(3, 28:30)]
+
+#Original gJam model:
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+modo_sk <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata_sk, modelList = ml)
+#only lets you run with 26 variables
+save(modo_sk, file= "~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/modo_sk.RData")
+```
+
+```{r}
+load("~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/modo_sk.RData")
+
+df2 <- df_count_wide_both
+
+#Set up for loop 
+Bootstrap_times <- 100
+model_compare_sk <- data.frame(matrix(ncol=8, nrow=1))
+colnames(model_compare_sk) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" )
+
+cor_sk <- modo_sk[["parameters"]][["corMu"]] #residual
+resid_sk <- as.data.frame(cor_sk)
+resid_sk$names <- rownames(cor_sk)
+resid_sk <- resid_sk %>% dplyr::select(southernkingfishP915, names) %>% dplyr::filter(names != "southernkingfishP915")
+
+#Start for loop 
+for(i in 1:Bootstrap_times) {
+#randomly select fish to use to predict
+use_sk <- resid_sk %>% top_n(20, southernkingfishP915)
+fish_sk <- sample(use_sk$names, 4, replace = F)
+specs1_sk <- fish_sk
+ynames_sk <- c(specs1_sk, "southernkingfishP915")
+# xdata_insample <- df %>% dplyr::select(avgstemp, avgsdo, InletDistkm, NoFishRest)
+ydata_insample_sk <- ydata_sk[, colnames(ydata_sk) %in% ynames_sk]
+
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+mod2_sk <- gjam(formula = ~ avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata, ydata = ydata_insample_sk, modelList = ml)
+
+#conditionally predict in-sample: using other species to inform red drum
+ycond_sk <- ydata_insample_sk[,!colnames(ydata_insample_sk) %in% "southernkingfishP915"]
+newdata1_sk <- list(xdata = xdata, ydataCond = ycond_sk, nsim = 1000)
+p6_sk <- gjamPredict(mod2_sk, newdata = newdata1_sk)
+
+# conditionally predict in-sample
+modo_sk <- gjam(~ avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata, ydata = ydata_insample_sk, modelList = ml)
+ycond_sk <- ydata_insample_sk %>% dplyr::select(-southernkingfishP915) #just remove red drum
+
+newdata1_sk <- list(xdata = xdata, ydataCond= ycond_sk, nsim = 1000)
+p6_sk <- gjamPredict(modo_sk, newdata = newdata1_sk)
+
+pred_sk_con <- p6_sk$sdList$yMu[,colnames(p6_sk$sdList$yMu) %in% "southernkingfishP915"] #get out red drum
+obs_sk <- ydata_insample_sk[,colnames(ydata_insample_sk) %in% "southernkingfishP915"] #observed red drum
+#colnames(obs_reddrum) <- "obs_reddrum"
+
+#unconditionally predict in sample: not letting other species inform red drum
+newdata_sk <- list(xdata = xdata, nsim = 1000)
+p7_sk <- gjamPredict(mod2_sk, newdata = newdata_sk)
+pred_sk_un <- p7_sk$sdList$yMu[,colnames(p7_sk$sdList$yMu) %in% "southernkingfishP915"]
+pred_sk_un2 <- mod2_sk$prediction$ypredMu[,colnames(mod2_sk$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat_sk <- cbind(pred_sk_con, obs_sk, pred_sk_un)
+dat_sk <- as.data.frame(dat_sk)
+
+r2_con_sk <- r2_general(dat_sk$pred_sk_con, dat_sk$obs__sk)
+r2_unco_skn <- r2_general(dat_sk$pred_sk_un, dat_sk$obs_sk)
+rmse_con_sk <-  RMSE_func(actual = dat_sk$obs_sk, pred = dat_sk$pred_sk_con)
+rmse_uncon_sk <-  RMSE_func(actual = dat_sk$obs_sk, pred = dat_sk$pred_sk_un)
+
+model_compare_sk[i,1] <- r2_con_sk
+model_compare_sk[i,2] <- r2_uncon_sk
+model_compare_sk[i,3] <- rmse_con_sk
+model_compare_sk[i,4] <- rmse_uncon_sk
+
+model_compare_sk[i,5] <- fish_sk[1]
+model_compare_sk[i,6] <- fish_sk[2]
+model_compare_sk[i,7] <- fish_sk[3]
+model_compare_sk[i,8] <- fish_sk[4]
+print(i)
+} 
+
+write.csv(model_compare_sk, "~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/sk_in_perform_gjam.csv")
 ```
 
 ```{r}
