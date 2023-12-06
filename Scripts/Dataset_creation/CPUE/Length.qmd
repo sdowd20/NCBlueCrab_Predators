@@ -227,16 +227,76 @@ P120_bc_prop$Number_new[P120_bc_prop$Number_new==0] <- 0.5 #Will have to check o
 ##### All species
 
 ```{r}
-P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "white shrimp", "pink shrimp", "brown shrimp", "southern flounder", "spot", "spotted seatrout", "weakfish")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #removed anchovies and pinfish b/c they had a large amount of NAs for length, this drops only 88 rows 
+#Deal with length 
+P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "blue crab", "southern flounder", "spot", "spotted seatrout")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #Length-frequency excel shows justification 
 
 P120_other_species_edt <- P120_other_species %>% group_by(Control1, Colnum, Length, Speciescommonname) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #duplicates rows according to Frequency
 
 #assign length 
-P120_other_species_edt <- P120_other_species_edt %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "J", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "white shrimp" & Length <= 640.5, "J", ifelse(Speciescommonname %in% "pink shrimp" & Length <= 850, "J", ifelse(Speciescommonname %in% "brown shrimp" & Length <= 820, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 408, "J", ifelse(Speciescommonname %in% "weakfish" & Length <= 170.7, "J", ifelse(Speciescommonname %in% "spot" & Length <= 250, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", "A"))))))))))
+P120_other_species_edt <- P120_other_species_edt %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "J", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "J", ifelse(Speciescommonname %in% "blue crab" & Length <= 50, "J", ifelse(Speciescommonname %in% "southern flounder" & Length <= 345.44, "J", ifelse(Speciescommonname %in% "spot" & Length <= 203.2, "J", ifelse(Speciescommonname %in% "spotted seatrout" & Length <= 260.8, "J", "A")))))))
 
 P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Age_class, Colnum, Speciescommonname) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum, Speciescommonname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion) #don't need to group_by Date/Location/Station here as blue crabs weren't in the diff_values below after 2008
 
 #Now apply proportion to Colnum 
-P120_os_prop <- P120_os_prop %>% mutate(Number= round(Colnum*Proportion,0)) %>% group_by(Control1, Age_class, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) #this is an important change: sometimes there were multiple Colnums for one sample, processed them differently but in the end added the numbers up from same age class 
-P120_os_prop$Number_new[P120_os_prop$Number_new==0] <- 0.5 #Will have to check over this move, want it to be sampled but
+P120_os_prop <- P120_os_prop %>% mutate(Number= Colnum*Proportion) %>% group_by(Control1, Age_class, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) #this is an important change: sometimes there were multiple Colnums for one sample, processed them differently but in the end added the numbers up from same age class 
+
+#Combine age class and Speciescommonname
+P120_os_prop_edt <- P120_os_prop %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("juvenile", Speciescommonname), paste("adult", Speciescommonname))) 
+
+#Checking: this shows that we don't have one Control1 for each juvenile and adult of each species 
+length(unique(P120_os_prop$Control1)) #9364
+unique(P120_os_prop$Speciescommonname) #6
+#6*9364 doesn't equal number of rows, haven't labeled J and A yet, haven't created one row for each sampling event for a species and an age class
+```
+
+```{r}
+#Create CPUE dataset with length data 
+##These need to be species not in length dataset 
+select_spp <- c("bay anchovy", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "striped anchovy", "weakfish")
+
+##Form a haul dataset where every row is one haul 
+summary(is.na(P120_bioledt$Sciname)) #10 NAs for Sciname
+P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
+P120_bioledt$Speciescommonname[P120_bioledt$Speciescommonname == "northern brown shrimp"] <- "brown shrimp"
+haul <- P120_bioledt %>% group_by(Date, Location, Station, Control1) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul: Dan suggested grouping by Date, Location, Control1 Station b/c location is waterbody at large and some stations have the same name (need Location), needed to exclude any non-core sampling, had to group by Control1, SPB1 was pulled twice on 11/9/2021
+length(unique(haul$Control1)) #7053
+length(unique(P120_bioledt$Control1)) #7053
+
+##Create dummy column for species of focus
+haul$Species=NA#create a dummy column first
+haul$Species=rep_along(haul$Species, c("atlantic menhaden", "atlantic croaker", "bay anchovy", "blue crab", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "southern flounder", "spot", "spotted seatrout", "striped anchovy", "weakfish")) #this repeats these species common names for the entirety of the length of the haul df
+haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Btmcomp, Sedsize_new, Btmcomp_new, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
+haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 13x (# of species) larger so it worked
+haul=haul_df %>% dplyr::select(-Species) #drop dummy species common name from hauldf
+
+#now can merge haul.all and haul to create a df with a row for species associated with each collection number
+haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
+
+#Factor in length 
+sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% dplyr::select(Control1,Date,Speciescommonname,Colnum) 
+
+P120_os_prop_edt
+
+
+P120_bc_tojoin <- P120_bc_prop %>% dplyr::select(Control1, Date, -Speciescommonname, Age_class, Number)
+P120_bc_tojoin <- P120_bc_tojoin %>% mutate(Age_class= ifelse(Age_class %in% "J", "juv blue crab", "adult blue crab")) %>% rename("Speciescommonname"= "Age_class", "Colnum"= "Number")
+sel_spp_120join <- rbind(sel_spp_120, P120_bc_tojoin)
+sel_spp_120joinedt <- sel_spp_120join %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() #should always be 1 for juv. and adult blue crab b/c have distinct rows, take the first row as there are repeats of Colnum with Control1 and Speciescommonname b/c of length measurements
+
+#Need to remove species then! 
+
+sel_spp_120joinedt = sel_spp_120joinedt %>% select(-id)
+haul_final <- haul_final %>% rename("Speciescommonname" = "Species")
+haul_sel_spp <- left_join(haul_final, sel_spp_120joinedt) %>% as.data.frame() #df is 56,424 rows, 7053 rows for each species (8 species)
+haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0
+
+names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
+p120_CPUE <- haul_sel_spp %>% left_join(names_join) %>% mutate(Sciname = ifelse(Speciescommonname == "brown shrimp", "F. aztecus", Sciname)) #brown shrimp went to NA for Sciname
+p120_CPUE$Sciname <- ifelse(p120_CPUE$Speciescommonname %in% "juv blue crab"|p120_CPUE$Speciescommonname %in% "adult blue crab", "C. sapidus", p120_CPUE$Sciname)
+
+p120_CPUE$doy <- yday(p120_CPUE$Date)
+p120_CPUE$Photoperiod <- daylength(lat= p120_CPUE$Latitude, doy= p120_CPUE$doy)
+p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
+p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
+
 ```
