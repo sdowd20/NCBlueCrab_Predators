@@ -16,6 +16,8 @@ invisible(lapply(packages, library, character.only= TRUE))
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
+
+df_count_wide_both %>% dplyr::select(reddrumP915) %>% pivot_longer(cols= reddrumP915, names_to= "Species", values_to= "avg_count") %>% ggplot() + geom_histogram(aes(x= avg_count)) + standard_theme + xlab("Average count") + ylab("Frequency") + ggtitle("Average count red drum in P915*")
 ```
 
 #### Setup data
@@ -28,6 +30,7 @@ ydata <- df_count_wide_both %>% dplyr::select(atlanticcroakerP915:blackdrumP915f
 species <- gjamTrimY(ydata, 20, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 20
 ydata <- ydata[, species] %>% as.data.frame()
 #Take out species that don't make sense 
+#remove gizzard shad b/c nothing feeds on it, bluecrabP915 doesn't make sense 
 
 r2_general <-function(preds,actual){ 
   return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
@@ -128,6 +131,37 @@ print(i)
 write.csv(model_compare, "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/reddrum_in_perform_gjam.csv")
 ```
 
+##### Selected model 
+```{r}
+#Reddrum 
+reddrum <- read.csv("~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/reddrum_in_perform_gjam.csv")
+t <- reddrum %>% arrange(-r2_con) %>% dplyr::select(-c(r2_uncon, rmse_uncon, X))
+write.csv(t, "~/Desktop/tester.csv")
+
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+#Highest
+ydata_sel <- ydata %>% dplyr::select(reddrumP915, atlanticmenhadenP120, atlanticcroakerP120, southernflounderP915, blackdrumP915) 
+model_choose_out_con_rd <- gjam(~avgdepth + avgssal + avgsdo + NoFishRest, ydata= ydata_sel, xdata= xdata, modelList= ml)
+
+View(model_choose_out_con_rd$parameters$betaStandXWTable)
+save(model_choose_out_con_rd, file='~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/model_choose_out_con_rd.Rdata')
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/model_choose_out_con_rd_plots2/')
+gjamPlot(output = model_choose_out_con_rd, plotPars = plot)
+
+model_choose_out_con_rd$fit$DIC
+model_choose_out_con_rd$fit$rmspeAll
+model_choose_out_con_rd$fit$rmspeBySpec
+
+md <- ggplot() +
+  geom_point(aes(x = model_choose_out_con_rd$inputs$y[,1],
+                 y = model_choose_out_con_rd$prediction$ypredMu[,1])) +
+  labs(x = "observed", y = "predicted", title = paste0(colnames(model_choose_out_con_rd$inputs$y)[1], ", common"))
+```
+
 #### In-sample prediction for southern kingfish
 ```{r}
 #Take out species that don't make sense/forage 
@@ -153,18 +187,18 @@ Bootstrap_times <- 100
 model_compare_sk <- data.frame(matrix(ncol=8, nrow=1))
 colnames(model_compare_sk) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon","fish1", "fish2", "fish3", "fish4" )
 
-cor_sk <- modo_sk[["parameters"]][["corMu"]] #residual
-resid_sk <- as.data.frame(cor_sk)
-resid_sk$names <- rownames(cor_sk)
-resid_sk <- resid_sk %>% dplyr::select(southernkingfishP915, names) %>% dplyr::filter(names != "southernkingfishP915")
+cor <- modo_sk[["parameters"]][["corMu"]] #residual
+resid <- as.data.frame(cor)
+resid$names <- rownames(cor)
+resid <- resid %>% dplyr::select(southernkingfishP915, names) %>% dplyr::filter(names != "southernkingfishP915")
 
 #Start for loop 
 for(i in 1:Bootstrap_times) {
 #randomly select fish to use to predict
-use_sk <- resid_sk %>% top_n(20, southernkingfishP915)
-fish_sk <- sample(use_sk$names, 4, replace = F)
-specs1_sk <- fish_sk
-ynames_sk <- c(specs1_sk, "southernkingfishP915")
+use <- resid %>% top_n(20, southernkingfishP915)
+fish <- sample(use$names, 4, replace = F)
+specs1 <- fish
+ynames_sk <- c(specs1, "southernkingfishP915")
 # xdata_insample <- df %>% dplyr::select(avgstemp, avgsdo, InletDistkm, NoFishRest)
 ydata_insample_sk <- ydata_sk[, colnames(ydata_sk) %in% ynames_sk]
 
@@ -197,24 +231,54 @@ pred_sk_un2 <- mod2_sk$prediction$ypredMu[,colnames(mod2_sk$prediction$ypredMu) 
 dat_sk <- cbind(pred_sk_con, obs_sk, pred_sk_un)
 dat_sk <- as.data.frame(dat_sk)
 
-r2_con_sk <- r2_general(dat_sk$pred_sk_con, dat_sk$obs__sk)
-r2_unco_skn <- r2_general(dat_sk$pred_sk_un, dat_sk$obs_sk)
-rmse_con_sk <-  RMSE_func(actual = dat_sk$obs_sk, pred = dat_sk$pred_sk_con)
-rmse_uncon_sk <-  RMSE_func(actual = dat_sk$obs_sk, pred = dat_sk$pred_sk_un)
+r2_con <- r2_general(dat_sk$pred_sk_con, dat_sk$obs_sk)
+r2_uncon <- r2_general(dat_sk$pred_sk_un, dat_sk$obs_sk)
+rmse_con <- RMSE_func(actual = dat_sk$obs_sk, pred = dat_sk$pred_sk_con)
+rmse_uncon <- RMSE_func(actual = dat_sk$obs_sk, pred = dat_sk$pred_sk_un)
 
-model_compare_sk[i,1] <- r2_con_sk
-model_compare_sk[i,2] <- r2_uncon_sk
-model_compare_sk[i,3] <- rmse_con_sk
-model_compare_sk[i,4] <- rmse_uncon_sk
+model_compare_sk[i,1] <- r2_con
+model_compare_sk[i,2] <- r2_uncon
+model_compare_sk[i,3] <- rmse_con
+model_compare_sk[i,4] <- rmse_uncon
 
-model_compare_sk[i,5] <- fish_sk[1]
-model_compare_sk[i,6] <- fish_sk[2]
-model_compare_sk[i,7] <- fish_sk[3]
-model_compare_sk[i,8] <- fish_sk[4]
+model_compare_sk[i,5] <- fish[1]
+model_compare_sk[i,6] <- fish[2]
+model_compare_sk[i,7] <- fish[3]
+model_compare_sk[i,8] <- fish[4]
 print(i)
 } 
 
 write.csv(model_compare_sk, "~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/sk_in_perform_gjam.csv")
+```
+
+##### Selected model 
+```{r}
+sk <- read.csv("~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/sk_in_perform_gjam.csv")
+t <- sk %>% arrange(-r2_con) %>% dplyr::select(-c(r2_uncon, rmse_uncon, X))
+
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+
+#Highest
+ydata_sel_sk <- ydata %>% dplyr::select(southernkingfishP915, gizzardshadP915, southernflounderP120, silverperchP120, whiteshrimpP120) 
+model_choose_out_con_sk <- gjam(~avgdepth + avgssal + avgsdo + NoFishRest, ydata= ydata_sel_sk, xdata= xdata, modelList= ml)
+
+View(model_choose_out_con_sk$parameters$betaStandXWTable)
+save(model_choose_out_con_sk, file='~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/model_choose_out_con_sk.Rdata')
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/model_choose_out_con_sk_plots2/')
+gjamPlot(output = model_choose_out_con_sk, plotPars = plot)
+
+model_choose_out_con_sk$fit$DIC
+model_choose_out_con_sk$fit$rmspeAll
+model_choose_out_con_sk$fit$rmspeBySpec
+
+md <- ggplot() +
+  geom_point(aes(x = model_choose_out_con_sk$inputs$y[,1],
+                 y = model_choose_out_con_sk$prediction$ypredMu[,1])) +
+  labs(x = "observed", y = "predicted", title = paste0(colnames(model_choose_out_con_sk$inputs$y)[1], ", common"))
+
 ```
 
 ```{r}
@@ -454,3 +518,5 @@ colnames(model_compare)
 tbl3 <- model_compare %>% arrange(-r2_uncon) %>% dplyr::select(r2_uncon, fish1, fish2, fish3, fish4) %>% .[1:3,] %>% gt() %>% cols_width(everything() ~ px(175)) %>% cols_align(align= "left")
 gtsave(tbl3, "~/Desktop/tbl3.png")
 ```
+
+

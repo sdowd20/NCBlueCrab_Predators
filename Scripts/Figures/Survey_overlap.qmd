@@ -20,9 +20,9 @@ p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 #Filter datasets: Add back in Secchi size once get P195 data
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== 6) #added in species of focus for now (still waiting on data)
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month==6)
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month==6)
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month== c(5,6)) #added in species of focus for now (still waiting on data)
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month== c(5,6))
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm, -Photoperiod) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month==6)
 
 ##All same column names! 
 colnames(p915_CPUEedt)
@@ -53,6 +53,22 @@ ggsave("~/Desktop/bc_reddrum.jpeg", width= 7, height=5)
 
 
 
-standard_theme <-  + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+standard_theme <-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+```
+
+```{r}
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey", labels= c("P915", "P120"))  + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14))
+ggsave("~/Desktop/survey_gridded.jpeg", width= 7, height=5)
+
+
+
++ geom_point(data = subset(p915_CPUEedt, p915_CPUEedt$Speciescommonname %in% "red drum" & as.numeric(p915_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + geom_point(data = subset(p120_CPUEedt, p120_CPUEedt$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + scale_color_manual(values= c("#52854C", "steelblue"), name= "Species", labels= c("Blue crab", "Red drum")) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14))
 ```
 

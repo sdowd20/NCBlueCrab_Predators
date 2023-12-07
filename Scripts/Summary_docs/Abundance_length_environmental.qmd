@@ -66,7 +66,7 @@ ggsave("~/Desktop/p915_length.png", width= 10, height= 10)
 p915_len_f %>% drop_na(Length) %>% filter(Speciescommonname %in% "spotted seatrout") %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scales= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + xlim(0,1000)
 ```
 
-##### Length division for special cases 
+##### Length division for special cases
 
 ```{r}
 #Black drum
