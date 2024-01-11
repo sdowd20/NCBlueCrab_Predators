@@ -4,9 +4,8 @@ format: html
 editor: visual
 ---
 
-Changes on 12/03/23: 
--Remove InletDist, FishingAllNum 
--GAM models with total forage (minus blue crabs) and blue crabs alone 
+Changes on 12/03/23: -Remove InletDist, FishingAllNum -GAM models with total forage (minus blue crabs) and blue crabs alone
+
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
 
@@ -76,7 +75,44 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 }
 ```
 
+### Env only
+```{r}
+#Load formulas
+##Red drum
+allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+
+##Southern kingfish
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfishP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+```
+
+```{r}
+#Red drum 
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_both_train, family= tw(link= "log"))
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+print(i)
+}
+
+write.csv(compare_var_tw_reddrum, "~/Desktop/compare_var_tw_reddrum_both_env.csv")
+
+#Southern kingfish
+compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_tw_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), family= tw(link= "log"), data= df_count_wide_both_train)
+compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
+print(i)
+}
+
+write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish_both_env.csv")
+```
+
 ### Env + forage + bc
+
 ```{r}
 #Load formulas
 ##Red drum
@@ -127,3 +163,25 @@ print(i)
 compare_var_tw_southernkingfish %>% arrange(AIC) %>% .[1,1]
 write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish_env_both.csv")
 ```
+
+```{r}
+reddrum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/P915.P120/compare_var_tw_reddrum_both.csv")
+
+
+
+gam1 <- gam(reddrumP915~s(avgdepth)+s(avgstemp)+s(bluecrabP120), family= tw(link= "log"), data=df_count_wide_both)
+summary(gam1)
+gam.check(gam1)
+
+sk <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/P915.P120/compare_var_tw_southernkingfish_env_both.csv")
+
+sk %>% arrange(AIC) %>% .[,-1] %>% .[1,1]
+
+gam2 <- gam(southernkingfishP915~s(avgssal)+s(SAVkm)+s(NoFishRest)+s(southernkingfishP915forage), family= tw(link= "log"), data=df_count_wide_both)
+summary(gam2)
+gam.check(gam2)
+
+plot.gam(gam2, select = 1, scale = 0)
+
+```
+

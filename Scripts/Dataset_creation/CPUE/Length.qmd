@@ -183,7 +183,7 @@ mean_diff <- merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) 
 length(unique(combo2$Sample))
 length(unique(combo2$Speciescommonname)) #11 species, 2 age classes, 13947 Samples, 11*2*13947= 306822, number of rows
 
-combo2_edt <- combo2 %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("juvenile", Speciescommonname), paste("adult", Speciescommonname))) %>% select(-c(Colnum, Age_class)) %>% rename("Colnum"= "Num_sum")
+combo2_edt <- combo2 %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("juvenile", Speciescommonname), paste("adult", Speciescommonname))) %>% dplyr::select(-c(Colnum, Age_class)) %>% rename("Colnum"= "Num_sum")
 
 #Check to see if same # of Sample IDs for P915 and length dataset
 p915_no_length <- p915_CPUE %>% filter(!Speciescommonname %in% other_species, !Sample %in% off_samplesID) #remove those Sample IDs that were not true 0s, drops 222 rows 
@@ -275,7 +275,7 @@ haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to mak
 haul=haul_df %>% dplyr::select(-Species) #drop dummy species common name from hauldf
 
 #now can merge haul.all and haul to create a df with a row for species associated with each collection number
-haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
+haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame() %>% rename("Speciescommonname"= "Species")
 length(unique(haul_final$Species)) #20 species
 length(unique(haul_final$Control1)) #7053 Control1, 20*7053= 141060 or # of rows 
 
@@ -287,14 +287,15 @@ sel_spp_120joinedt <- sel_spp_120join %>% group_by(Speciescommonname,Control1)%>
 #id should always be 1 for lengthed species b/c have distinct rows
 #this is not the case for non-lengthed species, there are repeats of Colnum with Control1 and Speciescommonname b/c of length measurements
 
-sel_spp_120joinedt = sel_spp_120joinedt %>% select(-id)
+sel_spp_120joinedt = sel_spp_120joinedt %>% dplyr::select(-id)
 haul_sel_spp <- left_join(haul_final, sel_spp_120joinedt, by= c("Speciescommonname", "Control1")) %>% as.data.frame() #df is 56,424 rows, 7053 rows for each species (8 species)
 haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0 #If there is an NA this is because there was no data there 
 
-names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
+names_join <- P120_bioledt %>% dplyr::select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
 p120_CPUE <- haul_sel_spp %>% left_join(names_join) %>% mutate(Sciname = ifelse(Speciescommonname == "brown shrimp", "F. aztecus", Sciname)) #brown shrimp went to NA for Sciname
 p120_CPUE$Sciname <- ifelse(p120_CPUE$Speciescommonname %in% "juv blue crab"|p120_CPUE$Speciescommonname %in% "adult blue crab", "C. sapidus", p120_CPUE$Sciname)
 
+library(geosphere)
 p120_CPUE$doy <- yday(p120_CPUE$Date)
 p120_CPUE$Photoperiod <- daylength(lat= p120_CPUE$Latitude, doy= p120_CPUE$doy)
 p120_CPUE$Season <- ifelse(p120_CPUE$Month==4 | p120_CPUE$Month==5 | p120_CPUE$Month==6, "Spring", ifelse(p120_CPUE$Month==9 |p120_CPUE$Month==10 | p120_CPUE$Month==11 | p120_CPUE$Month==12, "Fall", ifelse(p120_CPUE$Month==7 |p120_CPUE$Month==8, "Summer", "Winter")))
@@ -303,3 +304,11 @@ p120_CPUE$Ym_date <- format(p120_CPUE$Date, "%Y-%m")
 length(unique(p120_CPUE$Speciescommonname))
 length(unique(p120_CPUE$Control1)) #it worked!!! redu the scientific name! 
 ```
+
+
+```{r}
+combo2_edt %>% filter(Speciescommonname %in% "juvenile atlantic menhaden") %>% ggplot() + geom_histogram(aes(x= Colnum)) + standard_theme + xlim(0,1000) + ylim(0,1000)
+
+p120_CPUE %>% filter(Speciescommonname %in% "juvenile atlantic menhaden") %>% ggplot() + geom_histogram(aes(x= Colnum)) + standard_theme + xlim(0,1000) + ylim(0,1000)
+```
+

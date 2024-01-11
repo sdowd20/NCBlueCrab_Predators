@@ -4,8 +4,7 @@ format: html
 editor: visual
 ---
 
-Changes on 12/03/23: 
--Forage for each predator should include blue crabs for gJam, changes made to script to load in, dataset now: df_count_wide_both_gJam
+Changes on 12/03/23: -Forage for each predator should include blue crabs for gJam, changes made to script to load in, dataset now: df_count_wide_both_gJam
 
 #### Load packages, functions and datasets
 
@@ -131,7 +130,8 @@ print(i)
 write.csv(model_compare, "~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/reddrum_in_perform_gjam.csv")
 ```
 
-##### Selected model 
+##### Selected model
+
 ```{r}
 #Reddrum 
 reddrum <- read.csv("~/Desktop/Ch1Data/gJam/10km/Updated_results/Red_drum/InSample/reddrum_in_perform_gjam.csv")
@@ -163,6 +163,7 @@ md <- ggplot() +
 ```
 
 #### In-sample prediction for southern kingfish
+
 ```{r}
 #Take out species that don't make sense/forage 
 ydata_sk <- ydata[, -c(3, 28:30)]
@@ -251,7 +252,8 @@ print(i)
 write.csv(model_compare_sk, "~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/sk_in_perform_gjam.csv")
 ```
 
-##### Selected model 
+##### Selected model
+
 ```{r}
 sk <- read.csv("~/Desktop/Ch1Data/gJam/10km/Updated_results/Southern_kingfish/InSample/sk_in_perform_gjam.csv")
 t <- sk %>% arrange(-r2_con) %>% dplyr::select(-c(r2_uncon, rmse_uncon, X))
@@ -518,5 +520,3 @@ colnames(model_compare)
 tbl3 <- model_compare %>% arrange(-r2_uncon) %>% dplyr::select(r2_uncon, fish1, fish2, fish3, fish4) %>% .[1:3,] %>% gt() %>% cols_width(everything() ~ px(175)) %>% cols_align(align= "left")
 gtsave(tbl3, "~/Desktop/tbl3.png")
 ```
-
-
