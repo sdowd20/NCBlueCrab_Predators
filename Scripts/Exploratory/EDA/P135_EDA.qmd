@@ -1,0 +1,33 @@
+---
+title: "P135_EDA"
+format: html
+editor: visual
+---
+
+#### Dataset description
+
+The Striped Bass Independent Gill Net Survey (P135) began in 1990 to monitor adult striped bass through a random-stratified design in Albemarle and Croatan sounds. The sampling is conducted from November to late May in six sampling zones in Albemarle and Croatan sounds.
+
+These six zones are divided into one-mile square quadrants with 22 quadrants/zone that are randomly selected. Sampling in Zone 1 was discontinued shortly after survey initiation to focus on Zone 7. Some quadrants only have shallow water whereas others only have deep water. If a quadrant had both shallow (FIN) and deep water (FO or SO), both float and sink nets were set.
+
+The fishing occurs in a Fall/Winter segment, Nov 1-Feb 28 and a Spring segment, March 1 through late May. The fishing did not occur in fall in 2020 or spring in 2020 or 2021. Areas fished, sampling frequency, and sampling effort is not the same between the fall and spring sampling. All zones are sampled equally, except in the spring when effort is shifted to Zone 2. Each crew samples each of the six zones, providing 24 fishing days per month and a total of 96 fishing days for the season. A fishing day is defined as one crew, fishing the full complement of nets specified, for that segment for one day (24 hours).  There is a 24 hour soak time for each 40-yard net. Total gear soak time for each quadrant is 48 hours. 
+
+The southern area, adjacent to the Roanoke River, received increased effort at a 2:1 ratio south to north, based on the historical seasonal abundance of mature striped bass (Harris et al. 1985). Fishing effort is conducted continuously, seven days a week weather permitting, until the end of late May.
+
+For the gill net gear, 12 different mesh sizes from 2.5 inch stretched mesh to 10 inch stretched mesh are used to capture fish age one or older. Six nets were tied together to form a "gang." Gangs of nets were one of four types: 1) large mesh floating net; 2) large mesh sinking net; 3) small mesh floating net; or 4) small mesh sinking net. There are four gangs of twelve mesh sizes.
+
+Sources: 
+-NC Striped Bass Monitoring F-56 SEgment 28 (Nathaniel's documentation) 
+-Assessment of the Albemarle Sound-Roanoke River Striped Bass in North Carolina, 1991-2017
+
+##### Biological dataset
+
+All striped bass are counted and measured to the nearest mm. 
+```{r}
+
+```
+
+To pay attention to/remove: 
+-2020 for fall segment
+-Remove Zone 1 data (not consistently sampled)
+-Increased effort in southern area 
