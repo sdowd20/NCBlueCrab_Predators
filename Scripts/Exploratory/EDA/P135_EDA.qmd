@@ -10,24 +10,25 @@ The Striped Bass Independent Gill Net Survey (P135) began in 1990 to monitor adu
 
 These six zones are divided into one-mile square quadrants with 22 quadrants/zone that are randomly selected. Sampling in Zone 1 was discontinued shortly after survey initiation to focus on Zone 7. Some quadrants only have shallow water whereas others only have deep water. If a quadrant had both shallow (FIN) and deep water (FO or SO), both float and sink nets were set.
 
-The fishing occurs in a Fall/Winter segment, Nov 1-Feb 28 and a Spring segment, March 1 through late May. The fishing did not occur in fall in 2020 or spring in 2020 or 2021. Areas fished, sampling frequency, and sampling effort is not the same between the fall and spring sampling. All zones are sampled equally, except in the spring when effort is shifted to Zone 2. Each crew samples each of the six zones, providing 24 fishing days per month and a total of 96 fishing days for the season. A fishing day is defined as one crew, fishing the full complement of nets specified, for that segment for one day (24 hours).  There is a 24 hour soak time for each 40-yard net. Total gear soak time for each quadrant is 48 hours. 
+The fishing occurs in a Fall/Winter segment, Nov 1-Feb 28 and a Spring segment, March 1 through late May. The fishing did not occur in fall in 2020 or spring in 2020 or 2021. Areas fished, sampling frequency, and sampling effort is not the same between the fall and spring sampling. All zones are sampled equally, except in the spring when effort is shifted to Zone 2. Each crew samples each of the six zones, providing 24 fishing days per month and a total of 96 fishing days for the season. A fishing day is defined as one crew, fishing the full complement of nets specified, for that segment for one day (24 hours). There is a 24 hour soak time for each 40-yard net. Total gear soak time for each quadrant is 48 hours.
 
 The southern area, adjacent to the Roanoke River, received increased effort at a 2:1 ratio south to north, based on the historical seasonal abundance of mature striped bass (Harris et al. 1985). Fishing effort is conducted continuously, seven days a week weather permitting, until the end of late May.
 
 For the gill net gear, 12 different mesh sizes from 2.5 inch stretched mesh to 10 inch stretched mesh are used to capture fish age one or older. Six nets were tied together to form a "gang." Gangs of nets were one of four types: 1) large mesh floating net; 2) large mesh sinking net; 3) small mesh floating net; or 4) small mesh sinking net. There are four gangs of twelve mesh sizes.
 
-Sources: 
--NC Striped Bass Monitoring F-56 SEgment 28 (Nathaniel's documentation) 
--Assessment of the Albemarle Sound-Roanoke River Striped Bass in North Carolina, 1991-2017
+Sources: -NC Striped Bass Monitoring F-56 SEgment 28 (Nathaniel's documentation) -Assessment of the Albemarle Sound-Roanoke River Striped Bass in North Carolina, 1991-2017
+
+##### Habitat and CPUE dataset
+
+The file containing environmental data is name "HabitatDataP135_1990-May2023". Each row in this file represents the environmental data for a single net. Our individual nets are identified by the first column "control1". This file contains no biological data.
 
 ##### Biological dataset
 
-All striped bass are counted and measured to the nearest mm. 
-```{r}
+The file containing CPUE and Biological data is named "BiologicalDataP135forN100_Final". Each row in this data set represents a single capture event of a fish. As multiple fish are caught in a single net you will see "control1" values repeated multiple times, generally once for each fish caught in each net. "Control3" is the unique identifier for each capture event. Importantly all fish that have Form_4 = 3 are ranged measures meaning that we only measure the largest and the smallest fish in that capture event and counted the rest. This will most often apply to longnose gar and gizzard shad. When it comes to catch per unit effort, each row in this dataset has a "COLNUM" variable. This corresponds to the total number of that species caught in each net. For example, for the net control 1=0000508, 2 species were caught (blue catfish and striped mullet). The colnum for each is 1 meaning only a single specimen of each species was captured in that net. Looking at another example, for the net control 1=0000535, 3 species were captured (Atlantic sturgeon, gizzard shad, and white catfish). For the Atlantic sturgeon colnum=1 meaning only a single specimen was captured. But for gizzard shad and white catfish the colnum =2 or 3. This means 2 or 3 of each of these species were captured in this net. Importantly, when trying to summarize the total number of a species captured in a single net you should only count colnum once for each species. Looking at this same net, there are 2 lines with information on gizzard shad (one for each individual captured). Each line has a colnum of 2 which means 2 total gizzard shad were captured. If you sum colnum for the net youwould get a colnum of 1 for Atlantic sturgeon, 4 for gizzard shad, and 9 for white catfish. This would be incorrect as there are actually only 1, 2, and 3 of these species respectively. This means when calculating effort for a single net (control 1) that you should only take a single colnum value for each species. For example if I wanted to know how many gizzard shad were in net 000535 I would look at one row that had gizzard shad, see the colnum was 2, and know that a total of 2 gizzard shad were captured in that net.
 
+```{r}
+biol <- read_excel("~/Desktop/Ch1Data/P135/BiologicalDataP135forN100_Final.xlsx", col_types= "text")
+habitat <- read_excel("~/Desktop/Ch1Data/P135/HabitatDataP135_1990-May2023.xlsx", col_types= "text")
 ```
 
-To pay attention to/remove: 
--2020 for fall segment
--Remove Zone 1 data (not consistently sampled)
--Increased effort in southern area 
+To pay attention to/remove: -2020 for fall segment -Remove Zone 1 data (not consistently sampled) -Increased effort in southern area

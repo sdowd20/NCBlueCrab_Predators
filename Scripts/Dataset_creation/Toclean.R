@@ -398,3 +398,10 @@ summary(is.na(p195_lengthfreq_edt)) #no NAs in Sciname, makes sense
 
 write.csv(p195_lengthfreq_edt, "Data/P195/Finalized/p195_lengthfreq.csv")
 
+
+
+#####P135#####
+#waterbody codes: "Albemarle Sound" = 0200000000, "Chowan River"= 0208000000, Maherrin River= 0208190000, Kirby Creek= 0208190200, Turkey Creek= 0208190201 
+#join species 
+
+
