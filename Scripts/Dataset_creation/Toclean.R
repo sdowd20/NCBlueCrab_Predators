@@ -398,10 +398,66 @@ summary(is.na(p195_lengthfreq_edt)) #no NAs in Sciname, makes sense
 
 write.csv(p195_lengthfreq_edt, "Data/P195/Finalized/p195_lengthfreq.csv")
 
-
-
 #####P135#####
+
+###Habitat data## 
+setwd("/Users/sallydowd/Desktop/Ch1Data/P135")
+habitat <- read_excel("HabitatDataP135_1990-May2023.xlsx", col_types= "text") #read this in as text or columns mess up
+colnames(habitat) <- str_to_title(colnames(habitat))
+habitat <- habitat %>% mutate(Year = case_when(as.numeric(Year) >= 90 & as.numeric(Year) <= 99 ~ paste0("19", Year),
+    as.numeric(Year) >= 0 & as.numeric(Year) <= 9 ~ paste0("200", Year),
+    as.numeric(Year) >= 10 & as.numeric(Year) <= 23 ~ paste0("20", Year))) #add #s to year
+habitat$Season <- ifelse(habitat$Month==4 | habitat$Month==5 | habitat$Month==6, "Spring", ifelse(habitat$Month==9 |habitat$Month==10 | habitat$Month==11 | habitat$Month==12, "Fall", ifelse(habitat$Month==7 |habitat$Month==8, "Summer", "Winter")))
+habitat$Date <- as.Date(paste(habitat$Month, habitat$Day, habitat$Year, sep= "-"), "%m-%d-%Y")
+habitat$Ym_date <- format(habitat$Date, "%Y-%m")
+
+#identify column names with dot
+columns_with_dot <- colnames(habitat)[sapply(habitat, function(x) any(grepl("\\.", x)))]
+print(columns_with_dot) #Depth (16), Atemp (17), Btemp (19), Depth is plausible (e.g: 15.5 means there's a dot)
+
+##Remove implausible dots 
+columns <- c(17, 19)
+for (col in columns) {
+  habitat[[col]][is.na(habitat[[col]]) | habitat[[col]] == "."] <- NA
+} #some values only have a dot or maybe it is an NA that R generated, replace these with NA instead
+
+habitat <- habitat %>% mutate_at(vars(c(3:5, 16:21, 23:24)), as.numeric)
+
+#Re-classify sediment size as sand or mud 
+habitat <- habitat %>% mutate(Sedsize_new= ifelse(habitat$Sedsize == 1|habitat$Sedsize == 6|habitat$Sedsize == 8, "Sand", ifelse(habitat$Sedsize== 2|habitat$Sedsize== 3|habitat$Sedsize== 4|habitat$Sedsize== 5| habitat$Sedsize== 7| habitat$Sedsize== 9, "Mud", ifelse(habitat$Sedsize== 0, "Hard bottom", habitat$Sedsize))))
+
+#Scientific name, just do species names!
+p915_sppnames <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/p915_sppnames.csv")
+P915_CPUE <- merged %>% dplyr::rename("Speciescommonname"= "Species") %>% left_join(p915_sppnames, by= "Speciescommonname")
+
+##Add in other predictor variables
+library(geosphere)
+P915_CPUE$doy <- yday(P915_CPUE$Date)
+#P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
+P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
+P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
+P915_CPUE <- P915_CPUE %>% rename("Secchi"= "Depthend")
+write.csv(P915_CPUE, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+
+
+
+
+
+
+
+##Biological data## 
+
+
+
+
+
+
+
+
+
 #waterbody codes: "Albemarle Sound" = 0200000000, "Chowan River"= 0208000000, Maherrin River= 0208190000, Kirby Creek= 0208190200, Turkey Creek= 0208190201 
 #join species 
+
+
 
 
