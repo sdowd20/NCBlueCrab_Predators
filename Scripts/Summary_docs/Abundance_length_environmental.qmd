@@ -54,7 +54,9 @@ P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
 P120_bioledt %>% filter(Speciescommonname %in% interest_spp, Year >=2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
 ggsave("~/Desktop/p120_length.png", width= 10, height= 10)
 
-P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker"), Year >= 2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme + xlim(0,300)
+P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "blue crab", "southern flounder", "spot", "spotted seatrout"), Year >= 2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (mm)") + ylab("Count") + standard_theme + xlim(0,400)
+ggsave("~/Desktop/p120_length_scale.png", width= 10, height= 10)
+
 #P915
 P120_bioledt %>% filter(Speciescommonname %in% c("spotted seatrout"), Year >= 2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme + xlim(0,300)
 #P915
