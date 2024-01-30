@@ -52,7 +52,7 @@ lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE)
 
 ####Form grids
 
-##### Grid: From 10 x 10 km grid
+##### Grid: From 0.12° x 0.12° grid cell 
 
 ```{r}
 globe_bb <- matrix(c(-78.900147,33.802938,
@@ -85,7 +85,7 @@ lat_lon_pts_g <- fish_extract_2_2edt %>% separate(lat_lon, c("lat", "lon"), sep=
 ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = lat_lon_pts_g, aes(x = as.numeric(lon), y = as.numeric(lat), color= gridID)) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) #works
 ```
 
-##### Grid: Form 5 x 5 km grid
+##### Grid: Form 0.06° x 0.06° grid cell 
 
 ```{r}
 # make an object the size and shape of the output you want
@@ -128,6 +128,33 @@ fish_extract_comboedt <- fish_extract_combo[,-c(2,3, 4)]
 #write.csv(fish_extract_comboedt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
 
 #ggplot(data = world) + geom_sf() + geom_sf(data = fish_extract_comboedt, fill = NA) + geom_sf(data= fish_spat) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)
+```
+
+##### Grid: Form 0.24° x 0.24° grid cell 
+```{r}
+# make an object the size and shape of the output you want
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_15 <- st_make_grid(x= globe_bb, n = c(15,15), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) 
+
+fish_spat <- as.data.frame(lat_lon_combo)
+fish_spat$rowID <- 1:nrow(fish_spat)
+coordinates(fish_spat) <- ~ Longitude + Latitude
+fish_spat <- st_as_sf(fish_spat)
+fish_spat <- st_set_crs(fish_spat, 4326)
+grid <- globe_grid_15
+
+fish_extract_s <- st_intersection(fish_spat, grid)
+fish_extract_2 <- as.data.frame(fish_extract_s)
+fish_extract_2_2 <- fish_extract_2[!duplicated(fish_extract_2[c("rowID")]),] #should be same size as fish spat
+fish_extract_2_2$gridID <- fish_extract_2_2$ID
+fish_extract_2_2edt <- fish_extract_2_2[,-c(2,3, 4)]
+
+write.csv(fish_extract_2_2edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_24km.01.30.24.csv") 
+
 ```
 
 #### Structure grid dataset
