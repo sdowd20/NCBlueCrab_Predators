@@ -94,7 +94,7 @@ globe_bb <- matrix(c(-78.900147,33.802938,
                       -75.263672,36.672128,
                      -75.263672, 33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
-globe_grid_30 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
+globe_grid_60 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
 
 fish_spat <- as.data.frame(lat_lon_combo)
 fish_spat$rowID <- 1:nrow(fish_spat)
@@ -147,3 +147,14 @@ gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_30_edt, by= "grid
 gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% dplyr::select(gridID, geometry)
 write.csv(gridded_coords_geom_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.11.20.23.csv")
 ```
+
+```{r}
+#5 km 
+fish_extract_comboedt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
+gridded_coords <- fish_extract_comboedt %>% separate(lat_lon, into = c("Latitude", "Longitude"), sep = "_", convert = TRUE) %>% dplyr::select(-X)
+globe_grid_60_edt <- globe_grid_60 %>% rename("gridID"= "ID")
+gridded_coords_geom <- gridded_coords %>% left_join(globe_grid_60_edt, by= "gridID")
+gridded_coords_geom_edt <- gridded_coords_geom %>% distinct(gridID, .keep_all= TRUE) %>% dplyr::select(gridID, geometry)
+write.csv(gridded_coords_geom_edt, "~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_coords_geom.5km.01.30.24.csv")
+```
+
