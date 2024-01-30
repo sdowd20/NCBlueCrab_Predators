@@ -198,33 +198,40 @@ options(scipen = 0)
 #These are pretty far off from original calculations, checked habitat mosaic w/ 2006-2008 and were more similar
 
 ##Shoreline type
-nearest_shoreline <- st_nearest_feature(sf_cent, Estuarine_shoreline_edt)
-nearest <- as.numeric(nearest_shoreline)
-ShorelineType <- grid10km_edt %>% mutate(row_num= nearest)
-ESE <- Estuarine_shoreline_edt %>% mutate(row_num= 1:74937) %>% st_drop_geometry()
-ShorelineType <- ShorelineType %>% left_join(ESE, by= "row_num") %>% dplyr::select(gridID, SHORE_NAM) %>% rename("ShorelineType"= "SHORE_NAM") %>% st_drop_geometry() #21 differences in 120 gridIDs in common b/w old dataset and new, might be due to different calculation distances 
+# nearest_shoreline <- st_nearest_feature(sf_cent, Estuarine_shoreline_edt)
+# nearest <- as.numeric(nearest_shoreline)
+# ShorelineType <- grid10km_edt %>% mutate(row_num= nearest)
+# ESE <- Estuarine_shoreline_edt %>% mutate(row_num= 1:74937) %>% st_drop_geometry()
+# ShorelineType <- ShorelineType %>% left_join(ESE, by= "row_num") %>% dplyr::select(gridID, SHORE_NAM) %>% rename("ShorelineType"= "SHORE_NAM") %>% st_drop_geometry() #21 differences in 120 gridIDs in common b/w old dataset and new, might be due to different calculation distances 
 ```
 
 ##### Other calculation
 
 ```{r}
 #Merge grid and centroid calculated datasets
-dataframes <- list(ITP, ShrimpTrawl_pA, TrawlDredge_pA, GillPound_pA, RestrictedArea_pA, Waterbody_A, InletDist_km, SAV_km, ShorelineType)
+dataframes <- list(ITP, ShrimpTrawl_pA, TrawlDredge_pA, GillPound_pA, RestrictedArea_pA, Waterbody_A, InletDist_km, SAV_km)
 
 merged_df <- DPA_aA
 for (df in dataframes){
   merged_df <- merge(merged_df, df, by = "gridID")
 } #merge dataframes by common columns 
-
-#Most common sediment size 
-##Organize datasets: 
-datasets_Sedsize <- CPUE_all %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na() 
-#%>% dplyr::filter(Month %in% c(5,6), Survey %in% c("P915", "P120"))
-datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
-gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
-datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr::select(gridID, lat_lon), by= "lat_lon") 
-Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID) #only 104 grid cells not 127, was 299 not 340 grid cells for 5km
-merged_df2 <- merged_df %>% left_join(Sedsize_common, by= "gridID")
+# 
+# #Most common sediment size 
+# ##Organize datasets: 
+# datasets_Sedsize <- CPUE_all %>% dplyr::select(Latitude, Longitude, Sedsize_new) %>% drop_na() 
+# #%>% dplyr::filter(Month %in% c(5,6), Survey %in% c("P915", "P120"))
+# datasets_Sedsize$lat_lon <- paste(datasets_Sedsize$Latitude,datasets_Sedsize$Longitude, sep = "_") 
+# gridded_coords_geom$lat_lon <- paste(gridded_coords_geom$Latitude,gridded_coords_geom$Longitude, sep = "_") 
+# datasets_Sedsize <- datasets_Sedsize %>% left_join(gridded_coords_geom %>% dplyr::select(gridID, lat_lon), by= "lat_lon") 
+# # Sedsize_common <- datasets_Sedsize %>% group_by(gridID) %>% summarise(Sedsize_common = names(which.max(table(Sedsize_new)))) %>% drop_na(gridID) #only 104 grid cells not 127, was 299 not 340 grid cells for 5km
+# # merged_df2 <- merged_df %>% left_join(Sedsize_common, by= "gridID")
+# 
+# #Proportion of sand to mud: change on 01/30/24 to have numeric variable- easier to use with deviance explained 
+# grid_cells <- merged_df$gridID
+# 
+# datasets_Sedsize_edt <- datasets_Sedsize %>% filter(gridID %in% grid_cells) %>% group_by(gridID) %>% summarize(sand_prop= sum(Sedsize_new== "Sand")/n(), mud_prop= sum(Sedsize_new== "Mud")/n(), hardb_prop= sum(Sedsize_new == "Hard bottom")/n())
+# 
+# merged_df2 <- merged_df %>% left_join(datasets_Sedsize_edt, by= "gridID")
 
 #Fishing predictors: 
 merged_df3 <- merged_df2 %>% mutate(ShrimpTrawl_aA= Waterbody_A - ShrimpTrawl_pA, TrawlDredge_aA = Waterbody_A - TrawlDredge_pA, GillPound_aA = Waterbody_A - GillPound_pA)

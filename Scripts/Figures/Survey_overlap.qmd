@@ -4,6 +4,7 @@ format: html
 editor: visual
 ---
 
+#### Load in data
 ```{r}
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
@@ -43,20 +44,8 @@ p195_CPUEedt$Survey <- "P195"
 
 CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
 CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
-```
 
-```{r}
-world <- ne_countries(scale = "medium", returnclass = "sf")
-
-ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEedt, p915_CPUEedt$Speciescommonname %in% "red drum" & as.numeric(p915_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + geom_point(data = subset(p120_CPUEedt, p120_CPUEedt$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + scale_color_manual(values= c("#52854C", "steelblue"), name= "Species", labels= c("Blue crab", "Red drum")) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14))
-ggsave("~/Desktop/bc_reddrum.jpeg", width= 7, height=5)
-
-
-
-standard_theme <-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
-```
-
-```{r}
+##Load grid 
 globe_bb <- matrix(c(-78.900147,33.802938,
                       -78.900147,36.672128,
                       -75.263672,36.672128,
@@ -64,11 +53,56 @@ globe_bb <- matrix(c(-78.900147,33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
 globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
 
-ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey", labels= c("P915", "P120"))  + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14))
-ggsave("~/Desktop/survey_gridded.jpeg", width= 7, height=5)
-
-
-
-+ geom_point(data = subset(p915_CPUEedt, p915_CPUEedt$Speciescommonname %in% "red drum" & as.numeric(p915_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + geom_point(data = subset(p120_CPUEedt, p120_CPUEedt$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + scale_color_manual(values= c("#52854C", "steelblue"), name= "Species", labels= c("Blue crab", "Red drum")) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14))
+world <- ne_countries(scale = "medium", returnclass = "sf")
 ```
 
+#### Figure 1: 
+```{r}
+#Sampling points 
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) 
+ggsave("~/Desktop/Ch1Data/Figures/survey_gridded.jpeg", width= 7, height=5)
+```
+
+```{r}
+#Sampling points + fish nursery
+fish_nursery <- read_sf(dsn = "~/Desktop", layer = "fish_nursery")
+fish_nursery_edt <- st_transform(fish_nursery, crs = 32119)
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = fish_nursery_edt)  + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2)))
+ggsave("~/Desktop/Ch1Data/Figures/survey_gridded_nursery.jpeg", width= 7, height=5)
+```
+
+```{r}
+#Data analysis points + fish nursery
+##Count dataset 
+df_count <- read_csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_count_avg_edt.11.21.23.csv")
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
+df_count$Speciescommonname <- gsub(" ", "", df_count$Speciescommonname)
+colnames(df_count) <- gsub(pattern = "_", replacement = "", colnames(df_count))
+df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "")
+df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
+
+#join P915 CPUE and P120 CPUE with gridID dataset
+gridID_both <- unique(df_count_wide_both$gridID) 
+lat_lon_gridded <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv") #updated on 11/20/23
+
+p915_CPUEedt$lat_lon <- paste(p915_CPUEedt$Latitude, p915_CPUEedt$Longitude, sep= "_")
+p915_CPUEedt_fig <- p915_CPUEedt %>% left_join(lat_lon_gridded, by= "lat_lon") %>% filter(gridID %in% gridID_both)
+
+p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep= "_")
+p120_CPUEedt_fig <- p120_CPUEedt %>% left_join(lat_lon_gridded, by= "lat_lon") %>% filter(gridID %in% gridID_both)
+
+#filter gridID dataset for only gridIDs with data
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both)
+
+ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_sf(data = fish_nursery_edt)  + geom_point(data = p915_CPUEedt_fig, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2)))
+ggsave("~/Desktop/Ch1Data/Figures/survey_gridded_nursery_filtered.jpeg", width= 7, height=5)
+```
+
+```{r}
+#Species overlap 
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEedt, p915_CPUEedt$Speciescommonname %in% "red drum" & as.numeric(p915_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude") + geom_point(data = subset(p120_CPUEedt, p120_CPUEedt$Speciescommonname %in% "blue crab" & as.numeric(p120_CPUEedt$Colnum > 0) & Month %in% 6), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Speciescommonname)) + scale_color_manual(values= c("#52854C", "steelblue"), name= "Species", labels= c("Blue crab", "Red drum")) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14))
+ggsave("~/Desktop/bc_reddrum.jpeg", width= 7, height=5)
+
+standard_theme <-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+```

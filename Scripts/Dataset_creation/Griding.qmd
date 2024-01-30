@@ -50,7 +50,7 @@ lat_lon_combo <- rbind(p915_latlon, p120_latlon, p195_latlon)
 lat_lon_combo <- lat_lon_combo %>% distinct(lat_lon, .keep_all= TRUE)
 ```
 
-####Form grids 
+####Form grids
 
 ##### Grid: From 10 x 10 km grid
 
