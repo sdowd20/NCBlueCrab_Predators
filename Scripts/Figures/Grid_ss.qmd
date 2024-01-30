@@ -40,6 +40,7 @@ CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
 ```
 
 #### 0.06 x 0.06 size
+
 ```{r}
 gridded_0.06 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
 #Join CPUE data to gridded dataset
@@ -63,16 +64,12 @@ df_count <- CPUE_grid_count_avg_edt
 df_count$Speciescommonname <- gsub(" ", "", df_count$Speciescommonname)
 colnames(df_count) <- gsub(pattern = "_", replacement = "", colnames(df_count))
 df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "")
-df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
-
-#there are common gridIDs
-# t <- CPUE_grid_count_avg_edt %>% filter(Survey %in% "P915")
-# t2 <- CPUE_grid_count_avg_edt %>% filter(Survey %in% "P120")
-# common_gridIDs <- intersect(t$gridID, t2$gridID)
+df_count_wide_both06 <- df_count %>% filter(Survey == "P915"|Survey == "P120") %>% ungroup() %>% dplyr::select(-c(Speciescommonname, Survey)) %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
 ```
 
 #### 0.24 x 0.24 size
 
+#### .12 x .12 size
 ```{r}
 #Load data
 df_count <- read_csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_count_avg_edt.11.21.23.csv")
@@ -83,14 +80,25 @@ df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep
 df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
 ```
 
-#### Grid cell sensitivity figure 
+#### Grid cell sensitivity figure
+
 ```{r}
-df_count_wide_both %>% filter(reddrumP915 > 0)
-#Red drum: 181, black drum: 112, southern kingfish: 68
+#0.12: 
+df_count_wide_both %>% filter(blackdrumP915 > 0)
+##572 observations total 
+##Positive observations: red drum: 181, black drum: 112, southern kingfish: 68
+##Zero observations: 391, 460, 504 
 
-data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish"), count = c(181, 112, 68))
+#0.06
+df_count_wide_both06 %>% filter(blackdrumP915 > 0)
+##397 observations total 
+##Positive observations: red drum: 164, black drum: 130, southern kingfish: 65
+##Zero observations: 233, 267, 332
 
-ggplot(data, aes(x = "", y = count, fill = species)) + geom_bar(stat = "identity", width = 0.8) + standard_theme + labs(x= "0.12° x 0.12°", y= "Number of positive encounters", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species")
+data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572))
+
+ggplot(data, aes(x = "", y = count, fill = species)) + geom_bar(stat = "identity", width = 0.8) + standard_theme + labs(x= "0.12° x 0.12°", y= "Number of encounters", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species")
 
 #maybe add in total # of occurences too, can split chart up with different shades for positive and negative occurences 
 ```
+
