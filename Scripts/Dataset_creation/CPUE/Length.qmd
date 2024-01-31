@@ -193,7 +193,7 @@ perc_error <- merged_df %>% group_by(Speciescommonname) %>% summarize(percent_er
 length(unique(combo2$Sample))
 length(unique(combo2$Speciescommonname)) #11 species, 2 age classes, 13947 Samples, 11*2*13947= 306834, number of rows
 
-combo2_edt <- combo2 %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("juvenile", Speciescommonname), paste("adult", Speciescommonname))) %>% dplyr::select(-c(Colnum, Age_class)) %>% rename("Colnum"= "Num_sum")
+combo2_edt <- combo2 %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("small", Speciescommonname), paste("large", Speciescommonname))) %>% dplyr::select(-c(Colnum, Age_class)) %>% rename("Colnum"= "Num_sum")
 
 #Check to see if same # of Sample IDs for P915 and length dataset
 p915_no_length <- p915_CPUE %>% filter(!Speciescommonname %in% other_species, !Sample %in% off_samplesID) #remove those Sample IDs that were not true 0s, didn't drop rows here
@@ -296,7 +296,7 @@ P120_os_prop_edt <- P120_os_prop %>% mutate(Number= Colnum*Proportion) %>% group
 #Don't need to group by date doesn't change dataset 
 
 #Combine age class and Speciescommonname
-P120_os_prop_edt2 <- P120_os_prop_edt %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("juvenile", Speciescommonname), paste("adult", Speciescommonname))) 
+P120_os_prop_edt2 <- P120_os_prop_edt %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("small", Speciescommonname), paste("large", Speciescommonname))) 
 
 #Checking: this shows that we don't have one Control1 for each juvenile and adult of each species, does this still work?
 length(unique(P120_os_prop$Control1)) #6935/7053 in overall dataset 
@@ -362,7 +362,7 @@ length(unique(P120_bioledt$Control1)) #7053
 
 ##Create dummy column for species of focus
 haul$Species=NA #create a dummy column first
-haul$Species=rep_along(haul$Species, c("bay anchovy", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "striped anchovy", "weakfish", "juvenile atlantic menhaden", "adult atlantic menhaden", "juvenile atlantic croaker", "adult atlantic croaker", "juvenile blue crab", "adult blue crab", "juvenile southern flounder", "adult southern flounder", "juvenile spotted seatrout", "adult spotted seatrout", "spot")) #this repeats these species common names for the entirety of the length of the haul df
+haul$Species=rep_along(haul$Species, c("bay anchovy", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "striped anchovy", "weakfish", "small atlantic menhaden", "large atlantic menhaden", "small atlantic croaker", "large atlantic croaker", "small blue crab", "large blue crab", "small southern flounder", "large southern flounder", "small spotted seatrout", "juvenile spotted seatrout", "spot")) #this repeats these species common names for the entirety of the length of the haul df
 haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Btmcomp, Sedsize_new, Btmcomp_new, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
 haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 13x (# of species) larger so it worked
 haul=haul_df %>% dplyr::select(-Species) #drop dummy species common name from hauldf
@@ -504,4 +504,55 @@ length_total <- p120_CPUE_lengthBC %>% group_by(Speciescommonname) %>% summarize
 write.csv(length_total, "/users/sallydowd/Desktop/P120length_totalBC.csv")
 nonlength_total <- p120_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(nonlength_total, "/users/sallydowd/Desktop/P120nonlength_totalBC.csv")
+```
+
+### Length figures
+
+##### Fig. 1: Length frequency overall
+```{r}
+#data processing 
+##P915
+other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum) 
+
+#unsure if this is correct 
+other_species %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free_x") + standard_theme
+
+##P120
+P120_bioledt %>% filter(Year >=2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+```
+
+```{r}
+#figure formation 
+##P915
+
+
+##P120
+```
+
+##### Fig. 2: Length frequency upon division 
+```{r}
+#data processing
+p915_CPUE_length <- read.csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_length.csv")
+p120_CPUE_length <- read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_length.csv")
+
+p915_lengthspp <- unique(p915_CPUE_length$Speciescommonname[grepl("small|large", p915_CPUE_length$Speciescommonname, ignore.case = TRUE)])
+p120_lengthspp <- unique(p120_CPUE_length$Speciescommonname[grepl("small|large", p120_CPUE_length$Speciescommonname, ignore.case = TRUE)])
+```
+
+```{r}
+#figure formation 
+##P915
+darker_shade <- darken("#E69F00", 0.3) 
+p915_CPUE_length %>% filter(Speciescommonname %in% p915_lengthspp, Colnum > 0) %>% mutate(Basespp = gsub("^(small|large) ", "", Speciescommonname)) %>%
+ggplot() + geom_histogram(aes(x = Colnum, fill = grepl("small", Speciescommonname, ignore.case = TRUE)), bins = 15, alpha = 0.7) +
+facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shade, "#E69F00"), name= "Size", labels= c("large", "small")) + standard_theme + labs(x= "Number collected", y= "Count") + guides(fill = guide_legend(reverse = TRUE))
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P915_ls_length.jpeg")
+
+##P120 
+darker_shade <- darken("steelblue", 0.3) 
+p120_CPUE_length %>% filter(Speciescommonname %in% p120_lengthspp, Colnum >0 ) %>% mutate(Basespp = gsub("^(small|large) ", "", Speciescommonname)) %>%
+ggplot() + geom_histogram(aes(x = Colnum, fill = grepl("small", Speciescommonname, ignore.case = TRUE)), bins = 15, alpha = 0.7) +
+facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shade, "steelblue"), name= "Size", labels= c("large", "small")) + standard_theme + labs(x= "Number collected", y= "Count") +
+guides(fill = guide_legend(reverse = TRUE))
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P120_ls_length.jpeg")
 ```
