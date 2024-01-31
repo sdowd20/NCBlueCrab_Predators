@@ -512,13 +512,17 @@ write.csv(nonlength_total, "/users/sallydowd/Desktop/P120nonlength_totalBC.csv")
 ```{r}
 #data processing 
 ##P915
-other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum) 
 
-#unsure if this is correct 
-other_species %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free_x") + standard_theme
+#THIS ISN'T CORRECT! Need to fit it to each survey, atlantic menhaden is wrong for P915 and eveerything is off for P120, also make sure all species are included for both surveys- add in red drum, black drum from P120, etc.
 
-##P120
-P120_bioledt %>% filter(Year >=2001) %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length)) + facet_wrap(~Speciescommonname, scale= "free") + xlab("Length (in)") + ylab("Count") + standard_theme
+P915_to_plot <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Speciescommonname, Length) %>% mutate(Survey = "P915")
+
+P120_to_plot <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "blue crab", "southern flounder", "spot", "spotted seatrout")) %>% dplyr::select(Length, Speciescommonname) %>% drop_na(Length) %>% mutate(Survey = "P120")
+
+test <- rbind(P915_to_plot, P120_to_plot)
+
+test %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + xlim(0,750) + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/length_both.jpeg", width= 9, height=7)
 ```
 
 ```{r}
