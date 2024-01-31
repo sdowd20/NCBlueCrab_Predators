@@ -69,7 +69,8 @@ df_count_wide_both06 <- df_count %>% filter(Survey == "P915"|Survey == "P120") %
 
 #### 0.24 x 0.24 size
 
-#### .12 x .12 size
+#### 0.12 x 0.12 size
+
 ```{r}
 #Load data
 df_count <- read_csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_count_avg_edt.11.21.23.csv")
@@ -97,8 +98,27 @@ df_count_wide_both06 %>% filter(blackdrumP915 > 0)
 
 data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572))
 
-ggplot(data, aes(x = "", y = count, fill = species)) + geom_bar(stat = "identity", width = 0.8) + standard_theme + labs(x= "0.12° x 0.12°", y= "Number of encounters", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species")
+#red drum: 181, black drum: 112, southern kingfish: 68
+
+ggplot(data, aes(x = "", y = count, fill = species)) + geom_bar(stat = "identity", width = 0.8) + standard_theme + labs(x= "0.12° x 0.12°", y= "Number of encounters", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_hline(yintercept=181, linetype="solid", color = "white") + geom_line(y = 181, linetype = "solid", color = "lightgrey") 
 
 #maybe add in total # of occurences too, can split chart up with different shades for positive and negative occurences 
+```
+
+
+```{r}
+data <- data.frame(
+  species = c("Red drum", "Black drum", "Southern kingfish"),
+  count = c(572, 572, 572),
+  lightened_count = c(181, 112, 68)  # Specify the lightened count for each species
+)
+
+ggplot(data, aes(x = "", y = count, fill = species)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  geom_bar(aes(y = lightened_count, fill = species), stat = "identity", width = 0.8, alpha = 0.5) +
+  scale_alpha_manual(values = c(1, 1, 1), guide = FALSE) +  # Set alpha to 1 for the original bars
+  theme_minimal() +
+  labs(x = "0.12° x 0.12°", y = "Number of encounters", fill = "Species") +
+  scale_fill_manual(values = c("#0072B2", "#009E73", "#CC6666"), name = "Species")
 ```
 
