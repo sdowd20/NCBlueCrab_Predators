@@ -22,6 +22,7 @@ p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
 p915_len_f <- p915_len_f %>% dplyr::select(-X)
 P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
+P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2)
 p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
 ```
 
@@ -222,6 +223,7 @@ write.csv(sum_num, "/Users/sallydowd/Desktop/sum_numP915.csv")
 ```
 
 ##### Justification figures
+
 ```{r}
 other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
 
@@ -400,7 +402,85 @@ sum_num <- p120_CPUE %>% group_by(Speciescommonname) %>% filter(!Colnum %in% 0) 
 write.csv(sum_num, "/Users/sallydowd/Desktop/sum_numP120.csv")
 ```
 
+##### Blue crab only
+```{r}
+#Deal with length 
+P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #Length-frequency excel shows justification 
+
+P120_other_species_edt <- P120_other_species %>% group_by(Control1, Colnum, Length, Speciescommonname) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #duplicates rows according to Frequency
+
+#assign length 
+P120_other_species_edt <- P120_other_species_edt %>% mutate(Age_class = ifelse(Speciescommonname %in% "blue crab" & Length <= 75, "J", "A"))
+
+P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Age_class, Colnum, Speciescommonname) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum, Speciescommonname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Age_class, Count, Total_sampled, Proportion) #don't need to group_by Date/Location/Station here as blue crabs weren't in the diff_values below after 2008
+
+#Now apply proportion to Colnum 
+P120_os_prop_edt <- P120_os_prop %>% mutate(Number= Colnum*Proportion) %>% group_by(Control1, Age_class, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) #this is an important change: sometimes there were multiple Colnums for one sample, processed them differently but in the end added the numbers up from same age class 
+#Don't need to group by date doesn't change dataset 
+
+#Combine age class and Speciescommonname
+P120_os_prop_edt2 <- P120_os_prop_edt %>% mutate(Speciescommonname = ifelse(Age_class == "J", paste("small", Speciescommonname), paste("large", Speciescommonname))) 
+
+#Checking: this shows that we don't have one Control1 for each juvenile and adult of each species, does this still work? that's standard for this stage
+length(unique(P120_os_prop$Control1)) #4908 in overall dataset 
+length(unique(P120_os_prop_edt$Speciescommonname)) #2
+
+#This data doesn't have juvenile and adult for each Control1 
+```
+
+```{r}
+#Create CPUE dataset with length data 
+##These need to be species not in length dataset 
+select_spp <- c("bay anchovy", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "striped anchovy", "weakfish", "spot", "atlantic menhaden", "atlantic croaker", "southern flounder", "spot", "spotted seatrout")
+
+##Form a haul dataset where every row is one haul 
+summary(is.na(P120_bioledt$Sciname)) #10 NAs for Sciname
+P120_bioledt <- P120_bioledt %>% drop_na(Sciname)
+P120_bioledt$Speciescommonname[P120_bioledt$Speciescommonname == "northern brown shrimp"] <- "brown shrimp"
+haul <- P120_bioledt %>% group_by(Date, Location, Station, Control1) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame() #row every haul: Dan suggested grouping by Date, Location, Control1 Station b/c location is waterbody at large and some stations have the same name (need Location), needed to exclude any non-core sampling, had to group by Control1, SPB1 was pulled twice on 11/9/2021
+#this doesn't consider species, it's only haul  
+length(unique(haul$Control1)) #7053
+length(unique(P120_bioledt$Control1)) #7053
+
+##Create dummy column for species of focus
+haul$Species=NA #create a dummy column first
+haul$Species=rep_along(haul$Species, c("bay anchovy", "brown shrimp", "pink shrimp", "white shrimp", "pinfish", "silver perch", "striped anchovy", "weakfish", "atlantic menhaden", "atlantic croaker", "small blue crab", "large blue crab", "southern flounder", "spotted seatrout", "spot")) #this repeats these species common names for the entirety of the length of the haul df
+
+haul_df <- haul %>% dplyr::select(Control1, Program, Year, Month, Day, Date, Location, Nbrrec3, Station, Time, Duration, Sedsize, Btmcomp, Sedsize_new, Btmcomp_new, Depth, Stemp, Btemp, Ssal, Bsal, Sdo, Bdo, Secchi, Latitude, Longitude, Core, Species)
+haul_df_all <- haul_df %>% tidyr::expand(Species,Control1) ##using expand to make all species associated with each collection number, is 13x (# of species) larger so it worked
+haul=haul_df %>% dplyr::select(-Species) #drop dummy species common name from hauldf
+
+#now can merge haul.all and haul to create a df with a row for species associated with each collection number
+haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame() %>% rename("Speciescommonname"= "Species")
+length(unique(haul_final$Species)) #15 species
+length(unique(haul_final$Control1)) #7053 Control1, 15*7053= 105795 or # of rows 
+
+#Factor in length 
+sel_spp_120 <- P120_bioledt %>% filter(Speciescommonname %in% select_spp) %>% dplyr::select(Control1,Speciescommonname,Colnum) #select data for non-lengthed species
+P120_os_prop_edt_tojoin <- P120_os_prop_edt2 %>% ungroup() %>% dplyr::select(Control1, Speciescommonname, Number_new) %>% rename("Colnum"= "Number_new") 
+sel_spp_120join <- rbind(sel_spp_120, P120_os_prop_edt_tojoin)
+sel_spp_120joinedt <- sel_spp_120join %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number()) %>% filter(id==1) %>%ungroup()%>%as.data.frame() 
+#id should always be 1 for lengthed species b/c have distinct rows
+#this is not the case for non-lengthed species, there are repeats of Colnum with Control1 and Speciescommonname b/c of length measurements
+
+sel_spp_120joinedt = sel_spp_120joinedt %>% dplyr::select(-id)
+haul_sel_spp <- left_join(haul_final, sel_spp_120joinedt, by= c("Speciescommonname", "Control1")) %>% as.data.frame() 
+
+length(unique(haul_sel_spp$Speciescommonname))
+length(unique(haul_sel_spp$Control1)) #it worked! df is 105795 rows, 7053 rows for each species (15 species)
+
+haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0 #If there is an NA this is because there was no data there 
+
+haul_sel_spp$doy <- yday(haul_sel_spp$Date)
+haul_sel_spp$Photoperiod <- daylength(lat= haul_sel_spp$Latitude, doy= haul_sel_spp$doy)
+haul_sel_spp$Season <- ifelse(haul_sel_spp$Month==4 | haul_sel_spp$Month==5 | haul_sel_spp$Month==6, "Spring", ifelse(haul_sel_spp$Month==9 |haul_sel_spp$Month==10 | haul_sel_spp$Month==11 | haul_sel_spp$Month==12, "Fall", ifelse(haul_sel_spp$Month==7 |haul_sel_spp$Month==8, "Summer", "Winter")))
+haul_sel_spp$Ym_date <- format(haul_sel_spp$Date, "%Y-%m")
+
+write.csv(haul_sel_spp, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_lengthBC.csv")
+```
+
 #### Last check: both!
+
 ```{r}
 #Load in new length and non-length CPUE datasets 
 p915_CPUE_length <- read.csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_length.csv")
@@ -408,6 +488,7 @@ p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE_length <- read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_length.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
+p120_CPUE_lengthBC <-read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_lengthBC.csv")
 
 length_total <- p915_CPUE_length %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(length_total, "/users/sallydowd/Desktop/P915length_total.csv")
@@ -418,5 +499,9 @@ length_total <- p120_CPUE_length %>% group_by(Speciescommonname) %>% summarize(t
 write.csv(length_total, "/users/sallydowd/Desktop/P120length_total.csv")
 nonlength_total <- p120_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(nonlength_total, "/users/sallydowd/Desktop/P120nonlength_total.csv")
-```
 
+length_total <- p120_CPUE_lengthBC %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
+write.csv(length_total, "/users/sallydowd/Desktop/P120length_totalBC.csv")
+nonlength_total <- p120_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
+write.csv(nonlength_total, "/users/sallydowd/Desktop/P120nonlength_totalBC.csv")
+```
