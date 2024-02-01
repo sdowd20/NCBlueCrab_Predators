@@ -37,6 +37,18 @@ p195_CPUEedt$Survey <- "P195"
 
 CPUE_all <- rbind(p915_CPUEedt, p120_CPUEedt, p195_CPUEedt)
 CPUE_all$lat_lon <- paste(CPUE_all$Latitude, CPUE_all$Longitude, sep= "_")
+
+##Load grids
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
+
+globe_grid_60 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
+
+globe_grid_15 <- st_make_grid(x= globe_bb, n = c(15,15), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) 
 ```
 
 #### 0.06 x 0.06 size
@@ -68,6 +80,30 @@ df_count_wide_both06 <- df_count %>% filter(Survey == "P915"|Survey == "P120") %
 ```
 
 #### 0.24 x 0.24 size
+```{r}
+gridded_0.24 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_24km.01.30.24.csv")
+
+#Join CPUE dataset to lat/lons and grid IDs
+CPUE_all_grid <- CPUE_all %>% left_join(gridded_0.24, by= "lat_lon") %>% dplyr::select(-X) %>% drop_na(gridID)
+summary(is.na(CPUE_all_grid))
+
+#Small outlier filtering through CPUE and count dataset formation 
+CPUE_grid_count <- CPUE_all_grid %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(avg_count= mean(Colnum))
+
+CPUE_grid_count_avg <- CPUE_grid_count %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid_count$Stemp <= 11.8, NA, CPUE_grid_count$Stemp), Ssal= ifelse(CPUE_grid_count$Ssal==0.0, NA, CPUE_grid_count$Ssal), Sdo= ifelse(CPUE_grid_count$Sdo==0.0, NA, CPUE_grid_count$Sdo), Depth= ifelse(CPUE_grid_count$Depth==0.0, NA, CPUE_grid_count$Depth)) %>% group_by(Year, gridID, Month) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude)
+
+summary(is.na(CPUE_grid_count_avg))
+CPUE_grid_count_avg <- CPUE_grid_count_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 4610 points 
+
+CPUE_grid_count_avg_edt <- CPUE_grid_count_avg %>% dplyr::select(-Latitude, -Longitude, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Month, -Control1)
+CPUE_grid_count_avg_edt <- CPUE_grid_count_avg_edt %>% group_by(Year, gridID, Speciescommonname, Survey, Month) %>% distinct(avg_count, .keep_all= TRUE)
+
+df_count <- CPUE_grid_count_avg_edt 
+df_count$Speciescommonname <- gsub(" ", "", df_count$Speciescommonname)
+colnames(df_count) <- gsub(pattern = "_", replacement = "", colnames(df_count))
+df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= "")
+df_count_wide_both24 <- df_count %>% filter(Survey == "P915"|Survey == "P120") %>% ungroup() %>% dplyr::select(-c(Speciescommonname, Survey)) %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
+```
 
 #### 0.12 x 0.12 size
 
@@ -81,14 +117,11 @@ df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep
 df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
 ```
 
-#### Grid cell sensitivity figure
+#### Fig. 1: bar plot
 
 ```{r}
 #0.12: 
-df_count_wide_both %>% filter(blackdrumP915 > 0)
-##572 observations total 
-##Positive observations: red drum: 181, black drum: 112, southern kingfish: 68
-##Zero observations: 391, 460, 504 
+data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572, 181, 112, 68), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.12,.12,.12,.12,.12,.12))
 
 #0.06
 df_count_wide_both06 %>% filter(blackdrumP915 > 0)
@@ -96,29 +129,81 @@ df_count_wide_both06 %>% filter(blackdrumP915 > 0)
 ##Positive observations: red drum: 164, black drum: 130, southern kingfish: 65
 ##Zero observations: 233, 267, 332
 
-data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572))
+data2 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(397,397,397, 164, 130, 65), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.06,.06,.06,.06,.06,.06))
+data_t <- rbind(data, data2)
 
-#red drum: 181, black drum: 112, southern kingfish: 68
+#0.24
+df_count_wide_both24  %>% filter(southernkingfishP915 > 0)
 
-ggplot(data, aes(x = "", y = count, fill = species)) + geom_bar(stat = "identity", width = 0.8) + standard_theme + labs(x= "0.12° x 0.12°", y= "Number of encounters", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_hline(yintercept=181, linetype="solid", color = "white") + geom_line(y = 181, linetype = "solid", color = "lightgrey") 
+data3 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(432, 432, 432, 258, 220, 130), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.24,.24,.24,.24,.24,.24))
+data_t <- rbind(data, data2, data3)
 
-#maybe add in total # of occurences too, can split chart up with different shades for positive and negative occurences 
+data_t$grid <- factor(data_t$grid, levels = c(0.06, 0.12, 0.24))
+
+ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standard_theme + labs(x= "Grid cell size", y= "Number of data records", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_bar(stat= "identity") + guides(alpha = guide_legend(title = "Type of observation")) + scale_alpha_manual(values = c("pos" = 0.6, "neg" = 1), labels= "Positive encounter") + scale_x_discrete(labels= c("0.06° x 0.06°", "0.12° x 0.12°", "0.24° x 0.24°"))
+ggsave("/Users/sallydowd/Desktop/Ch1Data/Figures/gridcell_just.jpeg", height= 5, width=7)
 ```
 
+#### Fig. 2: grid pts
+```{r}
+#0.24
+#join P915 CPUE and P120 CPUE with gridID dataset
+gridID_both24 <- unique(df_count_wide_both24$gridID) 
+gridded24 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_24km.01.30.24.csv")
+
+p915_CPUEedt$lat_lon <- paste(p915_CPUEedt$Latitude, p915_CPUEedt$Longitude, sep= "_")
+p915_CPUEedt_fig24 <- p915_CPUEedt %>% left_join(gridded24, by= "lat_lon") %>% filter(gridID %in% gridID_both24)
+
+p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep= "_")
+p120_CPUEedt_fig24 <- p120_CPUEedt %>% left_join(gridded24, by= "lat_lon") %>% filter(gridID %in% gridID_both24)
+
+#filter gridID dataset for only gridIDs with data
+globe_grid_15_edt <- globe_grid_15 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both24)
+
+t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt_fig24, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig24, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2)))
+```
 
 ```{r}
-data <- data.frame(
-  species = c("Red drum", "Black drum", "Southern kingfish"),
-  count = c(572, 572, 572),
-  lightened_count = c(181, 112, 68)  # Specify the lightened count for each species
-)
+#0.12
+#join P915 CPUE and P120 CPUE with gridID dataset
+gridID_both <- unique(df_count_wide_both$gridID) 
+gridded12 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_11.20.23.csv")
 
-ggplot(data, aes(x = "", y = count, fill = species)) +
-  geom_bar(stat = "identity", width = 0.8) +
-  geom_bar(aes(y = lightened_count, fill = species), stat = "identity", width = 0.8, alpha = 0.5) +
-  scale_alpha_manual(values = c(1, 1, 1), guide = FALSE) +  # Set alpha to 1 for the original bars
-  theme_minimal() +
-  labs(x = "0.12° x 0.12°", y = "Number of encounters", fill = "Species") +
-  scale_fill_manual(values = c("#0072B2", "#009E73", "#CC6666"), name = "Species")
+p915_CPUEedt$lat_lon <- paste(p915_CPUEedt$Latitude, p915_CPUEedt$Longitude, sep= "_")
+p915_CPUEedt_fig12 <- p915_CPUEedt %>% left_join(gridded12, by= "lat_lon") %>% filter(gridID %in% gridID_both)
+
+p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep= "_")
+p120_CPUEedt_fig12 <- p120_CPUEedt %>% left_join(gridded12, by= "lat_lon") %>% filter(gridID %in% gridID_both)
+
+#filter gridID dataset for only gridIDs with data
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both)
+
+t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt_fig12, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig12, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2)))
+```
+
+```{r}
+#0.06
+#join P915 CPUE and P120 CPUE with gridID dataset
+gridID_both06 <- unique(df_count_wide_both06$gridID) 
+gridded06 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_10.02.23.5km.csv")
+
+p915_CPUEedt$lat_lon <- paste(p915_CPUEedt$Latitude, p915_CPUEedt$Longitude, sep= "_")
+p915_CPUEedt_fig06 <- p915_CPUEedt %>% left_join(gridded06, by= "lat_lon") %>% filter(gridID %in% gridID_both06)
+
+p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep= "_")
+p120_CPUEedt_fig06 <- p120_CPUEedt %>% left_join(gridded06, by= "lat_lon") %>% filter(gridID %in% gridID_both06)
+
+#filter gridID dataset for only gridIDs with data
+globe_grid_60_edt <- globe_grid_60 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both06)
+
+t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt_fig06, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig06, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2)))
+```
+
+```{r}
+library(ggpubr)
+library(grid)
+ya <- ggarrange(t1 + rremove("ylab") + rremove("xlab"),t2 + rremove("ylab") + rremove("xlab"),t3 + rremove("ylab") + rremove("xlab"), common.legend= TRUE, ncol= 3, nrow=1)
+annotate_figure(ya, bottom= text_grob("Longitude"), left= text_grob("Latitude", rot= 90))
+ggsave("~/Desktop/Ch1Data/Figures/gridded_map_compare.jpeg", width= 12, height=7)
 ```
 
