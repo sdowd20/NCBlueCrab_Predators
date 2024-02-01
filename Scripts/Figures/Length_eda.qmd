@@ -1,0 +1,61 @@
+---
+title: "Length"
+format: html
+editor: visual
+---
+
+##### Fig. 1: Length frequency overall
+
+```{r}
+#data processing 
+##P915
+
+#THIS ISN'T CORRECT! Need to fit it to each survey, atlantic menhaden is wrong for P915 and eveerything is off for P120, also make sure all species are included for both surveys- add in red drum, black drum from P120, etc.
+
+P915_to_plot <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Speciescommonname, Length) %>% mutate(Survey = "P915")
+
+P120_to_plot <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "blue crab", "southern flounder", "spot", "spotted seatrout")) %>% dplyr::select(Length, Speciescommonname) %>% drop_na(Length) %>% mutate(Survey = "P120")
+
+test <- rbind(P915_to_plot, P120_to_plot)
+
+test %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + xlim(0,750) + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/length_both.jpeg", width= 9, height=7)
+```
+
+```{r}
+#figure formation 
+##P915
+
+
+##P120
+```
+
+##### Fig. 2: Length frequency upon division
+
+```{r}
+#data processing
+p915_CPUE_length <- read.csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_length.csv")
+p120_CPUE_length <- read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_length.csv")
+
+p915_lengthspp <- unique(p915_CPUE_length$Speciescommonname[grepl("small|large", p915_CPUE_length$Speciescommonname, ignore.case = TRUE)])
+p120_lengthspp <- unique(p120_CPUE_length$Speciescommonname[grepl("small|large", p120_CPUE_length$Speciescommonname, ignore.case = TRUE)])
+```
+
+```{r}
+#figure formation 
+##P915
+darker_shade <- darken("#E69F00", 0.3) 
+p915_CPUE_length %>% filter(Speciescommonname %in% p915_lengthspp, Colnum > 0) %>% mutate(Basespp = gsub("^(small|large) ", "", Speciescommonname)) %>%
+ggplot() + geom_histogram(aes(x = Colnum, fill = grepl("small", Speciescommonname, ignore.case = TRUE)), bins = 15, alpha = 0.7) +
+facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shade, "#E69F00"), name= "Size", labels= c("large", "small")) + standard_theme + labs(x= "Number collected", y= "Count") + guides(fill = guide_legend(reverse = TRUE))
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P915_ls_length.jpeg")
+
+##P120 
+darker_shade <- darken("steelblue", 0.3) 
+p120_CPUE_length %>% filter(Speciescommonname %in% p120_lengthspp, Colnum >0 ) %>% mutate(Basespp = gsub("^(small|large) ", "", Speciescommonname)) %>%
+ggplot() + geom_histogram(aes(x = Colnum, fill = grepl("small", Speciescommonname, ignore.case = TRUE)), bins = 15, alpha = 0.7) +
+facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shade, "steelblue"), name= "Size", labels= c("large", "small")) + standard_theme + labs(x= "Number collected", y= "Count") +
+guides(fill = guide_legend(reverse = TRUE))
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P120_ls_length.jpeg")
+```
+

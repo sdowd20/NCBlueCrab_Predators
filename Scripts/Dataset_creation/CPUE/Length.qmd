@@ -403,6 +403,7 @@ write.csv(sum_num, "/Users/sallydowd/Desktop/sum_numP120.csv")
 ```
 
 ##### Blue crab only
+
 ```{r}
 #Deal with length 
 P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% "blue crab") %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #Length-frequency excel shows justification 
@@ -471,6 +472,10 @@ length(unique(haul_sel_spp$Control1)) #it worked! df is 105795 rows, 7053 rows f
 
 haul_sel_spp$Colnum[haul_sel_spp$Colnum %in% NA] <- 0 #If there is an NA this is because there was no data there 
 
+names_join <- P120_bioledt %>% select(Speciescommonname, Sciname) %>% distinct(Speciescommonname, .keep_all= T)
+haul_sel_spp <- haul_sel_spp %>% left_join(names_join) %>% mutate(Sciname = ifelse(Speciescommonname == "brown shrimp", "F. aztecus", Sciname)) #brown shrimp went to NA for Sciname
+haul_sel_spp$Sciname <- ifelse(haul_sel_spp$Speciescommonname %in% "small blue crab"|haul_sel_spp$Speciescommonname %in% "large blue crab", "C. sapidus", haul_sel_spp$Sciname)
+
 haul_sel_spp$doy <- yday(haul_sel_spp$Date)
 haul_sel_spp$Photoperiod <- daylength(lat= haul_sel_spp$Latitude, doy= haul_sel_spp$doy)
 haul_sel_spp$Season <- ifelse(haul_sel_spp$Month==4 | haul_sel_spp$Month==5 | haul_sel_spp$Month==6, "Spring", ifelse(haul_sel_spp$Month==9 |haul_sel_spp$Month==10 | haul_sel_spp$Month==11 | haul_sel_spp$Month==12, "Fall", ifelse(haul_sel_spp$Month==7 |haul_sel_spp$Month==8, "Summer", "Winter")))
@@ -488,75 +493,31 @@ p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
 setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE_length <- read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_length.csv")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
-p120_CPUE_lengthBC <-read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_lengthBC.csv")
+p120_CPUE_lengthBC<-read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_lengthBC.csv")
 
+##P915
 length_total <- p915_CPUE_length %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(length_total, "/users/sallydowd/Desktop/P915length_total.csv")
 nonlength_total <- p915_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(nonlength_total, "/users/sallydowd/Desktop/P915nonlength_total.csv")
 
+##P120 all length
 length_total <- p120_CPUE_length %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(length_total, "/users/sallydowd/Desktop/P120length_total.csv")
 nonlength_total <- p120_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(nonlength_total, "/users/sallydowd/Desktop/P120nonlength_total.csv")
 
+##P120 BC length 
 length_total <- p120_CPUE_lengthBC %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(length_total, "/users/sallydowd/Desktop/P120length_totalBC.csv")
 nonlength_total <- p120_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
 write.csv(nonlength_total, "/users/sallydowd/Desktop/P120nonlength_totalBC.csv")
-```
 
-### Length figures
+###test with P120 CPUE
+p120_CPUE_test <- p120_CPUE %>% filter(!Speciescommonname %in% "blue crab")
+p120_CPUEBC_test <- p120_CPUE_lengthBC %>% filter(!Speciescommonname %in% "small blue crab", !Speciescommonname %in% "large blue crab") %>% select(any_of(colnames(p120_CPUE_test)))#datasets are same # of rows
 
-##### Fig. 1: Length frequency overall
-```{r}
-#data processing 
-##P915
-
-#THIS ISN'T CORRECT! Need to fit it to each survey, atlantic menhaden is wrong for P915 and eveerything is off for P120, also make sure all species are included for both surveys- add in red drum, black drum from P120, etc.
-
-P915_to_plot <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "black drum", "red drum", "sheepshead", "southern flounder", "southern kingfish", "spot", "spotted seatrout", "striped bass", "striped mullet", "atlantic menhaden")) %>% dplyr::select(Speciescommonname, Length) %>% mutate(Survey = "P915")
-
-P120_to_plot <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "blue crab", "southern flounder", "spot", "spotted seatrout")) %>% dplyr::select(Length, Speciescommonname) %>% drop_na(Length) %>% mutate(Survey = "P120")
-
-test <- rbind(P915_to_plot, P120_to_plot)
-
-test %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + xlim(0,750) + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/length_both.jpeg", width= 9, height=7)
-```
-
-```{r}
-#figure formation 
-##P915
-
-
-##P120
-```
-
-##### Fig. 2: Length frequency upon division 
-```{r}
-#data processing
-p915_CPUE_length <- read.csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_length.csv")
-p120_CPUE_length <- read.csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized/p120_CPUE_length.csv")
-
-p915_lengthspp <- unique(p915_CPUE_length$Speciescommonname[grepl("small|large", p915_CPUE_length$Speciescommonname, ignore.case = TRUE)])
-p120_lengthspp <- unique(p120_CPUE_length$Speciescommonname[grepl("small|large", p120_CPUE_length$Speciescommonname, ignore.case = TRUE)])
-```
-
-```{r}
-#figure formation 
-##P915
-darker_shade <- darken("#E69F00", 0.3) 
-p915_CPUE_length %>% filter(Speciescommonname %in% p915_lengthspp, Colnum > 0) %>% mutate(Basespp = gsub("^(small|large) ", "", Speciescommonname)) %>%
-ggplot() + geom_histogram(aes(x = Colnum, fill = grepl("small", Speciescommonname, ignore.case = TRUE)), bins = 15, alpha = 0.7) +
-facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shade, "#E69F00"), name= "Size", labels= c("large", "small")) + standard_theme + labs(x= "Number collected", y= "Count") + guides(fill = guide_legend(reverse = TRUE))
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P915_ls_length.jpeg")
-
-##P120 
-darker_shade <- darken("steelblue", 0.3) 
-p120_CPUE_length %>% filter(Speciescommonname %in% p120_lengthspp, Colnum >0 ) %>% mutate(Basespp = gsub("^(small|large) ", "", Speciescommonname)) %>%
-ggplot() + geom_histogram(aes(x = Colnum, fill = grepl("small", Speciescommonname, ignore.case = TRUE)), bins = 15, alpha = 0.7) +
-facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shade, "steelblue"), name= "Size", labels= c("large", "small")) + standard_theme + labs(x= "Number collected", y= "Count") +
-guides(fill = guide_legend(reverse = TRUE))
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P120_ls_length.jpeg")
+library(arsenal)
+summary(comparedf(p120_CPUE_test, p120_CPUEBC_test))
+#datasets are the same once you remove blue crab! there's two more columns in p120_CPUE that p120_CPUEBC doesn't have which is fine
 ```
