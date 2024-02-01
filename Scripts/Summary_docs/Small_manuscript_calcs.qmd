@@ -1,0 +1,16 @@
+---
+title: "Small_manuscript_calcs"
+format: html
+editor: visual
+---
+
+This goes along with the document in the Writing doc titled small manuscript calculations. 
+
+#### Methods:
+```{r}
+#Method calc 1: 
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p915_CPUE %>% filter(Speciescommonname %in% "bonnethead shark", between(Year, 2001,2021), Month %in% 5|Month %in% 6) %>% summarize(total_count= sum(Colnum))
+```
+
