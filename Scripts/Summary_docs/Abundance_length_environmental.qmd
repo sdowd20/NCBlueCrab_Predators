@@ -26,7 +26,7 @@ p195_CPUEedt <- p195_CPUE %>%  filter(between(Year, 2000, 2021), Month %in% c(6,
 #### Abundance
 
 ```{r}
-interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish", "southern kingfish", "striped bass", "bay anchovy", "striped anchovy")
+interest_spp <- c("brown shrimp", "bluefish", "atlantic croaker", "southern flounder", "red drum", "black drum", "blue catfish", "gizzard shad", "american shad", "cownose ray", "blue crab", "atlantic menhaden", "spot", "summer flounder", "shads", "american eel", "adult blue crab", "atlantic brief squid", "atlantic thread herring", "lesser blue crab", "pink shrimp", "silver perch", "southern flounder",  "weakfish", "white shrimp", "cephalopod mullusc", "periwinkles", "alewife", "atlantic silverside", "bonnethead shark", "channel catfish", "hickory shad", "oyster toadfish", "sheepshead", "silver perch", "silversides", "striped mullet", "white mullet", "pinfish", "southern kingfish", "striped bass", "bay anchovy", "striped anchovy", "spotted seatrout")
 
 p195_nums <- p195_CPUEedt %>% filter(Speciescommonname %in% interest_spp, Month %in% c(6,9)) %>% group_by(Speciescommonname, Month) %>% summarise(Sum_colnum= sum(Numbertotal)) %>% mutate(Survey= "P195") 
 
@@ -37,6 +37,8 @@ p915_nums <- p915_CPUEedt %>% filter(Month %in% c(5,6,9), Speciescommonname %in%
 combo <- rbind(p195_nums, p120_nums, p915_nums)
 combo <- combo %>% arrange(Speciescommonname, Month)
 11
+
+write.csv(combo,"/Users/sallydowd/Desktop/Numbers.02.01.24.csv")
 ```
 
 #### Length
