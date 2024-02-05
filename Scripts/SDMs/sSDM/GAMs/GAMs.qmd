@@ -68,6 +68,10 @@ The k value is the number of basis functions that determines how wiggly the mode
 
 Smoothers are added to continuous variables in GAMs which is denoted by s() to fit the data. The s operator produces the spline base expansion. Different splines can be added to the model. One example is bs= "ts" which is a thin plate spline that is a smoothing basis for predictor variables (smoothing penalty). Thin plate spine basis are the default in the mgcv package. Thin plate splines tend to have better RMSE performance but are more computationally expensive. If you have a reason to do P-spliens or B-splines you can use those and if not, thin plate splines are fine. GAM in R can only accept spline smoothers (number of knots) and not LOESS. It is important to have a good compromise between roughness and smoothness. The parameter λ specifies how much weight the roughness penalty will get. It is important to note that regression spilnes don't implement penalization by reducing the number of knots rather they do this by reducing the coefficients of spline terms.
 
+This is what the output means for gam.check. The console reports on convergence where a model won't converge if there are too many parameters or not enough data. Basis checking results have a statistical check for each smoother where the k value is the # of basis functions. There is also test statistics and a p-value where a small p-value means residuals are not randomly distributed (not enough basis functions). 
+
+To check GAMs for overfitting, a testing and validation set can be used. Here the R^2/deviance explained on fit and validation set can be compared. 
+
 How do we know when to drop a model? If the answers to all three of these quesitons are yes, then drop it:
 
 1)  Are the EDF for the questioned term approaching 1 (i.e., linear effect)?
@@ -77,6 +81,7 @@ How do we know when to drop a model? If the answers to all three of these quesit
 Helpful articles: -smoothers and k: https://stats.stackexchange.com/questions/243367/smoothing-methods-for-gam-in-mgcv-package -choosing k: https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html -stack overflow: https://stackoverflow.com/questions/60078003/gam-in-r-is-it-a-spline-model-with-automated-knots-selection
 
 #### Diagnostics
+
 ```{r}
 #Exploratory graphs: left skewed and zero-inflated model
 df_CPUE_wide %>% ggplot() + geom_histogram(aes(x= red_drum), bins= 10) + xlab("CPUE") + ylab("Counts") + standard_theme

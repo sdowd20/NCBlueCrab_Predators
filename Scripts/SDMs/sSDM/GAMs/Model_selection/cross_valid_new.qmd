@@ -266,7 +266,7 @@ colnames(pois) <- c("model_type", "R2", "RMSE")
 ```
 
 ```{r}
-tw_k10_2 <- gam(reddrum~ s(SAVDist_km) +s(InletDist_km)+ s(atlanticmenhaden)+factor(FishingAll_num)+factor(Sedsize_common), family= tw(link= "log"), data= df_count_wide_train)
+tw_k10_2 <- gam(red_drum~ s(SAVDist_km) +s(InletDist_km)+ s(atlantic_menhaden)+factor(FishingAll_num)+factor(Sedsize_common), family= tw(link= "log"), data= df_count_wide_train)
 summary(tw_k10_2)
 gam.check(tw_k10_2)
 

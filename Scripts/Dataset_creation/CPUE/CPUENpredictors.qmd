@@ -106,7 +106,7 @@ ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coo
 base_plot <- ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme 
 #Outlier analysis
 colnames(CPUE_all_grid_pred)
-cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "GillPound_aA", "InletDist_km", "SAV_km", "Latitude", "Longitude")
+cn <- c("Year", "Month", "Day", "Depth", "Ssal", "Bsal", "Stemp", "Btemp", "Sdo", "Bdo", "Colnum", "GillPound_aA", "InletDist_km", "SAV_km", "Latitude", "Longitude", "NoFishRest")
 t <- list()
 for(col in cn){
 t[[col]] <- CPUE_all_grid_pred %>% identify_outliers(col) %>% filter(is.extreme== TRUE) %>% dplyr::select(col, is.extreme, Speciescommonname)
@@ -162,6 +162,12 @@ ggplot() + geom_histogram(data= CPUE_all_grid_pred, aes(x= Colnum)) + standard_t
 ggplot() + geom_histogram(data= CPUE_all_grid_pred, aes(x= Colnum)) + standard_theme +
 facet_wrap(~Speciescommonname) + xlim(0, 1000) + ylim(0,750)
 ggplot() + geom_histogram(data= subset(CPUE_all_grid_pred, Colnum > 100), aes(x= Colnum)) + standard_theme + facet_wrap(~Speciescommonname) + xlim(0, 1000) + ylim(0,250)
+
+t[17]
+min(CPUE_all_grid_pred$NoFishRest, na.rm= TRUE) #0.27
+max(CPUE_all_grid_pred$NoFishRest, na.rm= TRUE) #100
+ggplot() + geom_histogram(data= CPUE_all_grid_pred, aes(x= NoFishRest)) + standard_theme
+ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_all_grid_pred, aes(x = Longitude, y = Latitude, color= NoFishRest)) + coord_sf(xlim=c(-80, -75), ylim=c(33.5,37), expand = TRUE)
 ```
 
 ```{r}
@@ -182,7 +188,7 @@ CPUE_dfs_gridded_final <- read_csv("~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred.11
 CPUE_dfs_gridded_final <- CPUE_dfs_gridded_final[,-1]
 
 #Effort by survey: this works 
-CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else 
+CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else June 2007 and on, Southern district sampling started in 2008 so don't need to include year here 
 
 #CPUE by row: since you assigned effort correctly, this will work as it should 
 CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort

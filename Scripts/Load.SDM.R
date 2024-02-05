@@ -1,6 +1,4 @@
 
-#WOULD NEED TO SWITCH AROUND FORAGE!! 
-
 #Load packages and functions 
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "gjam", "report")
 invisible(lapply(packages, library, character.only= TRUE))
@@ -20,9 +18,6 @@ library(vip)
 library(baguette)
 library(ranger)
 library(dplyr)
-
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "gjam")
-invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
@@ -77,26 +72,19 @@ df_binary_wide_both <- df_binary %>% filter(Survey %in% "P915"|Survey %in% "P120
 df_count_wide_P915 <- df_count_wide_P915 %>% mutate(reddrumforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, pinfish, spot)), southernkingfishforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, spot))) #. allows you to reference dataframe 
 df_count_wide_P915 <- df_count_wide_P915 %>% dplyr::select(Month:avgsdo, atlanticcroaker, blackdrum, bluecrab, bonnetheadshark, bullshark, cownoseray, atlanticmenhaden, gizzardshad, reddrum, southernflounder, southernkingfish, spot, stripedbass, stripedmullet, summerflounder, pinfish, sheepshead, spottedseatrout, reddrumforage, southernkingfishforage) %>% filter(!Month %in% 9)
 
-##P915 and P120
-df_count_wide_both_gJam <- df_count_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, bluecrabP120, pinkshrimpP120, brownshrimpP120, southernflounderP120, weakfishP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, bluecrabP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120, bluecrabP120)))
+##P915 and P120: updated forage index based on Load.SDM.BC.R on 02/05/24
+df_count_wide_both_gJam <- df_count_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
 df_count_wide_both_gJam <- df_count_wide_both_gJam %>% dplyr::select(Month:avgsdo, atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, bluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120, reddrumP915forage:blackdrumP915forage)
-df_count_wide_both <- df_count_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120, weakfishP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
+df_count_wide_both <- df_count_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
 df_count_wide_both <- df_count_wide_both %>% dplyr::select(Month:avgsdo, atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, bluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120, reddrumP915forage:blackdrumP915forage)
-#Red drum: atlantic menhaden, atlantic croaker, blue crab, white shrimp, brown shrimp, pink shrimp, pinfish, southern flounder, spot, weakfish, removed southern flounder b/c could be large
-#Black drum: blue crab, white, brown and pink shrimp
-#Southern kingfish: Atlantic brief squid, atlantic menhaden, atlantic croaker, blue crab, white, brown and pink shrimp, spot
-#Bonnethead shark: blue crab, white, brown and pink shrimp 
-#To note: removed blue crab from analysis from forage calculation! 
 
+#Add on forage index to CPUE data 
+##P915 
+df_CPUE_wide_P915 <- df_CPUE_wide_P915 %>% mutate(reddrumforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, pinfish, spot)), southernkingfishforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, spot))) #. allows you to reference dataframe 
+df_CPUE_wide_P915 <- df_CPUE_wide_P915 %>% dplyr::select(Month:avgsdo, atlanticcroaker, blackdrum, bluecrab, bonnetheadshark, bullshark, cownoseray, atlanticmenhaden, gizzardshad, reddrum, southernflounder, southernkingfish, spot, stripedbass, stripedmullet, summerflounder, pinfish, sheepshead, spottedseatrout, reddrumforage, southernkingfishforage) %>% filter(!Month %in% 9)
 
-
-
-
-
-
-
-
-
-
-
-
+##P915 and P120: updated forage index based on Load.SDM.BC.R on 02/05/24
+df_CPUE_wide_both_gJam <- df_CPUE_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
+df_CPUE_wide_both_gJam <- df_CPUE_wide_both_gJam %>% dplyr::select(Month:avgsdo, atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, bluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120, reddrumP915forage:blackdrumP915forage)
+df_CPUE_wide_both <- df_CPUE_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
+df_CPUE_wide_both <- df_CPUE_wide_both %>% dplyr::select(Month:avgsdo, atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, bluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120, reddrumP915forage:blackdrumP915forage)
