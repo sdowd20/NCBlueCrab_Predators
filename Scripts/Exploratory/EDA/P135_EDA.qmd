@@ -26,68 +26,73 @@ The file containing environmental data is name "HabitatDataP135_1990-May2023". E
 
 The file containing CPUE and Biological data is named "BiologicalDataP135forN100_Final". Each row in this data set represents a single capture event of a fish. As multiple fish are caught in a single net you will see "control1" values repeated multiple times, generally once for each fish caught in each net. "Control3" is the unique identifier for each capture event. Importantly all fish that have Form_4 = 3 are ranged measures meaning that we only measure the largest and the smallest fish in that capture event and counted the rest. This will most often apply to longnose gar and gizzard shad. When it comes to catch per unit effort, each row in this dataset has a "COLNUM" variable. This corresponds to the total number of that species caught in each net. For example, for the net control 1=0000508, 2 species were caught (blue catfish and striped mullet). The colnum for each is 1 meaning only a single specimen of each species was captured in that net. Looking at another example, for the net control 1=0000535, 3 species were captured (Atlantic sturgeon, gizzard shad, and white catfish). For the Atlantic sturgeon colnum=1 meaning only a single specimen was captured. But for gizzard shad and white catfish the colnum =2 or 3. This means 2 or 3 of each of these species were captured in this net. Importantly, when trying to summarize the total number of a species captured in a single net you should only count colnum once for each species. Looking at this same net, there are 2 lines with information on gizzard shad (one for each individual captured). Each line has a colnum of 2 which means 2 total gizzard shad were captured. If you sum colnum for the net youwould get a colnum of 1 for Atlantic sturgeon, 4 for gizzard shad, and 9 for white catfish. This would be incorrect as there are actually only 1, 2, and 3 of these species respectively. This means when calculating effort for a single net (control 1) that you should only take a single colnum value for each species. For example if I wanted to know how many gizzard shad were in net 000535 I would look at one row that had gizzard shad, see the colnum was 2, and know that a total of 2 gizzard shad were captured in that net.
 
+#### Questions and answers
 
-#### Questions and answers 
+Overall:
 
-Overall: 
+1.  Is there a reason the Habitat and Biological datasets only have the Location code and not latitude/longitude points?
 
-1. Is there a reason the Habitat and Biological datasets only have the Location code and not latitude/longitude points? 
+We don't record latitude and longitude of individual net sets in our BDB. Each net set will be within about 0.7 miles from the centerpoint of each Grid-Quad combination. If you are looking for the most specific location for each net set look at the grid column and quad column. For example the location of the first record in the habitat excel sheet is 3-16 (grid-quad). I have included the map of our sites below as well as an excel document with the latitude and longitude of the centerpoint of each grid-quad. Note that grid in the dataset is equivalent to zone in the map below. The location codes are very general and probably should not be used to define where nets are fished unless you are looking at a larger scale.
 
-We don’t record latitude and longitude of individual net sets in our BDB. Each net set will be within about 0.7 miles from the centerpoint of each Grid-Quad combination. If you are looking for the most specific location for each net set look at the grid column and quad column. For example the location of the first record in the habitat excel sheet is 3-16 (grid-quad). I have included the map of our sites below as well as an excel document with the latitude and longitude of
-the centerpoint of each grid-quad. Note that grid in the dataset is equivalent to zone in the map below. The location codes are very general and probably should not be used to define where nets are fished unless you are looking at a larger scale.
+Questions pertaining to both datasets:
 
-Questions pertaining to both datasets: 
+1.  For the habitat dataset, Control1 is the individual net, the individual sampling dataset. However, in your description for the biological dataset on 12/04/23, you mentioned that Control3 is the unique identifier for each capture event for the biological dataset.
 
-1. For the habitat dataset, Control1 is the individual net, the individual sampling dataset. However, in your description for the biological dataset on 12/04/23, you mentioned that Control3 is the unique identifier for each capture event for the biological dataset.
+Since there is no strictly CPUE dataset where 0 catches were recorded for each species, I am planning to form one from the biological dataset. For this, I will need to link the habitat and biological datasets through the sampling event ID to create rows of 0 catches where a fish species wasn't captured. Do I do this using Control1 or Control3?
 
-Since there is no strictly CPUE dataset where 0 catches were recorded for each species, I am planning to form one from the biological dataset. For this, I will need to link the habitat and biological datasets through the sampling event ID to create rows of 0 catches
-where a fish species wasn’t captured. Do I do this using Control1 or Control3?
+For CPUE purposes you should link via Control 1. There is a control 1 in the habitat dataset for every net ever fished in the program. In the biological datasets there are only control 1s for each net that caught a fish but those control 1s will be duplicated in multiple rows for each fish caught in each net. Control 3 is the unique identifier for each species caught in a net and control 4 is the unique identifier for each individual fish. I have attached an example of this in an excel document. For this example we are looking at a single net fished on January 19 th 2022 you can tell this because there is a single Control 1 number. Look at the excel file first including my comments in the excel file. If those don't make sense read the explanation below:
 
+This net captured 4 species (Alewife, Atlantic Menhaden, White Catfish, and Blue Catfish). You can tell this because there are 4 different numbers in the control 3 column. Of those species we caught 1 Alewife, 5 Atlantic Menhaden, 4 White Catfish, and 14 Blue Catfish the control 3 number for each species will be repeated for each individual measured. Since we measured 4 white cats (highlighted) the control3 "22002160187770201012" is repeated 4 times. If you want to know how many of a species were collected in a net including the individuals not measured look at the colnum column for one of those control 3s. Looking at the white catfish we see colnum is 4 meaning 4 white catfish were captured in this net. Note that this 4 is repeated in the row for each white catfish measured. It is important to remember not to sum colnum by species in a single net (if you add the colnums you would think there were 16 white cats in the net not 4). Control 4 is the unique identifier for each fish that is measured. Since we measured 4 white cats they have a different control 4 for each row. To calculate a cpue for each net for each species caught in each net: First, in the biological file, you would want to delete all duplicate control 3 rows. This will leave one row for each species caught in each net. At this point the COLNUM will be equivalent to the CPUE (See the second tab named CPUE example in the excel sheet) To get your "0" catch CPUEs you will need to link the habitat and biological sets by Control 1.
 
-For CPUE purposes you should link via Control 1. There is a control 1 in the habitat dataset for every net ever fished in the program. In the biological datasets there are only control 1s for each net that caught a fish but those control 1s will be duplicated in multiple rows for each fish caught in each net. Control 3 is the unique identifier for each species caught in a net and control 4 is the unique identifier for each individual fish. I have attached an example of this in an excel document. For this example we are looking at a single net fished on January 19 th 2022 you can tell this because there is a single Control 1 number. Look at the excel file first including my
-comments in the excel file. If those don’t make sense read the explanation below:
+2.  Is there anything I need to know about the Control1 variable as the survey methodology changed throughout the years? I know with the biological dataset for the P915 gillnet survey, Control1 is unreliable due to mesh size changes.
 
-This net captured 4 species (Alewife, Atlantic Menhaden, White Catfish, and Blue Catfish). You can tell this because there are 4 different numbers in the control 3 column. Of those species we
-caught 1 Alewife, 5 Atlantic Menhaden, 4 White Catfish, and 14 Blue Catfish the control 3 number for each species will be repeated for each individual measured. Since we measured 4 white cats (highlighted) the control3 “22002160187770201012” is repeated 4 times. If you want to know how many of a species were collected in a net including the individuals not measured look at the colnum column for one of those control 3s. Looking at the white catfish we see colnum is 4 meaning 4 white catfish were captured in this net. Note that this 4 is repeated in the row for each white catfish measured. It is important to remember not to sum colnum by species in a single net (if you add the
-colnums you would think there were 16 white cats in the net not 4). Control 4 is the unique identifier for each fish that is measured. Since we measured 4 white cats they have a different control 4 for each row. To calculate a cpue for each net for each species caught in each net: First, in the biological file, you would want to delete all duplicate control 3 rows. This will leave one row for each species caught in each net. At this point the COLNUM will be equivalent to the CPUE (See the second tab named CPUE example in the excel sheet) To get your “0” catch CPUEs you will need to link the habitat and biological sets by Control 1.
+Control numbers work differently in P915 than P135. For P915 I believe they have 1 control 1 number per "Gang" of nets while we have one control 1 number for each individual net. There are no changes over time that you need to worry about for P135 when it comes to control 1.
 
-2. Is there anything I need to know about the Control1 variable as the survey methodology changed throughout the years? I know with the biological dataset for the P915 gillnet survey, Control1 is unreliable due to mesh size changes. 
-
-Control numbers work differently in P915 than P135. For P915 I believe they have 1 control 1 number per “Gang” of nets while we have one control 1 number for each individual net. There are no changes
-over time that you need to worry about for P135 when it comes to control 1.
-
-3. On that note, are there any major changes in survey methodology that I should be aware of? I am struggling to find P135 documentation beyond what you have sent me. Is there a more detailed survey description somewhere? Has mesh size changed throughout the survey years or only effort? From reading the southern flounder management plan, I noticed that they dropped data from P135 due to major changes in the survey that limited the catch of southern flounder. It would be helpful to be more aware of these changes.
+3.  On that note, are there any major changes in survey methodology that I should be aware of? I am struggling to find P135 documentation beyond what you have sent me. Is there a more detailed survey description somewhere? Has mesh size changed throughout the survey years or only effort? From reading the southern flounder management plan, I noticed that they dropped data from P135 due to major changes in the survey that limited the catch of southern flounder. It would be helpful to be more aware of these changes.
 
 The survey stopped in February 2020 until November 2021 as a result of covid and sturgeon interactions. Beginning in November 2021 major changes were implemented to reduce sturgeon interactions. These changes are summarized in the attached memo. See below excerpt from our grant report for additional survey details:
 
-4. 
+4.  
 
-b) Is it safe to assume constant effort for total minutes gear was fished throughout the years for the Fall/Winter segment. I noticed that there are sometimes NA for duration and differing #s between years.
+b)  Is it safe to assume constant effort for total minutes gear was fished throughout the years for the Fall/Winter segment. I noticed that there are sometimes NA for duration and differing #s between years.
 
-Prior to 2021 duration should always be assumed to equal 24 hours/1440 minutes. The exception to this is when, prior to 2021, VAR2 is &gt;1 soak time should be 2880 minutes (because nets were soaked for multiple days). Beginning in 2021 if blank duration=720 otherwise duration is recorded in number of minutes from when the net was set until we began fishing that net the next day.
+Prior to 2021 duration should always be assumed to equal 24 hours/1440 minutes. The exception to this is when, prior to 2021, VAR2 is \>1 soak time should be 2880 minutes (because nets were soaked for multiple days). Beginning in 2021 if blank duration=720 otherwise duration is recorded in number of minutes from when the net was set until we began fishing that net the next day.
 
-
-c) To follow up on the constant effort question, the NC Striped Bass Monitoring F-56 Segment 28 document you attached via email on 09/21/23 mentions this: “The southern area, adjacent to the Roanoke River, received increased effort at a 2:1 ratio south to north, based on the historical seasonal abundance of mature striped bass (Harris et al. 1985). Fishing effort is conducted continuously, seven days a week weather permitting, until the end of late May”
+c)  To follow up on the constant effort question, the NC Striped Bass Monitoring F-56 Segment 28 document you attached via email on 09/21/23 mentions this: "The southern area, adjacent to the Roanoke River, received increased effort at a 2:1 ratio south to north, based on the historical seasonal abundance of mature striped bass (Harris et al. 1985). Fishing effort is conducted continuously, seven days a week weather permitting, until the end of late May"
 
 This may be summed up better in the attached memo. Year to year there will be a bit of variation in effort, especially when comparing data after 2021 to data before 2021. Prior to 2021 effort will vary by a small percentage of nets every year. For most cases we are able to treat soak time as constant and look at a unit of effort as 1 net set for 24 hours (prior to survey changes in 2021 after which one unit of effort was considered on net set for 12 hours)
 
+d)  Do you have any recommendations in general for handling the dataset in R? For example, do I need to make sure certain variables are categorical vs. numerical?
 
-d) Do you have any recommendations in general for handling the dataset in R? For example, do I need to make sure certain variables are categorical vs. numerical?
+It has been a while since I have regularly worked in R. I believe Location, Species, SPSTATUS, sex, maturity, grid, quad, gear, G1_Parm2, G1_Parm3, Sedsize, bottom comp, weather, wind direction, alter, and activity all are categorical variables. The format A word document in the google drive should help explain the variables pretty well.
 
-It has been a while since I have regularly worked in R. I believe Location, Species, SPSTATUS, sex, maturity, grid, quad, gear, G1_Parm2, G1_Parm3, Sedsize, bottom comp, weather, wind
-direction, alter, and activity all are categorical variables. The format A word document in the google drive should help explain the variables pretty well.
+e)  It seems like the P135 biological dataset will be similar to work with the P915 biological dataset.
 
+It is similar other than the main exception I mentioned earlier about differences in how effort is measured.
 
-e) It seems like the P135 biological dataset will be similar to work with the P915 biological dataset.
+```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+invisible(lapply(packages, library, character.only= TRUE))
 
-It is similar other than the main exception I mentioned earlier about differences in how effort is
-measured.
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+coords_captured <- function(species){
+ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_CPUEold$Species %in% species & as.numeric(p915_CPUEold$Colnum > 0)), aes(x = as.numeric(Longitude), y = as.numeric(Latitude), colour = Colnum)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(x= "Longitude", y= "Latitude", colour= "# caught") + ggtitle(species)
+}
+```
 
 ```{r}
 biol <- read_excel("~/Desktop/Ch1Data/P135/BiologicalDataP135forN100_Final.xlsx", col_types= "text")
 habitat <- read_excel("~/Desktop/Ch1Data/P135/HabitatDataP135_1990-May2023.xlsx", col_types= "text")
 ```
+
+```{r}
+
+```
+
+
 
 
 

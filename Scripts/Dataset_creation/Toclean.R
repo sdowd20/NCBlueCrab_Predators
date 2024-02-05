@@ -46,7 +46,7 @@ t <- p915 %>% filter(Year > 2008) %>% drop_na(Sedsize, Btmcomp)
 
 #P915 NEW
 setwd("/Users/sallydowd/Desktop/CPUE")
-filenames <- list.files("/Users/sallydowd/Desktop/CPUE", pattern= '*.xlsx')  
+filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/CPUE", pattern= '*.xlsx')  
 filenames <- filenames[-c(1,16)]
 all <- lapply(filenames, readxl::read_excel, col_types= "text") #read in as text to avoid parsing warnings, sedsize and btmcomp was getting messed up
 merged <- do.call(rbind, all)
@@ -93,10 +93,10 @@ P915_CPUE$Photoperiod <- daylength(lat= P915_CPUE$Latitude, doy= P915_CPUE$doy)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
 getwd()
-#write.csv(P915_CPUE, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
+write.csv(P915_CPUE, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P915/Finalized/p915_CPUE.csv")
 ##P915 NEW: Biological data 
 
-#P915 CPUE NEW #2 
+#P915 CPUE NEW #2: FINAL!!
 setwd("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final")
 filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P915/CPUE_final", pattern= '*.csv') #update on 11/21/23: deleted duplicate files of hickory shad and sheepshead
 all <- lapply(filenames, readr::read_csv)
@@ -137,7 +137,7 @@ P915_CPUE$doy <- yday(P915_CPUE$Date)
 P915_CPUE$Wbdytype <- ifelse(P915_CPUE$Area %in% "PUNGO" | P915_CPUE$Area %in% "NEUSE" | P915_CPUE$Area %in% "NEWR"| P915_CPUE$Area %in% "CAPEF" | P915_CPUE$Area %in% "CAPEF", "River", "Sound")
 P915_CPUE$Wbd <- ifelse(P915_CPUE$Area %in% "DARE1" | P915_CPUE$Area %in% "DARE2" | P915_CPUE$Area %in% "DARE3"| P915_CPUE$Area %in% "DARE4" | P915_CPUE$Area %in% "HYDE1"| P915_CPUE$Area %in% "HYDE2"| P915_CPUE$Area %in% "HYDE3"| P915_CPUE$Area %in% "HYDE4", "PAMLICO SOUND", ifelse(P915_CPUE$Area %in% "MHDC1"| P915_CPUE$Area %in% "MHDC2"| P915_CPUE$Area %in% "MHDC3", "MHDC", P915_CPUE$Area))
 P915_CPUE <- P915_CPUE %>% rename("Secchi"= "Depthend")
-write.csv(P915_CPUE, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+write.csv(P915_CPUE, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv") #saved again on 02/05/24 b/c accidently saved P135 as this
 
 #p915_biol1 <-read_xlsx("/users/sallydowd/Desktop/P915_biological_new1.xlsx")
 #write.csv(p915_biol1, "Data/P915/Raw/p915_biol1new.csv")
@@ -426,8 +426,13 @@ habitat <- habitat %>% mutate_at(vars(c(3:5, 16:21, 23:24)), as.numeric)
 #Re-classify sediment size as sand or mud 
 habitat <- habitat %>% mutate(Sedsize_new= ifelse(habitat$Sedsize == 1|habitat$Sedsize == 6|habitat$Sedsize == 8, "Sand", ifelse(habitat$Sedsize== 2|habitat$Sedsize== 3|habitat$Sedsize== 4|habitat$Sedsize== 5| habitat$Sedsize== 7| habitat$Sedsize== 9, "Mud", ifelse(habitat$Sedsize== 0, "Hard bottom", habitat$Sedsize))))
 
-##Need to figure out lat/lon before write.csv 
-#write.csv(P915_CPUE, "/Users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+#Lat/lon
+habitat$QuadGrid <- paste(habitat$Quad, habitat$Grid, sep= "-")
+P135_lat_lons <- read_excel("~/Documents/GitHub/NCBlueCrab_Predators/Data/P135/P135_lat_lons.xlsx")
+lat_lons <- P135_lat_lons %>% rename("Quad"= "Zone") %>% mutate(QuadGrid = paste(.$Quad, .$Grid, sep= "-")) %>% select(-Quad, -Grid)
+habitat <- habitat %>% left_join(lat_lons, by= "QuadGrid")
+
+#write.csv(habitat, "/Users/sallydowd/Desktop/Ch1Data/P135/p135_habitat_edt.csv") #02/05/24 
 
 ##Biological data## 
 setwd("/Users/sallydowd/Desktop/Ch1Data/P135")
@@ -444,8 +449,24 @@ biol$Ym_date <- format(biol$Date, "%Y-%m")
 columns_with_dot <- colnames(biol)[sapply(biol, function(x) any(grepl("\\.", x)))]
 print(columns_with_dot) #Weight, this is plausible 
 
+#deal with species names 
+P120_speciesnms <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/P120_speciesnms.csv")
+colnames(P120_speciesnms) <- str_to_title(colnames(P120_speciesnms))
+P120_speciesnms$Speciescommonname <- str_to_lower(P120_speciesnms$Speciescommonname)
+P120_speciesnms_edt <- P120_speciesnms %>% select(Speciescode, Speciescommonname) %>% mutate_at('Speciescode', as.character)
+P120_speciesnms_edt$Speciescode <- trimws(P120_speciesnms_edt$Speciescode)
 
-#join species
+#identify which ones don't have species codes from P120, manually edit P120 dataset in excel and save as new, species code in bdbcode in Datasets google drive
+biol <- biol %>% rename("Speciescode"= "Species")
+length(unique(biol$Speciescode))
+biol_test <- biol %>% left_join(P120_speciesnms_edt, by= "Speciescode")
+ugh <- biol_test %>% filter(Speciescommonname %in% NA)
+length(unique(ugh$Speciescode))
 
-
-
+#now actually join spp names 
+ugh2 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/P120_P135_sppnames.csv")
+colnames(ugh2) <- str_to_title(colnames(ugh2))
+ugh2$Speciescommonname <- str_to_lower(ugh2$Speciescommonname)
+P120_P135_sppnames <- ugh2 %>% mutate_at('Speciescode', as.character)
+biol_edt <- biol %>% left_join(P120_P135_sppnames, by= "Speciescode")
+write.csv(biol_edt, "/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.csv")
