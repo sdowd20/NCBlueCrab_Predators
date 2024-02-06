@@ -84,8 +84,11 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 ```
 
 ```{r}
-biol_clean <- read_excel("/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.xlsx", col_types= "text")
+biol_clean <- read_excel("/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.xlsx", col_types= "text") #do this so doesn't drop leading 0s for Control1
+biol_clean$Date <- excel_numeric_to_date(as.numeric(as.character(biol_clean$Date)), date_system = "modern")    
+
 habitat_clean <- read_excel("~/Desktop/Ch1Data/P135/p135_habitat_edt.xlsx", col_types= "text")
+habitat_clean$Date <- excel_numeric_to_date(as.numeric(as.character(habitat_clean$Date)), date_system = "modern")    
 ```
 
 #### Create CPUE dataset
@@ -93,17 +96,36 @@ habitat_clean <- read_excel("~/Desktop/Ch1Data/P135/p135_habitat_edt.xlsx", col_
 The habitat dataset will have one Control1 for every sampling event whereas the biological dataset only has a Control1 for each fish caught in a net. These Control1s are duplicated in multiple rows for each fish caught in each net. Control3 uniquely identifies each species caught in a net and is repeated for each individual measured whereas Control4 will identify each individual fish. For the biological dataset, for non-length CPUE, you just need to have the Colnum for one of the Control3s.
 
 ```{r}
-length(unique(habitat$Control1)) #121,743
-length(unique(biol$Control1)) #71,946, only has Control1 for fish captured
+length(unique(habitat_clean$Control1)) #121,743
+length(unique(biol_clean$Control1)) #71,946, only has Control1 for fish captured
+summary(is.na(biol_clean))
 
-#Create CPUE dataset with biol
-summary(is.na(biol))
+#Distinct Control3s for a sampling event (Control1, Species), one row for each species caught in a net
+biol_edt <- biol_clean %>% group_by(Control1, Speciescommonname) %>% distinct(Colnum, .keep_all= TRUE) %>% dplyr::select(-Nbrrep, -Rep, -Nbrrec3, -Spstatus, -Form_4, -Linenum, -Frequenc, -Length, -Weight, -Sex, -Maturity, -Parm_a)
 
-biol_edt <- biol %>%
+##Check 
+t <- biol_edt %>% filter(Control1 %in% "2200216") #check with Nathaniel Hancock's email on 01/31/24, same CPUE #s
+```
 
-#distinct Control3s for a sampling event (Control1, Species), one row for each species caught in a net
-#do it on example data first 
-#after, link the habitat and biological datasets, see P120 
+```{r}
+#Link habitat and biological datasets 
+##Deal with habitat dataset
+haul <- habitat_clean
+haul$Species= NA #create a dummy column first
+
+spp_list <- unique(biol_clean$Speciescommonname)
+haul$Species <- rep_along(haul$Species, spp_list)
+haul_df <- haul %>% select(Control1:Day, Duration, Depth, Stemp, Ssal, Sdo, Season:Ym_date, QuadGrid:Longitude, Species)
+haul_df_all <- haul %>% tidyr::expand(Species,Control1) #39 species*121743= 4747977 (row #), all species associated with each collection number
+haul <- haul_df %>% dplyr::select(-Species)
+
+#now can merge haul.all and haul to create a df with a row for species associated with each collection number
+haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
+
+#merge biological with haul 
+biol_edt_tojoin <- biol_edt %>% dplyr::select(Control1, Speciescommonname, Colnum) 
+##ISSUE HERE 
+haul_spp <- left_join(haul_final, biol_edt_tojoin) %>% as.data.frame() #df is 56,424 rows, 7053 rows for each species (8 species)
 ```
 
 To pay attention to/remove: -2020 for fall segment -Remove Zone 1 data (not consistently sampled) -Increased effort in southern area
