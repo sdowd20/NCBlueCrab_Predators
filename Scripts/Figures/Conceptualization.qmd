@@ -1,0 +1,40 @@
+---
+title: "Conceptualization"
+format: html
+editor: visual
+---
+
+```{r}
+#Load packages, dataframes, etc.
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.BC.R")
+
+##Load grid 
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+```{r}
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
+df_plot <- df_binary_BC_wide_both %>% left_join(globe_grid_30_edt, by= "gridID") %>% dplyr::select(geometry, Month:avgsdo)
+colnames(df_plot)
+
+#Environmental
+ggplot(data = world) + geom_sf() + geom_sf(data = df_plot, aes(geometry= geometry, fill = avgstemp), show.legend= FALSE) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank()) + theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + scale_fill_viridis_c(option= "magma")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/concept_env.jpeg", width= 5, height= 4)
+
+#Human: fishing restrictions
+ggplot(data = world) + geom_sf() + geom_sf(data = df_plot, aes(geometry= geometry, fill = NoFishRest), show.legend= FALSE) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank()) + theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/concept_human.jpeg", width= 5, height= 4)
+```
+
