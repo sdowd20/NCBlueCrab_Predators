@@ -429,10 +429,10 @@ habitat <- habitat %>% mutate(Sedsize_new= ifelse(habitat$Sedsize == 1|habitat$S
 #Lat/lon
 habitat$QuadGrid <- paste(habitat$Quad, habitat$Grid, sep= "-")
 P135_lat_lons <- read_excel("~/Documents/GitHub/NCBlueCrab_Predators/Data/P135/P135_lat_lons.xlsx")
-lat_lons <- P135_lat_lons %>% rename("Quad"= "Zone") %>% mutate(QuadGrid = paste(.$Quad, .$Grid, sep= "-")) %>% select(-Quad, -Grid)
+lat_lons <- P135_lat_lons %>% rename("Quad"= "Zone") %>% mutate(QuadGrid = paste(.$Quad, .$Grid, sep= "-")) %>% dplyr::select(-Quad, -Grid)
 habitat <- habitat %>% left_join(lat_lons, by= "QuadGrid")
 
-#write.csv(habitat, "/Users/sallydowd/Desktop/Ch1Data/P135/p135_habitat_edt.csv") #02/05/24 
+# write_xlsx(habitat, "/Users/sallydowd/Desktop/Ch1Data/P135/p135_habitat_edt.xlsx") #02/06/23
 
 ##Biological data## 
 setwd("/Users/sallydowd/Desktop/Ch1Data/P135")
@@ -453,7 +453,7 @@ print(columns_with_dot) #Weight, this is plausible
 P120_speciesnms <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/Spp_names/P120_speciesnms.csv")
 colnames(P120_speciesnms) <- str_to_title(colnames(P120_speciesnms))
 P120_speciesnms$Speciescommonname <- str_to_lower(P120_speciesnms$Speciescommonname)
-P120_speciesnms_edt <- P120_speciesnms %>% select(Speciescode, Speciescommonname) %>% mutate_at('Speciescode', as.character)
+P120_speciesnms_edt <- P120_speciesnms %>% dplyr::select(Speciescode, Speciescommonname) %>% mutate_at('Speciescode', as.character)
 P120_speciesnms_edt$Speciescode <- trimws(P120_speciesnms_edt$Speciescode)
 
 #identify which ones don't have species codes from P120, manually edit P120 dataset in excel and save as new, species code in bdbcode in Datasets google drive
@@ -469,4 +469,4 @@ colnames(ugh2) <- str_to_title(colnames(ugh2))
 ugh2$Speciescommonname <- str_to_lower(ugh2$Speciescommonname)
 P120_P135_sppnames <- ugh2 %>% mutate_at('Speciescode', as.character)
 biol_edt <- biol %>% left_join(P120_P135_sppnames, by= "Speciescode")
-write.csv(biol_edt, "/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.csv")
+# write_xlsx(biol_edt, "/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.xlsx") #02/06/23

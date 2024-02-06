@@ -84,16 +84,26 @@ ggplot(data = world) + geom_sf() + geom_point(data = subset(p915_CPUEold, p915_C
 ```
 
 ```{r}
-biol <- read_excel("~/Desktop/Ch1Data/P135/BiologicalDataP135forN100_Final.xlsx", col_types= "text")
-habitat <- read_excel("~/Desktop/Ch1Data/P135/HabitatDataP135_1990-May2023.xlsx", col_types= "text")
+biol_clean <- read_excel("/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.xlsx", col_types= "text")
+habitat_clean <- read_excel("~/Desktop/Ch1Data/P135/p135_habitat_edt.xlsx", col_types= "text")
 ```
+
+#### Create CPUE dataset
+
+The habitat dataset will have one Control1 for every sampling event whereas the biological dataset only has a Control1 for each fish caught in a net. These Control1s are duplicated in multiple rows for each fish caught in each net. Control3 uniquely identifies each species caught in a net and is repeated for each individual measured whereas Control4 will identify each individual fish. For the biological dataset, for non-length CPUE, you just need to have the Colnum for one of the Control3s.
 
 ```{r}
+length(unique(habitat$Control1)) #121,743
+length(unique(biol$Control1)) #71,946, only has Control1 for fish captured
 
+#Create CPUE dataset with biol
+summary(is.na(biol))
+
+biol_edt <- biol %>%
+
+#distinct Control3s for a sampling event (Control1, Species), one row for each species caught in a net
+#do it on example data first 
+#after, link the habitat and biological datasets, see P120 
 ```
-
-
-
-
 
 To pay attention to/remove: -2020 for fall segment -Remove Zone 1 data (not consistently sampled) -Increased effort in southern area
