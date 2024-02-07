@@ -1,0 +1,469 @@
+---
+title: "cross_valid_allpredators"
+format: html
+editor: visual
+date: 11/27/23
+---
+
+Changes on 12/03/23: 
+-Remove InletDist, FishingAllNum 
+-Created GAM models with environment only and forage only
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.R")
+
+#Train and test dataset
+##P915
+sample_size_P915 = floor(0.8*nrow(df_count_wide_P915))
+picked_P915 = sample(seq_len(nrow(df_count_wide_P915)),size = sample_size_P915) 
+df_count_wide_P915_test = df_count_wide_P915[-picked_P915,]
+df_count_wide_P915_train = df_count_wide_P915[picked_P915,]
+```
+
+```{r}
+#Load cross-validation functions 
+library(gtools)
+
+pastePerm<- function(row, names){
+  keep<- which(row==1)
+  if(length(keep)==0){
+    return('1')
+  }else{
+    return(paste(names[keep],collapse='+'))
+  }
+}
+my_sqrt <- function(var1){
+  sqrt(var1) #take square root of variable 
+} #construct model formulas 
+
+dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty string
+  p<- length(covars) #number of independent variables
+  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T) #for different combinations of predictor variables
+  myforms<- NULL #store formulas 
+  for(j in 1:nrow(perm.tab)){
+    myforms[j]<- pastePerm(perm.tab[j,], covars) #function above
+  }
+  myforms<- paste0(pred, '~',myforms) #predicted variable and formula
+  return(myforms)
+}
+```
+
+### Data exploration
+
+```{r}
+#Number of sampling events with > 0 caught, 2001-2021
+t <- df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage"), avgcount > 0) %>% group_by(Speciescommonname) %>% mutate(count= n()) %>% distinct(count)
+
+#Avg. annual sample size
+t %>% group_by(Speciescommonname) %>% mutate(avg_ss= mean(count)) %>% distinct(avg_ss)
+unique(df_count$Speciescommonname)
+
+df_count %>% filter(Survey %in% "P915", Speciescommonname %in% c("bonnetheadshark", "southernkingfish", "reddrum", "blackdrum", "spot", "atlanticcroaker", "atlanticmenhaden", "southernkingfishforage")) %>% ggplot() + geom_histogram(aes(x= avgcount)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free") + xlim(0,400) + ylim(0,125)
+```
+
+### Env
+
+```{r}
+#Formulas 
+allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+
+allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+```
+
+```{r}
+#Red drum 
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train, family= tw(link= "log"))
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+print(i)
+}
+
+write.csv(compare_var_tw_reddrum, "~/Desktop/compare_var_tw_reddrum_env.csv")
+
+#Black drum 
+compare_var_tw_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_tw_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
+print(i)
+}
+
+write.csv(compare_var_tw_blackdrum, "~/Desktop/compare_var_tw_blackdrum_env.csv")
+
+#Southern kingfish
+compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_tw_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
+print(i)
+}
+
+write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish_env.csv")
+```
+
+### Env + forage
+
+```{r}
+#Formulas 
+allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(reddrumforage)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+
+allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(southernkingfishforage)", "s(NoFishRest)", "factor(Sedsizecommon)"))
+```
+
+```{r}
+#Red drum 
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train, family= tw(link= "log"))
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+print(i)
+}
+
+write.csv(compare_var_tw_reddrum, "~/Desktop/compare_var_tw_reddrum_env_forage.csv")
+
+#Black drum 
+compare_var_tw_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_tw_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
+print(i)
+}
+
+write.csv(compare_var_tw_blackdrum, "~/Desktop/compare_var_tw_blackdrum_env_forage.csv")
+
+#Southern kingfish
+compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_tw_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
+print(i)
+}
+
+write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish_env_forage.csv")
+```
+
+### Env + prey
+
+```{r}
+#Load formulas
+##Red drum
+allformulas_reddrum <- dredgeform(pred = "reddrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_reddrum <- dredgeform(pred = "log(reddrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_reddrum <- dredgeform(pred = "reddrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(southernflounder)", "s(spot)", "s(blackdrum)", "s(pinfish)", "s(reddrumforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##Black drum
+allformulas_blackdrum <- dredgeform(pred = "blackdrum", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_blackdrum <- dredgeform(pred = "log(blackdrum+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_blackdrum <- dredgeform(pred = "blackdrum^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(reddrum)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##Southern kingfish
+allformulas_southernkingfish <- dredgeform(pred = "southernkingfish", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_southernkingfish <- dredgeform(pred = "log(southernkingfish+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_southernkingfish <- dredgeform(pred = "southernkingfish^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "s(atlanticmenhaden)", "s(atlanticcroaker)", "s(spot)", "s(southernkingfishforage)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+##Bonnethead shark 
+allformulas_bonnetheadshark <- dredgeform(pred = "bonnetheadshark", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaslog_bonnetheadshark <- dredgeform(pred = "log(bonnetheadshark+1)", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+
+allformulaspow_bonnetheadshark <- dredgeform(pred = "bonnetheadshark^0.25", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(InletDistkm)", "s(NoFishRest)", "factor(FishingAllnum)", "factor(Sedsizecommon)"))
+```
+
+#### Cross-validation
+
+```{r}
+#Red drum
+#Gaussian
+compare_var_gaus_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_gaus_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_gaus_reddrum[i, 2] <- AIC(model_gaus_reddrum)
+}
+
+#Gaussian w/ log + 1 transformation
+compare_var_gaus_log_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_log_reddrum) <- c("formula", "AIC")
+for (i in 1:length(test)) {
+model_gaus_log_reddrum <- gam(as.formula( allformulaslog_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_log_reddrum[i, 1] <-  allformulaslog_reddrum[i]
+compare_var_gaus_log_reddrum[i, 2] <- AIC(model_gaus_log_reddrum)
+}
+compare_var_gaus_log_reddrum %>% arrange(AIC)
+
+#Gaussian w/ power transformation
+compare_var_gaus_pow_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_gaus_pow_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_reddrum)) {
+model_gaus_pow_reddrum <- gam(as.formula(allformulaspow_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_gaus_pow_reddrum[i, 1] <- allformulaspow_reddrum[i]
+compare_var_gaus_pow_reddrum[i, 2] <- AIC(model_gaus_pow_reddrum)
+}
+
+#Tweedie
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+}
+
+#Tweedie w/ power transformation
+compare_var_tw_pow_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_pow_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulaspow_reddrum)) {
+model_tw_pow_reddrum <- gam(as.formula(allformulaspow_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_tw_pow_reddrum[i, 1] <- allformulaspow_reddrum[i]
+compare_var_tw_pow_reddrum[i, 2] <- AIC(model_tw_pow_reddrum)
+}
+
+#Negative binomial 
+compare_var_nb_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_nb_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_nb_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_nb_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_nb_reddrum[i, 2] <- AIC(model_nb_reddrum)
+}
+
+#Poisson
+compare_var_pois_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_pois_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_pois_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train)
+compare_var_pois_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_pois_reddrum[i, 2] <- AIC(model_pois_reddrum)
+}
+
+compare_var_gaus_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_reddrum %>% arrange(AIC)
+compare_var_gaus_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_log_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_gaus_pow_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
+compare_var_tw_pow_reddrum %>% arrange(AIC)
+```
+
+```{r}
+#Tweedie only 
+##Red drum
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_count_wide_P915_train, family= tw(link= "log"))
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+}
+
+write.csv(compare_var_tw_reddrum, "~/Desktop/compare_var_tw_reddrum.csv")
+
+##Black drum
+compare_var_tw_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_tw_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
+}
+
+write.csv(compare_var_tw_blackdrum, "~/Desktop/compare_var_tw_blackdrum.csv")
+
+##Southern kingfish
+compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
+for (i in 1:length(allformulas_southernkingfish)) {
+model_tw_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
+compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
+}
+
+write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish.csv")
+
+compare_var_tw_southernkingfish %>% arrange(AIC) %>% .[1,1]
+
+##Bonnethead shark
+compare_var_tw_bonnetheadshark <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_bonnetheadshark) <- c("formula", "AIC")
+for (i in 1:length(allformulas_bonnetheadshark)) {
+model_tw_bonnetheadshark <- gam(as.formula(allformulas_bonnetheadshark[i]), family= tw(link= "log"), data=df_count_wide_P915_train)
+compare_var_tw_bonnetheadshark[i, 1] <- allformulas_bonnetheadshark[i]
+compare_var_tw_bonnetheadshark[i, 2] <- AIC(model_tw_bonnetheadshark)
+}
+
+write.csv(compare_var_tw_bonnetheadshark, "~/Desktop/compare_var_tw_bonnetheadshark.csv")
+```
+
+#### Final formulas
+
+```{r}
+#Deleted cross-validation for different distributions on 11/29/23
+
+#Red drum
+red_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/P915/compare_var_tw_reddrum.csv")
+red_drum %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_red_drum)
+gam.check(gaus_red_drum)
+
+##Gaussian w/ log transformation 
+gaus_log_red_drum <- gam(log(reddrum+1)~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_log_red_drum)
+gam.check(gaus_log_red_drum)
+
+##Gaussian w/ power transformation 
+gaus_pow_red_drum <- gam(reddrum^0.25~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_pow_red_drum)
+gam.check(gaus_pow_red_drum)
+
+##Tweedie
+tw_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_red_drum)
+gam.check(tw_red_drum)
+
+##Negative binomial 
+nb_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "nb")
+summary(nb_red_drum)
+gam.check(nb_red_drum)
+
+##Poisson 
+pois_red_drum <- gam(reddrum~s(avgdepth)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(southernflounder)+s(spot)+s(blackdrum)+s(pinfish)+s(reddrumforage)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_red_drum)
+gam.check(pois_red_drum)
+
+
+#Black drum
+black_drum <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_blackdrum.csv")
+black_drum %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_black_drum)
+gam.check(gaus_black_drum)
+
+##Gaussian w/ log transformation 
+gaus_log_black_drum <- gam(log(blackdrum+1)~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_log_black_drum)
+gam.check(gaus_log_black_drum)
+
+##Gaussian w/ power transformation 
+gaus_pow_black_drum <- gam(blackdrum^0.25~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_pow_black_drum)
+gam.check(gaus_pow_black_drum)
+
+##Tweedie
+tw_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_black_drum)
+gam.check(tw_black_drum)
+
+##Negative binomial 
+nb_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "nb")
+summary(nb_black_drum)
+gam.check(nb_black_drum)
+
+AIC(nb_black_drum, pois_black_drum, tw_black_drum, gaus_pow_black_drum, gaus_black_drum, gaus_log_black_drum) %>% arrange(AIC)
+
+##Poisson 
+pois_black_drum <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_black_drum)
+gam.check(pois_black_drum)
+
+#Bonnethead shark
+bonnethead_shark <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_bonnetheadshark.csv")
+bonnethead_shark %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_bonnethead_shark <- gam(bonnetheadshark~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_bonnethead_shark)
+gam.check(gaus_bonnethead_shark)
+
+##Gaussian w/ log transformation 
+gaus_log_bonnethead_shark <- gam(log(bonnetheadshark+1)~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train)
+summary(gaus_log_bonnethead_shark)
+gam.check(gaus_log_bonnethead_shark)
+
+##Gaussian w/ power transformation 
+gaus_pow_bonnethead_shark <- gam(bonnetheadshark^0.25~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_pow_bonnethead_shark)
+gam.check(gaus_pow_bonnethead_shark)
+
+##Tweedie
+tw_bonnethead_shark <- gam(bonnetheadshark~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_bonnethead_shark)
+gam.check(tw_bonnethead_shark)
+
+##Negative binomial 
+nb_bonnethead_shark <- gam(bonnetheadshark~s(avgssal)+s(avgstemp)+s(NoFishRest)+factor(FishingAllnum)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= "nb")
+summary(nb_bonnethead_shark)
+gam.check(nb_bonnethead_shark)
+
+##Poisson 
+pois_bonnethead_shark <- gam(blackdrum~s(avgdepth)+s(avgssal)+s(avgsdo)+s(InletDistkm)+s(reddrum)+factor(FishingAllnum), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_bonnethead_shark)
+gam.check(pois_bonnethead_shark)
+
+#Southern kingfish
+southern_kingfish <- read.csv("~/Desktop/Ch1Data/GAMs/Model_selection/compare_var_tw_southernkingfish.csv")
+southern_kingfish %>% arrange(AIC) %>% dplyr::select(-X) %>% .[1,1]
+
+##Gaussian 
+gaus_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_southern_kingfish)
+gam.check(gaus_southern_kingfish)
+
+##Gaussian w/ log transformation 
+gaus_log_southern_kingfish <- gam(log(southernkingfish+1)~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_log_southern_kingfish)
+gam.check(gaus_log_southern_kingfish)
+
+##Gaussian w/ power transformation 
+gaus_pow_southern_kingfish <- gam(southernkingfish^0.25~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train)
+summary(gaus_pow_southern_kingfish)
+gam.check(gaus_pow_southern_kingfish)
+
+##Tweedie
+tw_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= tw(link= "log"))
+summary(tw_southern_kingfish)
+gam.check(tw_southern_kingfish)
+
+##Negative binomial 
+nb_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= "nb")
+summary(nb_southern_kingfish)
+gam.check(nb_southern_kingfish)
+
+##Poisson 
+pois_southern_kingfish <- gam(southernkingfish~s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)+s(atlanticmenhaden)+s(atlanticcroaker)+s(spot)+s(southernkingfishforage)+factor(Sedsizecommon), data= df_count_wide_P915_train, family= "poisson")
+summary(pois_southern_kingfish)
+gam.check(pois_southern_kingfish)
+
+AIC(nb_southern_kingfish, pois_southern_kingfish, tw_southern_kingfish, gaus_pow_southern_kingfish, gaus_southern_kingfish, gaus_log_southern_kingfish) %>% arrange(AIC)
+```

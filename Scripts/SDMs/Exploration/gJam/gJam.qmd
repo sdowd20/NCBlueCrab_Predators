@@ -1,0 +1,170 @@
+---
+title: "gJam"
+format: html
+editor: visual
+---
+
+#### Load packages, functions and datasets
+
+```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "gjam")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+#Count dataset 
+df_count <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_count_avg_edt.csv")  
+df_count <- df_count %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd))
+df_count$Speciescommonname <- gsub(" ", ".", df_count$Speciescommonname) #gJam doesn't like _ in column names
+
+##Standardized catch per unit effort 
+CPUE_grid_avg_edt <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/CPUE/CPUE_grid_avg_edt.csv")
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt[,-1]
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% mutate_at(c("Sedsize_common", "ShorelineType", "ITP", "Survey"), as.factor)
+CPUE_grid_avg_edt$Speciescommonname <- gsub(" ", ".", CPUE_grid_avg_edt$Speciescommonname)
+```
+
+#### P915 Count
+
+##### Prepare data
+
+```{r}
+df_count_wide <- df_count %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avg_count") %>% drop_na()
+
+#Get data ready for gJam 
+##xdata: Environmental variables
+xdata <- df_count_wide %>% dplyr::select(avg_depth, avg_stemp, avg_ssal, avg_sdo, SAVDist_km, InletDist_km, NoFishRest,  FishingAll_num, Sedsize_common) %>% mutate_at(vars(c(Sedsize_common, FishingAll_num)), as.factor)
+colnames(xdata) <- gsub(pattern = "_", replacement = ".", colnames(xdata))
+
+##ydata: species of interest, same dimensions as xdata 
+ydata <- df_count_wide %>% dplyr::select(american.shad, atlantic.thread.herring:bonnethead.shark, bull.shark:cownose.ray, gizzard.shad:atlantic.sharpnose.shark, silver.perch:summer.flounder, -silversides)
+
+##edata: effort, columns as number of species and values as effort values  
+edata <- list(columns=1:ncol(ydata), values = 1)
+
+edata$columns
+edata$values
+```
+
+##### gJam
+
+Building a joint-model for red_drum with various predictor species.
+
+```{r}
+library(gjam)
+ml <- list(ng = 1000, burnin = 500, typeNames = 'DA', effort= edata) #typeNames is for response variable data type
+#DA for discrete abundance (counts) and CA for continuous data
+#no dimensional reduction 
+
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+out1 <- gjam(as.formula(formula_str), 
+                 xdata = xdata, 
+                 ydata = ydata, 
+                 modelList = ml)
+
+View(out1$parameters$betaStandXWTable)
+save(out1, file='~/Desktop/Ch1Data/gJam/10km/testing.Rdata')
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '~/Desktop/Ch1Data/gJam/10km/testing_plots/')
+gjamPlot(output = out1, plotPars = plot)
+```
+
+#### P915, P120 Count
+
+##### Prepare data
+
+```{r}
+df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep= ".")
+df_count_wide_edt <- df_count %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count")
+
+df_count_wide_na <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avg_count") %>% drop_na()
+
+##xdata: Environmental variables
+# xdata <- df_count_wide_na %>% dplyr::select(avg_depth, avg_stemp, avg_ssal, avg_sdo, SAVDist_km, InletDist_km, NoFishRest,  FishingAll_num, Sedsize_common, alewife.P915:white.shrimp.P120, -(c(red.drum.P915, bonnethead.shark.P915, black.drum.P915, cownose.ray.P915, southern.kingfish.P915, striped.bass.P915))) %>% mutate_at(vars(Sedsize_common), as.factor)
+# colnames(xdata) <- gsub(pattern = "_", replacement = ".", colnames(xdata))
+
+xdata <- df_count_wide_na %>% dplyr::select(avg_depth, avg_stemp, avg_ssal, avg_sdo, SAVDist_km, InletDist_km, NoFishRest,  FishingAll_num, Sedsize_common) %>% mutate_at(vars(c(Sedsize_common, FishingAll_num)), as.factor)
+colnames(xdata) <- gsub(pattern = "_", replacement = ".", colnames(xdata))
+
+##ydata: species of interest, same dimensions as xdata 
+ydata <- df_count_wide_na %>% dplyr::select(alewife.P915:white.shrimp.P120) 
+
+species  <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 20 
+ydata <- ydata[, species] %>% as.data.frame()
+
+##edata: effort, columns as number of species and values as effort values  
+edata <- list(columns=1:ncol(ydata), values = 1)
+
+edata$columns
+edata$values
+```
+
+##### gJam
+
+```{r}
+ml <- list(ng = 1000, burnin = 500, typeNames = 'DA', effort= edata)
+
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+out1 <- gjam(as.formula(formula_str), 
+                 xdata = xdata, 
+                 ydata = ydata, 
+                 modelList = ml)
+
+View(out1$parameters$betaStandXWTable)
+save(out1, file='~/Desktop/Ch1Data/gJam/10km/testing2.Rdata')
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '~/Desktop/Ch1Data/gJam/10km/testing_plots2/')
+gjamPlot(output = out1, plotPars = plot)
+```
+
+#### P915, P120 CPUE
+
+##### Prepare data
+
+```{r}
+CPUE_grid_avg_edt$SpeciesSurvey <- paste(CPUE_grid_avg_edt$Speciescommonname, CPUE_grid_avg_edt$Survey, sep= ".")
+
+CPUE_wide_na <- CPUE_grid_avg_edt %>% filter(Survey %in% "P915"|Survey %in% "P120") %>%  dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "mean_CPUE_stdzd") %>% drop_na()
+
+xdata <- CPUE_wide_na %>% dplyr::select(avg_depth, avg_stemp, avg_ssal, avg_sdo, SAVDist_km, InletDist_km, NoFishRest,  FishingAll_num, Sedsize_common) %>% mutate_at(vars(c(Sedsize_common, FishingAll_num)), as.factor)
+colnames(xdata) <- gsub(pattern = "_", replacement = ".", colnames(xdata))
+
+##ydata: species of interest, same dimensions as xdata 
+ydata <- CPUE_wide_na %>% dplyr::select(alewife.P915:white.shrimp.P120) 
+
+species  <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 20 
+ydata <- ydata[, species] %>% as.data.frame()
+
+##edata: effort, columns as number of species and values as effort values  
+edata <- list(columns=1:ncol(ydata), values = 1)
+
+edata$columns
+edata$values
+```
+
+##### gJam
+
+```{r}
+ml <- list(ng = 1000, burnin = 500, typeNames = 'CA', effort= edata)
+
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+out1 <- gjam(as.formula(formula_str), 
+                 xdata = xdata, 
+                 ydata = ydata, 
+                 modelList = ml)
+
+View(out1$parameters$betaStandXWTable)
+save(out1, file='~/Desktop/Ch1Data/gJam/10km/testing3.Rdata')
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '~/Desktop/Ch1Data/gJam/10km/testing_plots3/')
+gjamPlot(output = out1, plotPars = plot)
+```
