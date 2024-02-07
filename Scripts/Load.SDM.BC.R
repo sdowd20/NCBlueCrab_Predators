@@ -96,3 +96,18 @@ df_CPUE_BC_wide_both_gJam <- df_CPUE_BC_wide_both %>% mutate(reddrumP915forage =
 df_CPUE_BC_wide_both_gJam <- df_CPUE_BC_wide_both_gJam %>% dplyr::select(Month:avgsdo, atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, smallbluecrabP120, largebluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120, reddrumP915forage:blackdrumP915forage)
 df_CPUE_BC_wide_both <- df_CPUE_BC_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, pinfishP915, spotP915, atlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticcroakerP915, spotP915, atlanticmenhadenP120, atlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
 df_CPUE_BC_wide_both <- df_CPUE_BC_wide_both %>% dplyr::select(Month:avgsdo, atlanticcroakerP915, blackdrumP915, bluecrabP915, bonnetheadsharkP915, bullsharkP915, cownoserayP915, atlanticmenhadenP915, gizzardshadP915, reddrumP915, southernflounderP915, southernkingfishP915, spotP915, stripedbassP915, stripedmulletP915, summerflounderP915, pinfishP915, sheepsheadP915, spottedseatroutP915, atlanticcroakerP120, atlanticmenhadenP120, bayanchovyP120, smallbluecrabP120, largebluecrabP120, brownshrimpP120, pinfishP120, pinkshrimpP120, southernflounderP120, spotP120, spottedseatroutP120, stripedanchovyP120, weakfishP120, whiteshrimpP120, bayanchovyP120, silverperchP120, reddrumP915forage:blackdrumP915forage)
+
+#Add on family forage index to CPUE data: 02/07/24
+##P915 and P120
+df_CPUE_BC_wide_both <- df_CPUE_BC_wide_both %>% mutate(clupeidae_forage = rowSums(dplyr::select(., atlanticmenhadenP915, atlanticmenhadenP120)), 
+                                        sciaenidae_forage = rowSums(dplyr::select(., atlanticcroakerP915, spotP915, atlanticcroakerP120, spotP120)), 
+                                        sparidae_forage = rowSums(dplyr::select(., pinfishP915, pinfishP120)),
+                                        penaied_forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
+                                        paralichthyidae_forage = rowSums(dplyr::select(., southernflounderP120)))
+
+#Clupeidae: atlanticmenhadenP915, atlanticmenhadenP120 
+#Sciaenidae: atlanticcroakerP915, spotP915, atlanticcroakerP120, spotP120
+#Sparidae: pinfishP915, pinfishP120
+#Penaied:whiteshrimpP120, pinkshrimpP120, brownshrimpP120,
+#Paralichthyidae: southernflounderP120
+
