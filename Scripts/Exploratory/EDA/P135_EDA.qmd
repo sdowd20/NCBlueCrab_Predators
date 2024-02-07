@@ -54,6 +54,9 @@ The survey stopped in February 2020 until November 2021 as a result of covid and
 
 4.  
 
+```{=html}
+<!-- -->
+```
 b)  Is it safe to assume constant effort for total minutes gear was fished throughout the years for the Fall/Winter segment. I noticed that there are sometimes NA for duration and differing #s between years.
 
 Prior to 2021 duration should always be assumed to equal 24 hours/1440 minutes. The exception to this is when, prior to 2021, VAR2 is \>1 soak time should be 2880 minutes (because nets were soaked for multiple days). Beginning in 2021 if blank duration=720 otherwise duration is recorded in number of minutes from when the net was set until we began fishing that net the next day.
@@ -71,7 +74,7 @@ e)  It seems like the P135 biological dataset will be similar to work with the P
 It is similar other than the main exception I mentioned earlier about differences in how effort is measured.
 
 ```{r}
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco")
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "janitor")
 invisible(lapply(packages, library, character.only= TRUE))
 
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
@@ -97,11 +100,20 @@ The habitat dataset will have one Control1 for every sampling event whereas the 
 
 ```{r}
 length(unique(habitat_clean$Control1)) #121,743
-length(unique(biol_clean$Control1)) #71,946, only has Control1 for fish captured
+length(unique(biol_clean$Control1)) #71,946, only has Control1 for fish captured, these are all present in habitat dataset 
+
 summary(is.na(biol_clean))
 
 #Distinct Control3s for a sampling event (Control1, Species), one row for each species caught in a net
 biol_edt <- biol_clean %>% group_by(Control1, Speciescommonname) %>% distinct(Colnum, .keep_all= TRUE) %>% dplyr::select(-Nbrrep, -Rep, -Nbrrec3, -Spstatus, -Form_4, -Linenum, -Frequenc, -Length, -Weight, -Sex, -Maturity, -Parm_a)
+
+t <- biol_clean %>% filter(Speciescommonname %in% "alewife", Control1 %in% "0000824")
+length(unique(t$Control4))
+
+check <- biol_edt %>%
+  group_by(Speciescommonname, Control1) %>%
+  filter(n() > 1) %>%
+  ungroup()
 
 ##Check 
 t <- biol_edt %>% filter(Control1 %in% "2200216") #check with Nathaniel Hancock's email on 01/31/24, same CPUE #s
@@ -115,17 +127,18 @@ haul$Species= NA #create a dummy column first
 
 spp_list <- unique(biol_clean$Speciescommonname)
 haul$Species <- rep_along(haul$Species, spp_list)
-haul_df <- haul %>% select(Control1:Day, Duration, Depth, Stemp, Ssal, Sdo, Season:Ym_date, QuadGrid:Longitude, Species)
+haul_df <- haul %>% dplyr::select(Control1:Day, Duration, Depth, Stemp, Ssal, Sdo, Season:Ym_date, QuadGrid:Longitude, Species)
 haul_df_all <- haul %>% tidyr::expand(Species,Control1) #39 species*121743= 4747977 (row #), all species associated with each collection number
 haul <- haul_df %>% dplyr::select(-Species)
 
 #now can merge haul.all and haul to create a df with a row for species associated with each collection number
-haul_final=left_join(haul_df_all,haul,by="Control1")%>%as.data.frame()
+haul_final <- haul_df_all %>% left_join(haul, by= "Control1") %>% rename("Speciescommonname"= "Species")
 
 #merge biological with haul 
 biol_edt_tojoin <- biol_edt %>% dplyr::select(Control1, Speciescommonname, Colnum) 
-##ISSUE HERE 
-haul_spp <- left_join(haul_final, biol_edt_tojoin) %>% as.data.frame() #df is 56,424 rows, 7053 rows for each species (8 species)
+haul_spp <- haul_final %>% left_join(biol_edt_tojoin, by= c("Speciescommonname", "Control1")) #4748460, 121743 unique Control1* 39 unique species = 4747977
+#actual row # is 4748460, 483 rows leftover
+haul_spp$Colnum[haul_spp$Colnum %in% NA] <- 0
 ```
 
 To pay attention to/remove: -2020 for fall segment -Remove Zone 1 data (not consistently sampled) -Increased effort in southern area
