@@ -9,7 +9,8 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.BC.R")
 ```
 
-#### CV 
+#### CV
+
 ```{r}
 library(gtools)
 
@@ -38,6 +39,7 @@ dredgeform<- function(pred, covars, alwaysIn=''){ #always in is set to empty str
 ```
 
 ##### Env
+
 ```{r}
 #Load formulas 
 ##Red drum
@@ -83,14 +85,20 @@ write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkin
 compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
 
 reddrum_env <- gam(reddrumP915~s(avgssal)+s(SAVkm)+s(NoFishRest)+s(Year), family= tw(link= "log"), data=df_CPUE_BC_wide_both)
-summary(reddrum_env)
-#Test model fit
+#Test model fit 
+##Assumptions
 gam.check(reddrum_env)
-#Test overfitting with predictor variable effects
-plot(reddrum_env, shade= TRUE, seWithMean= TRUE, scale=0)
+##Overfitting and prediction 
+lets_see <- df_CPUE_BC_wide_both %>% dplyr::select(reddrumP915, avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage) %>% mutate(pred= predict(reddrum_env)) %>% pivot_longer(cols= c(avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage), names_to= "predictor")
+
+lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme
+
+#WHAT THE HECK! 
+lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme + geom_line(aes(x= value, y= pred))
 ```
 
-##### Env + total forage + blue crabs 
+##### Env + total forage + blue crabs
+
 ```{r}
 #Load formulas
 ##Red drum
@@ -119,31 +127,30 @@ compare_var_tw_reddrum_M2 %>% arrange(AIC) %>% .[1,1]
 
 reddrum_env_forage <- gam(reddrumP915~s(avgssal)+s(SAVkm)+s(smallbluecrabP120)+s(Year), family= tw(link= "log"), data=df_CPUE_BC_wide_both)
 summary(reddrum_env_forage)
-#Test model fit
+#Test model fit 
+##Assumptions
 gam.check(reddrum_env_forage)
-#Test overfitting with predictor variable effects
-plot(reddrum_env_forage, shade= TRUE, seWithMean= TRUE, scale=0)
+##Overfitting and prediction 
+lets_see <- df_CPUE_BC_wide_both %>% dplyr::select(reddrumP915, avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage) %>% mutate(pred= predict(reddrum_env_forage)) %>% pivot_longer(cols= c(avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage), names_to= "predictor")
 
-AIC(reddrum_env_forage, reddrum_env)
+lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme
+
+#WHAT THE HECK! 
+lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme + geom_line(aes(x= value, y= pred))
+
+
 ```
 
 ##### Env + fish family forage
+
 ```{r}
 #Load formulas
 ##Red drum
 allformulas_reddrum_M3 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(clupeidae_forage)", "s(sciaenidae_forage)", "s(sparidae_forage)", "s(penaied_forage)", "s(paralichthyidae_forage)", "s(Year)"))
 ```
 
-```{r}
-
-```
-
-
-
-
-
-
 #### Model comparison
+
 ```{r}
 #Run CV
 ##Red drum
@@ -159,6 +166,29 @@ print(i)
 write.csv(compare_var_tw_reddrum_M3, "/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/Env_family/compare_var_tw_reddrum_both_env_family.csv")
 ```
 
-#Prediction
-https://multithreaded.stitchfix.com/blog/2015/07/30/gam/
-#more interpretation: https://www.analyticsvidhya.com/blog/2023/09/understanding-generalized-additive-models-gams-a-comprehensive-guide/
+```{r}
+#Analyze best model
+##Red drum
+compare_var_tw_reddrum_M3 <- read.csv("/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/Env_family/compare_var_tw_reddrum_both_env_family.csv")
+compare_var_tw_reddrum_M3 %>% arrange(AIC) %>% .[1,2]
+
+reddrum_env_family <- gam(reddrumP915~s(avgssal)+s(SAVkm)+s(smallbluecrabP120)+s(clupeidae_forage)+s(sciaenidae_forage)+s(Year), family= tw(link= "log"), data=df_CPUE_BC_wide_both)
+summary(reddrum_env_family)
+
+#Test model fit 
+##Assumptions
+gam.check(reddrum_env_family)
+##Overfitting and prediction 
+lets_see <- df_CPUE_BC_wide_both %>% dplyr::select(reddrumP915, avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage) %>% mutate(pred= predict(reddrum_env_family)) %>% pivot_longer(cols= c(avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage), names_to= "predictor")
+
+lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme
+
+#WHAT THE HECK! 
+lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme + geom_line(aes(x= value, y= pred))
+```
+
+```{r}
+AIC(reddrum_env_forage, reddrum_env, reddrum_env_family) %>% arrange(-AIC)
+```
+
+#Prediction https://multithreaded.stitchfix.com/blog/2015/07/30/gam/ #more interpretation: https://www.analyticsvidhya.com/blog/2023/09/understanding-generalized-additive-models-gams-a-comprehensive-guide/
