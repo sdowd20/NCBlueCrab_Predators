@@ -54,9 +54,8 @@ The survey stopped in February 2020 until November 2021 as a result of covid and
 
 4.  
 
-```{=html}
 <!-- -->
-```
+
 b)  Is it safe to assume constant effort for total minutes gear was fished throughout the years for the Fall/Winter segment. I noticed that there are sometimes NA for duration and differing #s between years.
 
 Prior to 2021 duration should always be assumed to equal 24 hours/1440 minutes. The exception to this is when, prior to 2021, VAR2 is \>1 soak time should be 2880 minutes (because nets were soaked for multiple days). Beginning in 2021 if blank duration=720 otherwise duration is recorded in number of minutes from when the net was set until we began fishing that net the next day.
@@ -114,7 +113,7 @@ check <- biol_edt %>%
   group_by(Speciescommonname, Control1) %>%
   filter(n() > 1) %>%
   ungroup()
-
+write.csv(check, "/Users/sallydowd/Desktop/duplicates.csv")
 ##Check 
 t <- biol_edt %>% filter(Control1 %in% "2200216") #check with Nathaniel Hancock's email on 01/31/24, same CPUE #s
 ```

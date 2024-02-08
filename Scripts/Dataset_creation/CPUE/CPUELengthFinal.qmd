@@ -1,0 +1,172 @@
+---
+title: "CPUELengthFinal"
+format: html
+editor: visual
+---
+
+#### Load packages, functions, datasets
+```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "geosphere")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+
+#CPUEs 
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+setwd("~/Documents/GitHub/NCBlueCrab_Predators")
+p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv") #98472 rows/14 species = 7053 unique sampling events 
+p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
+
+#Length 
+p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
+p915_len_f <- p915_len_f %>% dplyr::select(-X)
+P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
+P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2)
+p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
+```
+
+#### Diagnostics 
+```{r}
+#P915
+length(unique(p915_len_f$Sample)) #13611
+length(unique(p915_CPUE$Sample)) #13947
+length(unique(p915_len_f$Control1)) #19910
+length(unique(p915_CPUE$Control1)) #13947
+
+#How many SampleIDs are the same between datasets? 
+lets_look <- p915_len_f %>% dplyr::select(Speciescommonname, Colnum, Length, Sample) 
+merged_df <- merge(p915_CPUE, lets_look, by = "Sample")
+length(unique(merged_df$Sample)) #13611 same Samples, all samples in length dataset are in CPUE dataset 
+
+#P120 
+length(unique(P120_bioledt$Control1)) #9668
+length(unique(p120_CPUE$Control1)) #7053
+```
+
+#### P915 
+##### Divide length
+```{r}
+#Species to divide up length for in Final length divisions
+other_species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "atlantic menhaden", "spot", "southern flounder")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum) #Control2 depends on Control1 and replicate, replicate (1-8) corresponds to mesh size and aggregate count of each specis across mesh sizes, breaks out catch by mesh size
+
+##Assign age class
+other_species <- other_species %>% mutate(Age_class = ifelse(Speciescommonname %in% "atlantic menhaden" & Length <= 250, "S", ifelse(Speciescommonname %in% "atlantic croaker" & Length <= 173, "S", ifelse(Speciescommonname %in% "spot" & Length <= 134, "S", ifelse(Speciescommonname %in% "southern flounder" & Length <= 200, "S", "L")))))
+               
+##Count # of individuals in an age class for a mesh size, sum_count as # of individuals in both age classes 
+other_species2 <- other_species %>% group_by(Sample, Colnum, Age_class, Control2, Speciescommonname) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(sum_count= sum(count)) 
+
+##Counted # of observations in each age class for a sample, computed a frequency, multiplied frequency by total Colnum
+other_species2_freq <- other_species2 %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(Freq= count/sum_count) %>% ungroup() %>% mutate(Number= Freq*Colnum) 
+other_species2_freq <- other_species2_freq %>% group_by(Sample, Age_class, Speciescommonname) %>% summarize(Num_sum = sum(Number))
+
+##Make each Sample have small and large associated with it in CPUE file
+length_samples <- unique(p915_len_f$Sample)
+other_species_CPUE <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "spot", "southern flounder")) %>% group_by(Sample) %>% slice(rep(1:n(), each = 2)) %>% mutate(Age_class = rep(c("S", "L"), length.out = n())) #n(): for each sample observation, duplicate each row for sample one with J and one with adult
+
+##Join together CPUE and length-frequency analysis
+combo <- other_species_CPUE %>% left_join(other_species2_freq, by= c("Sample", "Age_class", "Speciescommonname")) #add length to original CPUE dataset 
+
+##Filter for true 0s only
+combo %>% filter(! Sample %in% length_samples)
+combo %>% filter(!Sample %in% length_samples & Colnum > 0) #Control1: 1119763, remove this 
+#2,688 rows with SampleIDs present in CPUE and not in length, these are almost all where Colnum= 0 
+#Only 4 rows with Colnum= 1 or 2, lengths weren't recorded even though species were present 
+#These columns will become Colnum= 0 with line of code below 
+#Need to remove samples that were not there in length dataset where Colnum > 0
+combo2 <- combo %>% filter(!Control1 == 1119763) #removes 8 rows (S and L for 4 species for one Control1)
+
+##Once you've established 0s are true, fill the NAs with 0
+combo2$Num_sum[combo2$Num_sum %in% NA] <- 0 #dataset size of 334716 makes sense 
+#once filtered CPUE dataset for species of interest, had 13946 Samples*4 species*2(S and L)= 111568, # of rows in combo
+
+length(unique(other_species2_freq$Sample)) #12790 
+length(unique(p915_CPUE$Sample)) #13947
+#This code was used in Length.qmd as there were difference in Sample IDs b/w CPUE and length dataset- there isn't any here so we do have true 0s 
+# unmerged_df <- anti_join(p915_CPUE, combo, by = "Sample")
+# length(unique(unmerged_df$Sample)) #0 samples that aren't present in p915_len_f
+# diff_samples <- unique(unmerged_df$Sample)
+# off_samples <- combo %>% filter(Sample %in% diff_samples & Colnum > 0)
+# off_samplesID <- unique(off_samples$Sample)
+# combo2 <- combo %>% filter(!(Sample %in% off_samplesID)) #drops 132 rows
+```
+
+##### Verification
+```{r}
+check <- combo2 %>% group_by(Sample, Speciescommonname) %>% mutate(sum_count = sum(Num_sum)) %>% distinct(sum_count, .keep_all= TRUE) %>% dplyr::select(Sample, sum_count, Speciescommonname) %>% rename("Colnum"= "sum_count")
+with <- p915_CPUE %>% filter(Speciescommonname %in% c("atlantic menhaden", "atlantic croaker", "southern flounder", "spot")) %>% dplyr::select(Sample, Colnum, Speciescommonname)
+#0 differences in SampleID
+differences <- anti_join(check, with, by = c("Sample")) 
+
+#Check other differences
+check$Sample <- trimws(check$Sample)
+check$Speciescommonname <- trimws(check$Speciescommonname)
+check$Colnum <- trimws(check$Colnum)
+with$Sample <- trimws(with$Sample)
+with$Speciescommonname <- trimws(with$Speciescommonname)
+with$Colnum <- trimws(with$Colnum) #remove white space 
+
+merged_df <- inner_join(check, with, by = c('Sample', "Speciescommonname"))
+merged_df$Colnum.x <- gsub("\\s", "", merged_df$Colnum.x)
+merged_df$Colnum.y <- gsub("\\s", "", merged_df$Colnum.y)
+merged_df$Colnum_match <- merged_df$Colnum.x == merged_df$Colnum.y #there are a bunch of differences
+merged_df <- merged_df %>% mutate(across(c(Colnum.x, Colnum.y), as.numeric))
+merged_df$diff <- merged_df$Colnum.x - merged_df$Colnum.y
+merged_df %>% filter(!diff == 0)
+
+#Number of sampling events by Species with different values 
+length_diff <- merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) %>% summarize(count= n())
+write.csv(length_diff, "~/Desktop/P915length_diff.csv")
+
+#Magnitude of difference by species 
+merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) %>% ggplot() + geom_histogram(aes(x= diff)) + facet_wrap(~Speciescommonname)
+merged_df %>% ungroup() %>% filter(!diff %in% 0) %>% distinct(Sample) %>% summarize(count= n()) 
+
+#Mean difference for species
+mean_diff <- merged_df %>% group_by(Speciescommonname) %>% filter(!diff %in% 0) %>% summarize(mean_diff= mean(diff))
+
+#Percent error
+perc_error <- merged_df %>% group_by(Speciescommonname) %>% summarize(percent_error= sum(diff != 0)/n()*100)
+```
+
+##### Final dataset
+```{r}
+#combo2 is length dataset only with species in length dataset, need to relabel species here as small and large
+length(unique(combo2$Sample))
+length(unique(combo2$Speciescommonname)) #4 species, 2 age classes, 13946 Samples, 4*2*13947= 111568, number of rows
+
+combo2_edt <- combo2 %>% mutate(Speciescommonname = ifelse(Age_class == "S", paste("small", Speciescommonname), paste("large", Speciescommonname))) %>% dplyr::select(-c(Colnum, Age_class)) %>% rename("Colnum"= "Num_sum")
+
+#Check to see if same # of Sample IDs for P915 and length dataset
+p915_no_length <- p915_CPUE %>% filter(!Speciescommonname %in% other_species$Speciescommonname, !Control1 == 1119763) #Remove SampleID that was inconsistent from CPUE dataset
+
+length(unique(p915_no_length$Sample)) #13946
+length(unique(combo2_edt$Sample)) #13946
+test <- rbind(p915_no_length, combo2_edt)
+
+#Did this work? 
+length(unique(test$Sample)) #13946
+length(unique(test$Speciescommonname)) #41
+#41*13946= 571786, # of rows in this dataset, one row for each sample for each species 
+
+test$doy <- yday(test$Date)
+test$Photoperiod <- daylength(lat= test$Latitude, doy= test$doy)
+test$Season <- ifelse(test$Month==4 | test$Month==5 | test$Month==6, "Spring", ifelse(test$Month==9 |test$Month==10 | test$Month==11 | test$Month==12, "Fall", ifelse(test$Month==7 |test$Month==8, "Summer", "Winter")))
+test$Ym_date <- format(test$Date, "%Y-%m")
+
+p915_CPUE_length <- test 
+write.csv(p915_CPUE_length, "/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_length_multi.csv")
+```
+
+##### Vertification 2
+```{r}
+p915_CPUE_length_multi <- read.csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_length_multi.csv")
+p915_CPUE <- read_csv("/users/sallydowd/Desktop/Ch1Data/P915/p915_CPUE_new.csv")
+
+length_total <- p915_CPUE_length_multi %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
+write.csv(length_total, "/users/sallydowd/Desktop/P915length_total.csv")
+nonlength_total <- p915_CPUE %>% group_by(Speciescommonname) %>% summarize(total_count= sum(Colnum))
+write.csv(nonlength_total, "/users/sallydowd/Desktop/P915nonlength_total.csv")
+
+
+```
+

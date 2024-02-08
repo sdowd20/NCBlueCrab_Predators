@@ -26,7 +26,7 @@ P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2)
 p195_lengthfreq <- read_csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/P195/Finalized/p195_lengthfreq.csv")
 ```
 
-#### P915
+#### P915 raw length 
 
 ```{r}
 #Diagnostics 
@@ -235,7 +235,7 @@ other_species2_freq <- other_species2 %>% group_by(Sample, Colnum, Control2, Spe
 other_species2_freq <- other_species2_freq %>% group_by(Sample, Age_class, Speciescommonname) %>% summarize(Num_sum = sum(Number)) #sum number of individuals in each age class, 10797 samples 
 ```
 
-### P120
+### P120 raw length + blue crabs 
 
 ```{r}
 #Diagnostics 

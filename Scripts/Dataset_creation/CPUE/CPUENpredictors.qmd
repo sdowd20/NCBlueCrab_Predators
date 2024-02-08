@@ -193,8 +193,7 @@ CPUE_grid <- CPUE_dfs_gridded_final %>% mutate("Effort"= ifelse(Survey %in% "P12
 #CPUE by row: since you assigned effort correctly, this will work as it should 
 CPUE_grid$CPUE <- CPUE_grid$Colnum/CPUE_grid$Effort
 
-CPUE_grid <- CPUE_grid %>% group_by(Survey) %>% mutate(CPUE_stdzd= normalize(CPUE, method= "range", range= c(0,1))) ##min-max scaling:
-CPUE_grid <- CPUE_grid %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd))
+CPUE_grid <- CPUE_grid %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE))
 
 #Remove outliers! Turn into NAs and then remove them 
 CPUE_grid_avg <- CPUE_grid %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid$Stemp <= 11.8, NA, CPUE_grid$Stemp), Ssal= ifelse(CPUE_grid$Ssal==0.0, NA, CPUE_grid$Ssal), Sdo= ifelse(CPUE_grid$Sdo==0.0, NA, CPUE_grid$Sdo), Depth= ifelse(CPUE_grid$Depth==0.0, NA, CPUE_grid$Depth)) %>% group_by(Month, Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude)
@@ -203,17 +202,17 @@ CPUE_grid_avg <- CPUE_grid_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% dro
 #Correlation plot to see what to remove
 cor <- cor(CPUE_grid_avg[, c(17, 19:25, 28:32)])
 corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
-cor1 <- cor(CPUE_grid_avg[, c(24:25, 38:41)])
-corrplot(cor1) #maybe remove inlet distance 
+# cor1 <- cor(CPUE_grid_avg[, c(24:25, 38:41)])
+# corrplot(cor1) #maybe remove inlet distance 
 
 #Remove latitude, longitude, all fishing variables except NofishRest and FishingAll_num 
-CPUE_grid_avg_edt <- CPUE_grid_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -CPUE, -CPUE_stdzd, -mean_CPUE, -Month, -Control1)
+CPUE_grid_avg_edt <- CPUE_grid_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -CPUE, -Month, -Control1)
 
 summary(is.na(CPUE_grid_avg_edt)) #no NAs                                           
 ##Make there be one column for each CPUE
-CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE_stdzd, .keep_all= TRUE)
+CPUE_grid_avg_edt <- CPUE_grid_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
-write.csv(CPUE_grid_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_edt.11.21.23.csv")
+#write.csv(CPUE_grid_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_edt.02.08.24.csv")
 ```
 
 ```{r}
@@ -227,8 +226,7 @@ CPUE_grid_BC <- CPUE_dfs_gridded_final_BC %>% mutate("Effort"= ifelse(Survey %in
 #CPUE by row: since you assigned effort correctly, this will work as it should 
 CPUE_grid_BC$CPUE <- CPUE_grid_BC$Colnum/CPUE_grid_BC$Effort
 
-CPUE_grid_BC <- CPUE_grid_BC %>% group_by(Survey) %>% mutate(CPUE_stdzd= normalize(CPUE, method= "range", range= c(0,1))) ##min-max scaling:
-CPUE_grid_BC <- CPUE_grid_BC %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE), mean_CPUE_stdzd= mean(CPUE_stdzd))
+CPUE_grid_BC <- CPUE_grid_BC %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE))
 
 #Remove outliers! Turn into NAs and then remove them 
 CPUE_grid_BC_avg <- CPUE_grid_BC %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid_BC$Stemp <= 11.8, NA, CPUE_grid_BC$Stemp), Ssal= ifelse(CPUE_grid_BC$Ssal==0.0, NA, CPUE_grid_BC$Ssal), Sdo= ifelse(CPUE_grid_BC$Sdo==0.0, NA, CPUE_grid_BC$Sdo), Depth= ifelse(CPUE_grid_BC$Depth==0.0, NA, CPUE_grid_BC$Depth)) %>% group_by(Month, Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude)
@@ -241,14 +239,16 @@ cor1 <- cor(CPUE_grid_BC_avg[, c(24:25, 38:41)])
 corrplot(cor1) #maybe remove inlet distance 
 
 #Remove latitude, longitude, all fishing variables except NofishRest and FishingAll_num 
-CPUE_grid_BC_avg_edt <- CPUE_grid_BC_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -CPUE, -CPUE_stdzd, -mean_CPUE, -Month, -Control1)
+CPUE_grid_BC_avg_edt <- CPUE_grid_BC_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata/station", -Waterbody_A, -Effort, -Effort, -CPUE, -mean_CPUE, -Month, -Control1)
 
 summary(is.na(CPUE_grid_BC_avg_edt)) #no NAs                                           
 ##Make there be one column for each CPUE
-CPUE_grid_BC_avg_edt <- CPUE_grid_BC_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE_stdzd, .keep_all= TRUE)
+CPUE_grid_BC_avg_edt <- CPUE_grid_BC_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
-write.csv(CPUE_grid_BC_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_BCedt.02.01.24.csv")
+write.csv(CPUE_grid_BC_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_BCedt.02.08.24.csv")
 ```
+
+####################### didn't update on 02/08/24 with mean CPUE over standardized, not using this anymore #######################
 
 ##### Count dataset
 
