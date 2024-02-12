@@ -23,50 +23,25 @@ standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-#Load in datasets, 10 km 
+#Load in datasets
 ##CPUE
-df_CPUE_BC <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_BCedt.02.01.24.csv")
-df_CPUE_BC <- df_CPUE_BC[,-1]
-df_CPUE_BC <- df_CPUE_BC %>% mutate_at(c("Sedsize_common", "ShorelineType", "Survey"), as.factor)
-df_CPUE_BC$Speciescommonname <- gsub(" ", "", df_CPUE_BC$Speciescommonname)
-colnames(df_CPUE_BC) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_BC))
-
-##Count dataset 
-df_count_BC <- read_csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_count_avg_BCedt.02.01.24.csv")
-df_count_BC <- df_count_BC %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd)) #need to remove or R will get confused 
-df_count_BC$Speciescommonname <- gsub(" ", "", df_count_BC$Speciescommonname)
-colnames(df_count_BC) <- gsub(pattern = "_", replacement = "", colnames(df_count_BC))
-
-##Binary dataset
-df_binary_BC <- read_csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_binary_BCedt.02.01.24.csv")
-df_binary_BC <- df_binary_BC %>% dplyr::select(-c(...1, CPUE, CPUE_stdzd, mean_CPUE, mean_CPUE_stdzd, avg_count))
-df_binary_BC$Speciescommonname <- gsub(" ", "", df_binary_BC$Speciescommonname)
-colnames(df_binary_BC) <- gsub(pattern = "_", replacement = "", colnames(df_binary_BC))
+df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.12.24.csv")
+df_CPUE_length <- df_CPUE_length[,-1]
+df_CPUE_length <- df_CPUE_length %>% mutate_at(c("Sedsize_common", "ShorelineType", "Survey"), as.factor)
+df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
+colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
 #Pivot-wider datasets: P915
 ##CPUE
-df_CPUE_BC_wide_P915 <- df_CPUE_BC %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "meanCPUEstdzd") %>% drop_na()
+df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "meanCPUE") %>% drop_na()
 
-##Count
-df_count_BC_wide_P915 <- df_count_BC %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "avgcount") %>% drop_na()
-
-##Binary 
-df_binary_BC_wide_P915 <- df_binary_BC %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "binary") %>% drop_na()
-
-#Pivot-wider datasets: P915 and P120 
+#Pivot-wider dataset: P915 and P120 
 ##CPUE
-df_CPUE_BC$SpeciesSurvey <- paste(df_CPUE_BC$Speciescommonname, df_CPUE_BC$Survey, sep= "")
-df_CPUE_BC$meanCPUEstdzd <- as.numeric(df_CPUE_BC$meanCPUEstdzd)
-df_CPUE_BC_wide_both <- df_CPUE_BC %>% filter(Survey %in% "P120"|Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUEstdzd") %>% drop_na()
+df_CPUE_length$SpeciesSurvey <- paste(df_CPUE_length$Speciescommonname, df_CPUE_length$Survey, sep= "")
+df_CPUE_length$meanCPUE <- as.numeric(df_CPUE_length$meanCPUE)
+df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
 
-##Count
-df_count_BC$SpeciesSurvey <- paste(df_count_BC$Speciescommonname, df_count_BC$Survey, sep= "")
-df_count_BC_wide_both <- df_count_BC %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
-
-##Binary 
-df_binary_BC$SpeciesSurvey <- paste(df_binary_BC$Speciescommonname, df_binary_BC$Survey, sep= "")
-df_binary_BC_wide_both <- df_binary_BC %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "binary") %>% drop_na()
-
+#STOPPED HERE
 #Add on forage index to count data 
 ##P915 
 df_count_BC_wide_P915 <- df_count_BC_wide_P915 %>% mutate(reddrumforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, pinfish, spot)), southernkingfishforage = rowSums(dplyr::select(., atlanticmenhaden, atlanticcroaker, spot))) #. allows you to reference dataframe 
