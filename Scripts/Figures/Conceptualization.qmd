@@ -37,4 +37,3 @@ ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/concept_env.jpeg", width= 5, he
 ggplot(data = world) + geom_sf() + geom_sf(data = df_plot, aes(geometry= geometry, fill = NoFishRest), show.legend= FALSE) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank()) + theme(axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank())
 ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/concept_human.jpeg", width= 5, height= 4)
 ```
-
