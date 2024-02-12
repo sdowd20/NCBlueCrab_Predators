@@ -277,23 +277,27 @@ CPUE_grid_length$CPUE <- CPUE_grid_length$Colnum/CPUE_grid_length$Effort
 CPUE_grid_length <- CPUE_grid_length %>% group_by(gridID, Month, Survey, Year, Speciescommonname) %>% mutate(mean_CPUE= mean(CPUE))
 
 #Remove outliers! Turn into NAs and then remove them 
-CPUE_grid_length_avg <- CPUE_grid_length %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid_length$Stemp <= 11.8, NA, CPUE_grid_length$Stemp), Ssal= ifelse(CPUE_grid_length$Ssal==0.0, NA, CPUE_grid_length$Ssal), Sdo= ifelse(CPUE_grid_length$Sdo==0.0, NA, CPUE_grid_length$Sdo), Depth= ifelse(CPUE_grid_length$Depth==0.0, NA, CPUE_grid_length$Depth)) %>% group_by(Month, Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude)
-CPUE_grid_length_avg <- CPUE_grid_length_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 2426 rows
+CPUE_grid_length_avg <- CPUE_grid_length %>% ungroup() %>% mutate(Stemp= ifelse(CPUE_grid_length$Stemp <= 11.8, NA, CPUE_grid_length$Stemp), Ssal= ifelse(CPUE_grid_length$Ssal==0.0, NA, CPUE_grid_length$Ssal), Sdo= ifelse(CPUE_grid_length$Sdo==0.0, NA, CPUE_grid_length$Sdo), Depth= ifelse(CPUE_grid_length$Depth==0.0, NA, CPUE_grid_length$Depth)) %>% group_by(Month, Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude, -Sciname, -ITP)
+
+summary(is.na(CPUE_grid_length))
+summary(is.na(CPUE_grid_length_avg))
+
+CPUE_grid_length_avg <- CPUE_grid_length_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 2619 rows mainly from avg_sdo
 
 #Correlation plot to see what to remove
-cor <- cor(CPUE_grid_length_avg[, c(17, 19:25, 28:32)])
-corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
+# cor <- cor(CPUE_grid_length_avg[, c(17, 19:25, 28:32)])
+# corrplot(cor) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
 # cor1 <- cor(CPUE_grid_length_avg[, c(24:25, 38:41)])
 # corrplot(cor1) #maybe remove inlet distance 
 
 #Remove latitude, longitude, all fishing variables except NofishRest and FishingAll_num 
-CPUE_grid_length_avg_edt <- CPUE_grid_length_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -Sciname, -"Strata.station", -Waterbody_A, -Effort, -Effort, -CPUE, -Month, -Control1)
+CPUE_grid_length_avg_edt <- CPUE_grid_length_avg %>% dplyr::select(-Latitude, -Longitude, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -lat_lon, -Day, -Location, -Colnum, -Date, -Ym_date, -"Strata.station", -Waterbody_A, -Effort, -Effort, -CPUE, -Month, -Control1, -ShorelineType, -Sedsize_common)
 
 summary(is.na(CPUE_grid_length_avg_edt)) #no NAs                                           
 ##Make there be one column for each CPUE
 CPUE_grid_length_avg_edt <- CPUE_grid_length_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
-write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.12.24.csv")
+# write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.12.24.csv")
 ```
 
 ####################### didn't update on 02/08/24 with mean CPUE over standardized, not using this anymore

@@ -175,10 +175,10 @@ nonlength_total <- p915_CPUE %>% group_by(Speciescommonname) %>% summarize(total
 write.csv(nonlength_total, "/users/sallydowd/Desktop/P915nonlength_total.csv")
 ```
 
-
 #### P120
 
 ##### Divide length
+
 ```{r}
 #Deal with length 
 P120_other_species <- P120_bioledt %>% filter(Speciescommonname %in% c( "atlantic croaker", "blue crab")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length) #Length-frequency excel shows justification 
@@ -242,6 +242,7 @@ perc_error <- merged_df %>% group_by(Speciescommonname) %>% summarize(percent_er
 ```
 
 ##### Final dataset
+
 ```{r}
 #Create CPUE dataset with length data 
 ##These need to be species not in length dataset 
@@ -298,6 +299,7 @@ write.csv(haul_sel_spp, "/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/
 ```
 
 ##### Verification #2
+
 ```{r}
 setwd("/Users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Data/P120/Finalized")
 p120_CPUE <- read_csv("p120_CPUE.csv")
@@ -316,4 +318,3 @@ p120_CPUEBC_test <- p120_CPUE_lengthBC %>% filter(!Speciescommonname %in% "small
 library(arsenal)
 summary(comparedf(p120_CPUE_test, p120_CPUEBC_test))
 ```
-
