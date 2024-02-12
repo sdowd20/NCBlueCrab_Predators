@@ -31,21 +31,20 @@ df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
 colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
-#Pivot-wider datasets: P915
-##CPUE
+#Form datasets! 
+##Pivot-wider datasets: P915
 df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "meanCPUE") %>% drop_na()
 
-#Pivot-wider dataset: P915 and P120 
-##CPUE
+##Pivot-wider dataset: P915 and P120 
 df_CPUE_length$SpeciesSurvey <- paste(df_CPUE_length$Speciescommonname, df_CPUE_length$Survey, sep= "")
 df_CPUE_length$meanCPUE <- as.numeric(df_CPUE_length$meanCPUE)
 df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
 
-#Add on forage index to CPUE data
-##Total forage 
+###Add on forage index to CPUE data
+####Total forage 
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, smallspotP915, atlanticmenhadenP120, smallatlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
 
-##Family forage
+####Family forage
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915)), 
                                                                 clupeidaeP120 = rowSums(dplyr::select(., atlanticmenhadenP120)), 
                                                                 sciaenidae_P915 = rowSums(dplyr::select(., smallatlanticcroakerP915, smallspotP915)), 
@@ -55,6 +54,9 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = 
                                                                 penaied_P120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
                                                                 paralichthyidae_P915 = rowSums(dplyr::select(., smallsouthernflounderP915)),
                                                                 paralichthyidae_P120 = rowSums(dplyr::select(., southernflounderP120)))
+
+##Select species of focus, refer to Final dataset & model formula 
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, spotP120, reddrumP915forage:paralichthyidae_P120)
 
 
 ##### INDIVIDUAL FORAGE #####
@@ -73,3 +75,16 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = 
 # ParalichthyidaeP915: smallsouthernflounderP915
 # ParalichthyidaeP120: southernflounderP120 
 # PortunidaeP120: smallbluecrabP120
+
+##Get rid of correlated variables
+check <- df_CPUE_length_wide_both
+cor <- cor(check[, c(2:11)]) #biotic 
+corrplot(cor) #removeInletDistkm (correlated w/ avgssal) and FishingAllnum (correlated w/ gridID)
+cor1 <- cor(check[, c(12:39)]) #abiotic, just indicates to not use individual species with total forage, makes sense
+corrplot(cor1) 
+
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDistkm, -FishingAllnum)
+
+##Make year a factor  
+df_CPUE_length_wide_both$Year_factor <- as.factor(df_CPUE_length_wide_both$Year)
+  
