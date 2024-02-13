@@ -87,4 +87,3 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDis
 
 ##Make year a factor  
 df_CPUE_length_wide_both$Year_factor <- as.factor(df_CPUE_length_wide_both$Year)
-  
