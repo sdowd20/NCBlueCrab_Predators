@@ -25,7 +25,7 @@ df_pred = df_CPUE_length_wide_both[-picked,]
 
 ##Divide inference dataset into testing vs. training 
 inf_ss <- floor(0.7*nrow(df_inf))
-picked_inf = sample(seq_len(nrow(df_CPUE_length_wide_both)),size = inf_ss)
+picked_inf = sample(seq_len(nrow(df_inf)),size = inf_ss)
 df_inf_test = df_inf[-picked_inf,]
 df_inf_train = df_inf[picked_inf,]
 ```
@@ -47,7 +47,7 @@ my_sqrt <- function(var1){
   sqrt(var1) #take square root of variable 
 } #construct model formulas 
 
-dredgeform<- function(pred, covars, alwaysIn='factor(Year)'){ #always in is set to factor Year
+dredgeform<- function(pred, covars, alwaysIn='factor(Yearfactor)'){ #always in is set to factor Year
   p<- length(covars) #number of independent variables
   perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T) #for different combinations of predictor variables
   myforms<- NULL #store formulas 
@@ -66,9 +66,9 @@ dredgeform<- function(pred, covars, alwaysIn='factor(Year)'){ #always in is set 
 ##### Env
 
 ```{r}
-#Load formulas 
+#Load formulas- factor_Yearfactor is already included 
 ##Red drum
-allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Yearfactor)"))
+allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)"))
 ```
 
 ```{r}
@@ -77,25 +77,13 @@ allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)"
 compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
 for (i in 1:length(allformulas_reddrum)) {
-model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_CPUE_BC_wide_both, family= tw(link= "log"))
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_inf_train, family= tw(link= "log"))
 compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
 compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
 print(i)
 }
 
 write.csv(compare_var_tw_reddrum, "/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/Env/compare_var_tw_reddrum_both_env.csv")
-
-#Southern kingfish
-compare_var_tw_southernkingfish <- as.data.frame(matrix(ncol = 2, nrow = 0))
-colnames(compare_var_tw_southernkingfish) <- c("formula", "AIC")
-for (i in 1:length(allformulas_southernkingfish)) {
-model_tw_southernkingfish <- gam(as.formula(allformulas_southernkingfish[i]), family= tw(link= "log"), data= df_CPUE_BC_wide_both)
-compare_var_tw_southernkingfish[i, 1] <- allformulas_southernkingfish[i]
-compare_var_tw_southernkingfish[i, 2] <- AIC(model_tw_southernkingfish)
-print(i)
-}
-
-write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkingfish_both_env.csv")
 ```
 
 ```{r}
@@ -103,7 +91,7 @@ write.csv(compare_var_tw_southernkingfish, "~/Desktop/compare_var_tw_southernkin
 ##Red drum
 compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
 
-reddrum_env <- gam(reddrumP915~s(avgssal)+s(SAVkm)+factor(Year), family= tw(link= "log"), data=df_CPUE_BC_wide_both)
+reddrum_env <- gam(reddrumP915~factor(Yearfactor)+s(SAVkm), family= tw(link= "log"), data=df_inf_train)
 summary(reddrum_env)
 #Test model fit 
 ##Assumptions
@@ -112,7 +100,7 @@ gam.check(reddrum_env)
 
 #TO DO: To assess overfitting: plot marginal effects of each covariate, max k is total # of observations for a covariate - 1 
 
-test <- predict(reddrum_env, newdata= df_CPUE_BC_wide_both, type= "response") #explore this more, tweedie 
+test <- predict(reddrum_env, newdata= df_inf_test, type= "response") #explore this more, tweedie 
 
 
 lets_see <- df_CPUE_BC_wide_both %>% dplyr::select(reddrumP915, avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage) %>% mutate(pred= predict(reddrum_env), type="link") %>% pivot_longer(cols= c(avgssal, SAVkm, smallbluecrabP120, clupeidae_forage, sciaenidae_forage), names_to= "predictor")
@@ -128,7 +116,7 @@ lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method
 ```{r}
 #Load formulas
 ##Red drum
-allformulas_reddrum_M2 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(reddrumP915forageP915)", "s(reddrumP915forageP120)", "factor(Yearfactor)"))
+allformulas_reddrum_M2 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(reddrumP915forageP915)", "s(reddrumP915forageP120)"))
 ```
 
 ```{r}
@@ -170,7 +158,7 @@ lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method
 ```{r}
 #Load formulas
 ##Red drum
-allformulas_reddrum_M3 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(clupeidaeP915)", "s(clupeidaeP120)", "s(sciaenidaeP915)", "s(sciaenidaeP120)", "s(sparidaeP915)", "s(sparidaeP120)", "s(penaiedP120)", "s(paralichthyidaeP120)", "factor(Yearfactor)"))
+allformulas_reddrum_M3 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(clupeidaeP915)", "s(clupeidaeP120)", "s(sciaenidaeP915)", "s(sciaenidaeP120)", "s(sparidaeP915)", "s(sparidaeP120)", "s(penaiedP120)", "s(paralichthyidaeP120)"))
 ```
 
 #### Model comparison
