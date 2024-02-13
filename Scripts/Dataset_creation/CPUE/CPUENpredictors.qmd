@@ -269,7 +269,7 @@ CPUE_dfs_gridded_final_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_all_grid_
 CPUE_dfs_gridded_final_length <- CPUE_dfs_gridded_final_length[,-1]
 
 ##Update on 02/13/24: remove month 9, remove P195 
-CPUE_dfs_gridded_final_length <- CPUE_dfs_gridded_final_length %>% filter(!Survey %in% "P195", !Month %in% 9)
+#CPUE_dfs_gridded_final_length <- CPUE_dfs_gridded_final_length %>% filter(!Survey %in% "P195", !Month %in% 9)
 
 #Effort by survey: this works 
 CPUE_grid_length <- CPUE_dfs_gridded_final_length %>% mutate("Effort"= ifelse(Survey %in% "P120", 1, ifelse(Survey %in% "P195", 20, ifelse(Survey %in% "P915" & Location == "CAPEF" & Month %in% c(04, 05, 06, 07, 08, 09), 240, ifelse(Survey %in% "P915" & Location == "NEWR" & Month %in% c(04, 05, 06, 07, 08, 09), 240, 720))))) #P120: 1 minute tows, P195: 20 minute tows, P915: 240 minute soak time for rivers from April to September and 720 soak time everything else 
@@ -285,7 +285,7 @@ CPUE_grid_length_avg <- CPUE_grid_length %>% ungroup() %>% mutate(Stemp= ifelse(
 summary(is.na(CPUE_grid_length))
 summary(is.na(CPUE_grid_length_avg))
 
-CPUE_grid_length_avg <- CPUE_grid_length_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 2619 rows mainly from avg_sdo
+CPUE_grid_length_avg <- CPUE_grid_length_avg %>% mutate_all(~ifelse(is.nan(.), NA, .)) %>% drop_na() #drops 1945 rows mainly from avg_sdo
 
 #Correlation plot to see what to remove
 # cor <- cor(CPUE_grid_length_avg[, c(17, 19:25, 28:32)])
@@ -300,7 +300,7 @@ summary(is.na(CPUE_grid_length_avg_edt)) #no NAs
 ##Make there be one column for each CPUE
 CPUE_grid_length_avg_edt <- CPUE_grid_length_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
-#write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.13.24.csv")
+write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.13.24.csv")
 ```
 
 ####################### didn't update on 02/08/24 with mean CPUE over standardized, not using this anymore
