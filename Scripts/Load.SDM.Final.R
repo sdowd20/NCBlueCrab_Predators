@@ -25,16 +25,13 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 
 #Load in datasets
 ##CPUE
-df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.12.24.csv")
+df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.13.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
 df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
 colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
 #Form datasets! 
-##Pivot-wider datasets: P915
-df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% ungroup() %>% pivot_wider(names_from = "Speciescommonname", values_from = "meanCPUE") %>% drop_na()
-
 ##Pivot-wider dataset: P915 and P120 
 df_CPUE_length$SpeciesSurvey <- paste(df_CPUE_length$Speciescommonname, df_CPUE_length$Survey, sep= "")
 df_CPUE_length$meanCPUE <- as.numeric(df_CPUE_length$meanCPUE)
@@ -42,7 +39,11 @@ df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey 
 
 ###Add on forage index to CPUE data
 ####Total forage 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forage = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), southernkingfishP915forage = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, smallspotP915, atlanticmenhadenP120, smallatlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)), blackdrumP915forage = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915)), 
+                                                                reddrumP915forageP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), 
+                                                                southernkingfishP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, smallspotP915)),
+                                                                southernkingfishP915forageP120 = rowSums(dplyr::select(., atlanticmenhadenP120, smallatlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
+                                                                blackdrumP915forageP120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
 
 ####Family forage
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915)), 
@@ -56,8 +57,7 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = 
                                                                 paralichthyidae_P120 = rowSums(dplyr::select(., southernflounderP120)))
 
 ##Select species of focus, refer to Final dataset & model formula 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, spotP120, reddrumP915forage:paralichthyidae_P120)
-
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, spotP120, reddrumP915forageP915:paralichthyidae_P120)
 
 ##### INDIVIDUAL FORAGE #####
 # reddrumP915forage: smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120
@@ -77,13 +77,20 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avg
 # PortunidaeP120: smallbluecrabP120
 
 ##Get rid of correlated variables
-check <- df_CPUE_length_wide_both
-cor <- cor(check[, c(2:11)]) #biotic 
-corrplot(cor) #removeInletDistkm (correlated w/ avgssal) and FishingAllnum (correlated w/ gridID)
-cor1 <- cor(check[, c(12:39)]) #abiotic, just indicates to not use individual species with total forage, makes sense
-corrplot(cor1) 
+# check <- df_CPUE_length_wide_both
+# cor <- cor(check[, c(2:11)]) #biotic 
+# corrplot(cor) #removeInletDistkm (correlated w/ avgssal) and FishingAllnum (correlated w/ gridID)
+# cor1 <- cor(check[, c(12:41)]) #abiotic, just indicates to not use individual species with total forage, makes sense
+# corrplot(cor1) 
 
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDistkm, -FishingAllnum)
 
 ##Make year a factor  
 df_CPUE_length_wide_both$Year_factor <- as.factor(df_CPUE_length_wide_both$Year)
+
+##Filter out rare species in total forage or prey family forage (individual species don't matter)
+# test <- df_CPUE_length_wide_both %>% dplyr::select(which(sapply(., function(col) sum(col>0) >= 50)))
+# t <- setdiff(colnames(df_CPUE_length_wide_both), colnames(test)) #paralichthyidae_P915
+
+###Remove paralichthyidae_P915
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-paralichthyidae_P915)

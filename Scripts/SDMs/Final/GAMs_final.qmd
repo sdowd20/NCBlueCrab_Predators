@@ -6,19 +6,33 @@ editor: visual
 
 ```{r}
 #Load packages, functions and datasets
-source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.BC.R")
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 
-#PAUSE: MIGHT NEED TO APPLY TO IMPORTING DATASET
-df_count_BC_wide_both$Year <- as.factor(df_count_BC_wide_both$Year)
+#Subset data
 
-##TEST FOR CORRELATIONS AND VIF! 
+##Inference: AIC with 2/3rds of original dataset, check for overfitting and see if need to adjust k-values, divide this further into testing vs. training
+##Prediction: Remainder 1/3rd to compare b/w GAM and gJam 
 
-unique(df_count_BC_wide_both$Year)
-#change this 
-sample_size_both = floor(0.7*nrow(df_count_BC_wide_both))
-picked_both = sample(seq_len(nrow(df_count_BC_wide_both)),size = sample_size_both) 
-df_count_BC_wide_both_test = df_count_BC_wide_both[-picked_both,]
-df_count_BC_wide_both_train = df_count_BC_wide_both[picked_both,]
+###Divide into inference vs. prediction datasets
+div_ss <- floor(0.7*nrow(df_CPUE_length_wide_both))
+picked= sample(seq_len(nrow(df_CPUE_length_wide_both)),size = div_ss)
+
+#inference dataset
+df_inf = df_CPUE_length_wide_both[picked,]
+
+#prediction dataset
+df_pred = df_CPUE_length_wide_both[-picked,]
+
+##Divide inference dataset into testing vs. training 
+inf_ss <- floor(0.7*nrow(df_inf))
+picked_inf = sample(seq_len(nrow(df_CPUE_length_wide_both)),size = inf_ss)
+df_inf_test = df_inf[-picked_both,]
+df_inf_train = df_inf[picked_both,]
+```
+
+```{r}
+#Diagnostics 
+##test for correlations and VIF
 ```
 
 #### CV
