@@ -48,16 +48,16 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forag
 ####Family forage
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915)), 
                                                                 clupeidaeP120 = rowSums(dplyr::select(., atlanticmenhadenP120)), 
-                                                                sciaenidae_P915 = rowSums(dplyr::select(., smallatlanticcroakerP915, smallspotP915)), 
-                                                                sciaenidae_P120 = rowSums(dplyr::select(., smallatlanticcroakerP120, spotP120)),
-                                                                sparidae_P915 = rowSums(dplyr::select(., pinfishP915)),
-                                                                sparidae_P120 = rowSums(dplyr::select(., pinfishP120)),
-                                                                penaied_P120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
-                                                                paralichthyidae_P915 = rowSums(dplyr::select(., smallsouthernflounderP915)),
-                                                                paralichthyidae_P120 = rowSums(dplyr::select(., southernflounderP120)))
+                                                                sciaenidaeP915 = rowSums(dplyr::select(., smallatlanticcroakerP915, smallspotP915)), 
+                                                                sciaenidaeP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, spotP120)),
+                                                                sparidaeP915 = rowSums(dplyr::select(., pinfishP915)),
+                                                                sparidaeP120 = rowSums(dplyr::select(., pinfishP120)),
+                                                                penaiedP120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
+                                                                paralichthyidaeP915 = rowSums(dplyr::select(., smallsouthernflounderP915)),
+                                                                paralichthyidaeP120 = rowSums(dplyr::select(., southernflounderP120)))
 
 ##Select species of focus, refer to Final dataset & model formula 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, spotP120, reddrumP915forageP915:paralichthyidae_P120)
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, spotP120, reddrumP915forageP915:paralichthyidaeP120)
 
 ##### INDIVIDUAL FORAGE #####
 # reddrumP915forage: smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120
@@ -86,11 +86,11 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avg
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDistkm, -FishingAllnum)
 
 ##Make year a factor  
-df_CPUE_length_wide_both$Year_factor <- as.factor(df_CPUE_length_wide_both$Year)
+df_CPUE_length_wide_both$Yearfactor <- as.factor(df_CPUE_length_wide_both$Year)
 
 ##Filter out rare species in total forage or prey family forage (individual species don't matter)
 # test <- df_CPUE_length_wide_both %>% dplyr::select(which(sapply(., function(col) sum(col>0) >= 50)))
 # t <- setdiff(colnames(df_CPUE_length_wide_both), colnames(test)) #paralichthyidae_P915
 
-###Remove paralichthyidae_P915
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-paralichthyidae_P915)
+###Remove paralichthyidaeP915
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-paralichthyidaeP915)

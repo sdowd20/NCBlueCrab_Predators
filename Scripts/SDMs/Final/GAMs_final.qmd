@@ -26,13 +26,8 @@ df_pred = df_CPUE_length_wide_both[-picked,]
 ##Divide inference dataset into testing vs. training 
 inf_ss <- floor(0.7*nrow(df_inf))
 picked_inf = sample(seq_len(nrow(df_CPUE_length_wide_both)),size = inf_ss)
-df_inf_test = df_inf[-picked_both,]
-df_inf_train = df_inf[picked_both,]
-```
-
-```{r}
-#Diagnostics 
-##test for correlations and VIF
+df_inf_test = df_inf[-picked_inf,]
+df_inf_train = df_inf[picked_inf,]
 ```
 
 #### CV
@@ -64,18 +59,16 @@ dredgeform<- function(pred, covars, alwaysIn='factor(Year)'){ #always in is set 
 }
 ```
 
+```{r}
+#Diagnostics at end- check for vif(full_model)
+```
+
 ##### Env
 
 ```{r}
 #Load formulas 
 ##Red drum
-allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)"))
-
-##Black drum
-allformulas_blackdrum <- dredgeform(pred = "blackdrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(Month)"))
-
-##Southern kingfish
-allformulas_southernkingfish <- dredgeform(pred = "southernkingfishP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(Month)"))   
+allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "factor(Yearfactor)"))
 ```
 
 ```{r}
@@ -135,7 +128,7 @@ lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method
 ```{r}
 #Load formulas
 ##Red drum
-allformulas_reddrum_M2 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(reddrumP915forage)", "s(Year)"))
+allformulas_reddrum_M2 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(reddrumP915forageP915)", "s(reddrumP915forageP120)", "factor(Yearfactor)"))
 ```
 
 ```{r}
@@ -177,7 +170,7 @@ lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method
 ```{r}
 #Load formulas
 ##Red drum
-allformulas_reddrum_M3 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(clupeidae_forage)", "s(sciaenidae_forage)", "s(sparidae_forage)", "s(penaied_forage)", "s(paralichthyidae_forage)", "s(Year)"))
+allformulas_reddrum_M3 <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(clupeidaeP915)", "s(clupeidaeP120)", "s(sciaenidaeP915)", "s(sciaenidaeP120)", "s(sparidaeP915)", "s(sparidaeP120)", "s(penaiedP120)", "s(paralichthyidaeP120)", "factor(Yearfactor)"))
 ```
 
 #### Model comparison
