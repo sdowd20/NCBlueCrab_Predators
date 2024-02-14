@@ -25,6 +25,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 
 #Load in datasets
 ##CPUE
+
 df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.13.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
 df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)

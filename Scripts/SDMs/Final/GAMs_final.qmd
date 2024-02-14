@@ -91,7 +91,7 @@ write.csv(compare_var_tw_reddrum, "/users/sallydowd/Desktop/Ch1Data/Final_result
 ##Red drum
 compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
 
-reddrum_env <- gam(reddrumP915~factor(Yearfactor)+s(SAVkm), family= tw(link= "log"), data=df_inf_train)
+reddrum_env <- gam(reddrumP915~factor(Yearfactor)+s(avgdepth)+s(avgssal)+s(SAVkm), family= tw(link= "log"), data=df_inf_train)
 summary(reddrum_env)
 #Test model fit 
 ##Assumptions
