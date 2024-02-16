@@ -1,0 +1,60 @@
+---
+title: "GAMs_final_real"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+#Red drum 
+reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(reddrum_env)
+
+reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(smallbluecrabP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(reddrum_env_bc)
+
+reddrum_env_forage <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(reddrumP915forageP915) + s(reddrumP915forageP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(reddrum_env_forage)
+
+reddrum_env_bc_forage <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp) + s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(reddrumP915forageP120) + s(reddrumP915forageP915) + s(smallbluecrabP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(reddrum_env_bc_forage)
+
+AIC(reddrum_env, reddrum_env_bc, reddrum_env_forage, reddrum_env_bc_forage) %>% arrange(AIC)
+```
+
+```{r}
+#Southern kingfish
+southernkingfish_env <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(southernkingfish_env)
+
+southernkingfish_env_bc <- gam(southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(smallbluecrabP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(southernkingfish_env_bc)
+
+southernkingfish_env_forage <- gam(southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(southernkingfishP915forageP915) + s(southernkingfishP915forageP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(southernkingfish_env_forage)
+
+southernkingfish_env_bc_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp) + s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(southernkingfishP915forageP120) + s(southernkingfishP915forageP915) + s(smallbluecrabP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(southernkingfish_env_bc_forage)
+
+AIC(southernkingfish_env, southernkingfish_env_bc, southernkingfish_env_forage, southernkingfish_env_bc_forage) %>% arrange(AIC)
+```
+
+```{r}
+#Black drum
+blackdrum_env <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(blackdrum_env)
+
+blackdrum_env_bc <- gam(blackdrumP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(smallbluecrabP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(blackdrum_env_bc)
+
+blackdrum_env_forage <- gam(blackdrumP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(blackdrumP915forageP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(blackdrum_env_forage)
+
+blackdrum_env_bc_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp) + s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor) + s(blackdrumP915forageP120) + s(smallbluecrabP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)
+summary(blackdrum_env_bc_forage)
+
+AIC(blackdrum_env, blackdrum_env_bc, blackdrum_env_forage, blackdrum_env_bc_forage) %>% arrange(AIC)
+```
