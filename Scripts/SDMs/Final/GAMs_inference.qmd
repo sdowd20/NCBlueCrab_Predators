@@ -8,11 +8,12 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
--https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/algo-params/tweedie_link_power.html
--Used tweedie with log link: https://www.ccamlr.org/ru/system/files/science_journal_papers/04candy.pdf
+-https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/algo-params/tweedie_link_power.html -Used tweedie with log link: https://www.ccamlr.org/ru/system/files/science_journal_papers/04candy.pdf
 
-#### Red drum 
-##### Models 
+#### Red drum
+
+##### Models
+
 ```{r}
 #Red drum 
 reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log",), data=df_CPUE_length_wide_both)
@@ -33,7 +34,9 @@ AIC(reddrum_env, reddrum_env_bc, reddrum_env_forage, reddrum_env_bc_forage) %>% 
 ```
 
 ##### Diagnostics
+
 -Interpret partial effect plots: https://towardsdatascience.com/producing-insights-with-generalized-additive-models-gams-cf2b68b1b847
+
 ```{r}
 gam.check(reddrum_env)
 gam.check(reddrum_env_bc)
@@ -46,36 +49,55 @@ plot(reddrum_env_bc, shade= "true")
 plot(reddrum_env_forage, shade= "true") 
 plot(reddrum_env_bc_forage, shade= "true") 
 
-#Marginal effect plots
+#Predictions 
 
-#Look at GLMs for prediction with log link 
-test <- as.data.frame(predict(reddrum_env), df_CPUE_length_wide_both, type= "response")
-colnames(test) <- "prediction"
-test <- test %>% mutate(pred2= exp(prediction)) #get predictions on correct scale 
+#Environment only 
+reddrum_env_pred <- as.data.frame(predict(reddrum_env), df_CPUE_length_wide_both, type= "response")
+colnames(reddrum_env_pred) <- "prediction"
+reddrum_env_pred <- reddrum_env_pred %>% mutate(pred2= exp(prediction)) #get predictions on correct scale 
+df_env <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, Yearfactor, reddrumP915)
+df_env <- bind_cols(df_env, reddrum_env_pred)
+df_env_long <- df_env %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, reddrumP915), names_to= "predictor")
+df_env_long %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE")
+df_env %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
 
-df <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, Yearfactor, reddrumP915)
-bind <- bind_cols(df, test)
+#Environment + BC 
+reddrum_env_bc_pred <- as.data.frame(predict(reddrum_env_bc), df_CPUE_length_wide_both, type= "response")
+colnames(reddrum_env_bc_pred) <- "prediction"
+reddrum_env_bc_pred <- reddrum_env_bc_pred %>% mutate(pred2= exp(prediction)) #get predictions on correct scale 
+df_env_bc <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, Yearfactor, reddrumP915, smallbluecrabP120)
+df_env_bc <- bind_cols(df_env_bc, reddrum_env_bc_pred)
+df_env_bc_long <- df_env_bc %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, reddrumP915, smallbluecrabP120), names_to= "predictor")
+df_env_bc_long %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE")
+df_env_bc %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
 
-bind %>% ggplot(aes(x= avgssal, y= pred2)) + geom_point() stat_smooth(method = "gam", formula = re ~ s(x), method.args = list(fit = gam_model))
+#Environment + total forage
+reddrum_env_forage_pred <- as.data.frame(predict(reddrum_env_forage), df_CPUE_length_wide_both, type= "response")
+colnames(reddrum_env_forage_pred) <- "prediction"
+reddrum_env_forage_pred <- reddrum_env_forage_pred %>% mutate(pred2= exp(prediction)) #get predictions on correct scale 
+df_env_forage <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, Yearfactor, reddrumP915, reddrumP915forageP915, reddrumP915forageP120)
+df_env_forage <- bind_cols(df_env_forage, reddrum_env_forage_pred)
+df_env_forage_long <- df_env_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120), names_to= "predictor")
+df_env_forage_long %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE")
+df_env_forage %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
 
+#Environment + bc + total forage
+reddrum_env_bc_forage_pred <- as.data.frame(predict(reddrum_env_bc_forage), df_CPUE_length_wide_both, type= "response")
+colnames(reddrum_env_bc_forage_pred) <- "prediction"
+reddrum_env_bc_forage_pred <- reddrum_env_bc_forage_pred %>% mutate(pred2= exp(prediction)) #get predictions on correct scale 
+df_env_bc_forage <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, Yearfactor, reddrumP915, smallbluecrabP120, reddrumP915forageP915, reddrumP915forageP120)
+df_env_bc_forage <- bind_cols(df_env_bc_forage, reddrum_env_bc_forage_pred)
+df_env_bc_forage_long <- df_env_bc_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, reddrumP915, smallbluecrabP120, reddrumP915forageP915, reddrumP915forageP120), names_to= "predictor")
+df_env_bc_forage_long %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE")
+df_env_bc_forage %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
 
-  s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor)
-  
-  plot(reddrum_env, select = 1, shade = TRUE, main = "avgssal") #partial effect plots: show component effect of each of smooth or linear terms in model, centered around mean: increase or decrease in y axis is reflected in average predicted value of response, if above 0 than higher than average, decrease in ssal decreases # of reddrum 
-
-
-lets_see <- bind %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, SAVkm, NoFishRest, Yearfactor, reddrumP915), names_to= "predictor")
-
-lets_see %>% ggplot(aes(value, reddrumP915)) + geom_point() + geom_smooth(method= "loess") + facet_wrap(~predictor, scales= "free") + standard_theme
-#plot predictor variable effects 
-#plot marginal effects of each covariate
-#max k is total # of observations for a covariate - 1 
-#covariate effect plots 
+#partial effect plots: show component effect of each of smooth or linear terms in model, centered around mean: increase or decrease in y axis is reflected in average predicted value of response, if above 0 than higher than average, decrease in ssal decreases # of reddrum  
 ```
 
 #### Southern kingfish
 
-##### Models 
+##### Models
+
 ```{r}
 southernkingfish_env <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(SAVkm)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
 summary(southernkingfish_env)
