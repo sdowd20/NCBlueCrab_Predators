@@ -6,9 +6,7 @@ editor: visual
 
 Code to select the best model for prediction of blue crab predators through generalized additive models.
 
-Helpful articles:
--Setup initial GAM: https://bcheggeseth.github.io/253_fall_2021/local-regression-gams.html 
--Best for CV: https://www.tidymodels.org/start/resampling/ -An Introduction to Calibration wiht tidymodels: https://www.tidymodels.org/learn/models/calibration/
+Helpful articles: -Setup initial GAM: https://bcheggeseth.github.io/253_fall_2021/local-regression-gams.html -Best for CV: https://www.tidymodels.org/start/resampling/ -An Introduction to Calibration wiht tidymodels: https://www.tidymodels.org/learn/models/calibration/
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
@@ -63,13 +61,13 @@ terms <- sub(".* ~ (.+?)(?:\\+1)?$", "\\1", f)
 
 Using k-fold cross-validation, we build a gam() model on 4/5ths of the data, leaving 1/5 out. We do this a bunch of different times for each variable combination and get out R2 or RMSE.
 
-K-fold cross-validation is used to find the best model for prediction. The data is randomly split into k-subsets (k-fold) let's say 5. 4/5 of the data is for training the model and 1/5 of the data is for testing the model. Each fold is used as a validation set once where the remaining folds forms the training set. The prediction error is calculated. This process continues until each set of data has functioned as the test set. 
+K-fold cross-validation is used to find the best model for prediction. The data is randomly split into k-subsets (k-fold) let's say 5. 4/5 of the data is for training the model and 1/5 of the data is for testing the model. Each fold is used as a validation set once where the remaining folds forms the training set. The prediction error is calculated. This process continues until each set of data has functioned as the test set.
 
-Typically, a k value of 5 or 10 is selected. The lower the k, the more biased the error rate estimates are. 
+Typically, a k value of 5 or 10 is selected. The lower the k, the more biased the error rate estimates are.
 
-With repeated k-fold cross-validation, the data is split into different folds. If there are 3 repeats on 5-fold cross-validation, the data is split into 5 different folds 3 times. The cross-validation procedure is repeated multiple times. 
+With repeated k-fold cross-validation, the data is split into different folds. If there are 3 repeats on 5-fold cross-validation, the data is split into 5 different folds 3 times. The cross-validation procedure is repeated multiple times.
 
-This is all done based on the initial data split into testing vs. training dataset. The training dataset is typically divided up once and this is used in model building. 
+This is all done based on the initial data split into testing vs. training dataset. The training dataset is typically divided up once and this is used in model building.
 
 ```{r}
 #Split the data once 
@@ -119,10 +117,6 @@ reddrum_env[i, 3] <- t$mean[2]
 ```
 
 ```{r}
-
-```
-
-```{r}
 compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
 colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
 for (i in 1:length(allformulas_reddrum)) {
@@ -132,19 +126,6 @@ compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
 print(i)
 }
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ```{r}
 #Interpret
