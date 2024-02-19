@@ -1,0 +1,36 @@
+---
+title: "P100_EDA"
+format: html
+editor: visual
+---
+
+#### Overall data set description
+
+Sampling for P100, the Juvenile Anadromous Survey, began in 1982. The trawl survey samples in June through October. The exception is with Hassler and Central Sound trawls that are conducted bimonthly during this time period. The purpose is "To determine relative abundance, growth and distribution of juvenile alosines and striped bass throughout the Albemarle Sound area and its tributaries."
+
+Further standardization of the survey occured in 2004. Since 2004, the trawls have been conducted June through October and the gear has been kept consistent. Before then, the tow time would vary depending on Gear1 type and methodology. Now, there are only two types of Gear1 that have been utilized, 535 or 311. For Gear1 = 535, the tow time is 10 to 15 minutes depending on the station sampled. From 2004 to present, Gear1= 311 duration or tow time should be plank. Gear1 = 535 is a semi balloon trawl and Gear1= 311 is a bag seine.
+
+This is the current narrative for 2004-present for the different sampling methodlogy:
+
+Striped bass trawls: Hassler trawls have been conducted since 1984 at 7 stations. These trawls consist of seven locations in the western portion of Albemarle Sound and are completed on an every other week basis starting the week following the end of the striped bass seines. The gear used is the same gear Dr. Hassler used when the stations were established; an 18 ft semi balloon trawl made from 0.75 inch stretched mesh for the body and wings and a 0.125 inch stretched mesh tail bag (535). The stations sampled are; 153, 149, 137, 150, 151, 152, and 139. The tow duration remains 15 minutes.\
+Central Sound trawls (12 stations) have been conducted since 1984 in the central portion of Albemarle Sound. These trawls consist of 12 stations completed every other week opposite the Hassler stations. The gear used is the same as the Hassler gear (535) but the trawl duration is reduced to 10 minutes. Stations sampled are; 156, 154, 155, 144, 143, 142, 160, 157, 134, 28, 158, and 159.
+
+Alosid Seines: Alosine core seines (11 stations) have been completed since 1972 on a monthly basis from June through October. These seines are conducted in the western portions of Albemarle Sound and the Chowan River. In 2008 (June-November) these eleven core stations were sampled weekly to determine accuracy of sampling. In 2009 (June-October) these eleven core stations were sampled twice a month to evaluate adequate frequency of sampling. Gear used is the same as the striped bass seine and stations are; 48S, 56S, 47S, 46S, 128S, 85S, 84S, 126S, 39S, 130S, and 127S.
+
+Historical trawl sites (43 stations) were reactivated in 2004 to help fill data needs for the upcoming Perch and Catfish FMPs. These additional trawls are completed on a monthly basis from June through October. These trawls incorporate sites in all the major tributaries of Albemarle Sound except Roanoke River and include sites in Currituck Sound. Gear is the same trawl (535) duration is 10 minutes and stations are; 320, 321, 322, 314, 318, 316, 315, 11, 9, 7, 3, 104, 89, 90, 92, 100, 99, 97, OW1, 6, OW7, 87, 85, 59, 56, OW11, OW10, OW12, 49, 51, 41, 44, 36, 38, 35, 37, OW16, 29, 31, 26, 24, 19, 18, OW9.
+
+There are also striped bass seines and alsoid seines. This analysis will not consider seines.
+
+In terms of sample workup, samples are sorted to the species with up to 30 individuals of each anadromous species present are measured to the nearest millimeter FL and TL. Other species are subsampled and length measurements recorded to nearest millimeter or species documented. For other fish, if there are two different size groups and they are subsampled separately, denoted by species status (SPSTATUS) (I think you dealt with this w/ atlantic menhaden P100).
+
+```{r}
+
+```
+
+
+
+
+
+First thing: plot stations for all the trawls
+
+To note: have to consider effort in Gear1= 535 b/c Hassler trawls are 15 minutes and Central sound trawls are 10 mins, leave out the bag seine- only consider trawl? Historical tarwl sites have 10 minute tow time

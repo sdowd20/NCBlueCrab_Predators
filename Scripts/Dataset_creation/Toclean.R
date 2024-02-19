@@ -470,3 +470,15 @@ ugh2$Speciescommonname <- str_to_lower(ugh2$Speciescommonname)
 P120_P135_sppnames <- ugh2 %>% mutate_at('Speciescode', as.character)
 biol_edt <- biol %>% left_join(P120_P135_sppnames, by= "Speciescode")
 # write_xlsx(biol_edt, "/Users/sallydowd/Desktop/Ch1Data/P135/biol_edt.xlsx") #02/06/23
+
+#####P100#####
+setwd("/Users/sallydowd/Desktop/Ch1Data/P100/Data")
+filenames <- list.files("/Users/sallydowd/Desktop/Ch1Data/P100/Data")
+all <- lapply(filenames, readr::read_csv)
+merged <- do.call(rbind, all)
+
+colnames(merged) <- str_to_title(colnames(merged))
+merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Spring", ifelse(merged$Month==9 |merged$Month==10 | merged$Month==11 | merged$Month==12, "Fall", ifelse(merged$Month==7 |merged$Month==8, "Summer", "Winter")))
+merged$Date <- as.Date(paste(merged$Month, merged$Day, merged$Year, sep= "-"), "%m-%d-%Y")
+merged$Ym_date <- format(merged$Date, "%Y-%m")
+
