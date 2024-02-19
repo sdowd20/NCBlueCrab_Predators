@@ -482,3 +482,24 @@ merged$Season <- ifelse(merged$Month==4 | merged$Month==5 | merged$Month==6, "Sp
 merged$Date <- as.Date(paste(merged$Month, merged$Day, merged$Year, sep= "-"), "%m-%d-%Y")
 merged$Ym_date <- format(merged$Date, "%Y-%m")
 
+#identify column names with dot
+columns_with_dot <- colnames(merged)[sapply(merged, function(x) any(grepl("\\.", x)))]
+print(columns_with_dot) #all check out 
+
+#deal with species names 
+merged$Species_common <- str_to_lower(merged$Species_common)
+unique(merged$Species_common)
+switch_order <- function(text) {
+  words <- unlist(strsplit(text, ", "))
+  switched_text <- paste(rev(words), collapse = " ")
+  return(switched_text)
+}
+merged$Species_common <- sapply(merged$Species_common, switch_order)
+unique(merged$Species_common)
+
+merged <- merged %>% filter(!Species_common %in% "8835022102") %>% rename("Speciescommonname"= Species_common)
+#removes 1 row 
+
+library(writexl)
+# write_xlsx(merged, "/Users/sallydowd/Desktop/Ch1Data/P100/p100_clean.xlsx") #02/06/23
+
