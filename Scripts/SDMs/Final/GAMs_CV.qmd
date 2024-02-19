@@ -8,6 +8,9 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
+Helpful articles: -Setup initial GAM: https://bcheggeseth.github.io/253_fall_2021/local-regression-gams.html -Best for CV: https://www.tidymodels.org/start/resampling/ 
+-An Introduction to Calibration with tidymodels: https://www.tidymodels.org/learn/models/calibration/
+
 ```{r}
 set.seed(123) #only divide data once 
 #4/5, 1/5ths 
@@ -28,17 +31,26 @@ set_engine(engine = 'mgcv', family= tw(link= "log")) %>% set_mode('regression')
 ```
 
 ```{r}
-folds <- vfold_cv(data_train, v= 5, strata= reddrumP915, repeats= 1) #10 fold cross-validation repeated 5 times on the training set 
+folds <- vfold_cv(data_train, v= 5, strata= reddrumP915, repeats= 50) #10 fold cross-validation repeated 5 times on the training set 
+#strata: create a stratified CV object, too little data to stratify by Year 
 ```
 
 ```{r}
 #Fit model
 set.seed(123)
-gam_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgstemp, avgssal, Yearfactor, avgsdo)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgstemp) + s(avgssal) + Yearfactor + s(avgsdo)) %>% fit(data= data_train) 
+gam_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgstemp, avgssal, avgsdo, Year)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgstemp) + s(avgssal) + s(avgsdo) + s(Year)) %>% fit(data= data_train) 
 
 #Perform cross-validation
 gam_fit_rs <- gam_wf %>% fit_resamples(folds) 
+
+#15/100 fitting terminated with step failure w/avgsdo, avgstemp, avgssal, Yearfactor
+#some when remove avgsdo 
+#
+summary(gam_fit_rs)
 t <- collect_metrics(gam_fit_rs)
+
+show_best(gam_fit_rs, metric = "rmse")
+
 
 gam_wf2 <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgstemp, avgssal, avgsdo, Yearfactor, reddrumP915forageP915, reddrumP915forageP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgstemp) + s(avgssal) + Yearfactor + s(avgsdo) + s(reddrumP915forageP915) + s(reddrumP915forageP120)) %>% fit(data= data_train) 
 
@@ -54,4 +66,3 @@ reddrum_env[i, 3] <- t$mean[2]
 #workflow: creates workflow, aggregate information required to fit and predict from a model
 #fit_resamples(): analysis set (division within training data set) is used for prediction, 4/5 of data are used to fit the model, 1/5 is used for predictions, 5 predictions in non-repeated CV 
 ```
-
