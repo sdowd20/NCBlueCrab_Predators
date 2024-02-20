@@ -24,13 +24,35 @@ There are also striped bass seines and alsoid seines. This analysis will not con
 In terms of sample workup, samples are sorted to the species with up to 30 individuals of each anadromous species present are measured to the nearest millimeter FL and TL. Other species are subsampled and length measurements recorded to nearest millimeter or species documented. For other fish, if there are two different size groups and they are subsampled separately, denoted by species status (SPSTATUS) (I think you dealt with this w/ atlantic menhaden P100).
 
 ```{r}
+P100_bioledt <- read_excel("~/Desktop/Ch1Data/P100/p100_clean.xlsx", col_types= "text")
+```
 
+#### Create CPUE dataset
+
+The collection number is the Control1. This represents one haul/pull 
+
+```{r}
+haul <- P100_bioledt %>% group_by(Date, Location, Station, Control1) %>% mutate(ID=row_number()) %>% filter(ID==1) %>% as.data.frame()
+haul$Species=NA#create a dummy column first
+
+testit <- P100_bioledt %>% dplyr::select(Control1, Date, Location, Station, Colsze, Samsze, Speciescommonname:Subnum) %>% filter(Control1 == 8124, Speciescommonname %in% "white perch")
+
+
+testit <- P120_bioledt %>% filter(Year > 2001) %>% dplyr::select(Control1, Date, Location, Station, Speciescommonname, Colnum, Spstatus) 
+
+yikes <- P120_bioledt %>% filter(Control1 %in% 205170, Speciescommonname %in% "spot") %>% dplyr::select(Control1, Date, Location, Station, Speciescommonname, Colnum, Spstatus) 
+
+sel_spp_120joinedt <- sel_spp_120 %>% group_by(Speciescommonname,Control1)%>% mutate(id=row_number())%>% filter(Control1 %in% 205170, Speciescommonname %in% "spot")
+
+%>% filter(Control1 == 8124, Speciescommonname %in% "white perch")
 ```
 
 
 
 
 
+
+##########Exploring###############
 First thing: plot stations for all the trawls
 
 To note: have to consider effort in Gear1= 535 b/c Hassler trawls are 15 minutes and Central sound trawls are 10 mins, leave out the bag seine- only consider trawl? Historical tarwl sites have 10 minute tow time

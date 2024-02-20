@@ -8,8 +8,7 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
-Helpful articles: -Setup initial GAM: https://bcheggeseth.github.io/253_fall_2021/local-regression-gams.html -Best for CV: https://www.tidymodels.org/start/resampling/ 
--An Introduction to Calibration with tidymodels: https://www.tidymodels.org/learn/models/calibration/
+Helpful articles: -Setup initial GAM: https://bcheggeseth.github.io/253_fall_2021/local-regression-gams.html -Best for CV: https://www.tidymodels.org/start/resampling/ -An Introduction to Calibration with tidymodels: https://www.tidymodels.org/learn/models/calibration/
 
 ```{r}
 set.seed(123) #only divide data once 
@@ -31,38 +30,48 @@ set_engine(engine = 'mgcv', family= tw(link= "log")) %>% set_mode('regression')
 ```
 
 ```{r}
-folds <- vfold_cv(data_train, v= 5, strata= reddrumP915, repeats= 50) #10 fold cross-validation repeated 5 times on the training set 
+folds <- vfold_cv(data_train, v= 5, strata= reddrumP915, repeats= 100) #10 fold cross-validation repeated 5 times on the training set 
 #strata: create a stratified CV object, too little data to stratify by Year 
 ```
 
+#### Red drum
 ```{r}
-#Fit model
 set.seed(123)
-gam_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgstemp, avgssal, avgsdo, Year)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgstemp) + s(avgssal) + s(avgsdo) + s(Year)) %>% fit(data= data_train) 
 
-#Perform cross-validation
-gam_fit_rs <- gam_wf %>% fit_resamples(folds) 
+#Environment
+reddrum_env_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Year)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(Year)) %>% fit(data= data_train) 
+                                                           
+reddrum_env_cv <- reddrum_env_wf %>% fit_resamples(folds)
+reddrum_env_cv2 <- collect_metrics(reddrum_env_cv)
 
-#15/100 fitting terminated with step failure w/avgsdo, avgstemp, avgssal, Yearfactor
-#some when remove avgsdo 
-#
-summary(gam_fit_rs)
-t <- collect_metrics(gam_fit_rs)
+#Environment + bc
+reddrum_env_bc_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Year, smallbluecrabP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(Year) + s(smallbluecrabP120)) %>% fit(data= data_train) 
 
-show_best(gam_fit_rs, metric = "rmse")
+reddrum_env_bc_cv <- reddrum_env_bc_wf %>% fit_resamples(folds)
+reddrum_env_bc_cv2 <- collect_metrics(reddrum_env_bc_cv)
 
+#Environment + forage
+reddrum_env_forage_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Year, reddrumP915forageP915, reddrumP915forageP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(Year) + s(reddrumP915forageP915) + s(reddrumP915forageP120)) %>% fit(data= data_train) 
 
-gam_wf2 <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgstemp, avgssal, avgsdo, Yearfactor, reddrumP915forageP915, reddrumP915forageP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgstemp) + s(avgssal) + Yearfactor + s(avgsdo) + s(reddrumP915forageP915) + s(reddrumP915forageP120)) %>% fit(data= data_train) 
+reddrum_env_forage_cv <- reddrum_env_forage_wf %>% fit_resamples(folds)
+reddrum_env_forage_cv2 <- collect_metrics(reddrum_env_forage_cv)
 
-gam_fit_rs2 <- gam_wf2 %>% fit_resamples(folds) 
-t2 <- collect_metrics(gam_fit_rs2)
+#Environment + bc + forage 
+reddrum_env_bc_forage_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Year, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(Year) + s(reddrumP915forageP915) + s(reddrumP915forageP120) + s(smallbluecrabP120)) %>% fit(data= data_train) 
 
-reddrum_env <- as.data.frame(matrix(ncol = 3, nrow = 0))
-colnames(reddrum_env) <- c("formula", "rmse", "rsq")
-reddrum_env[i, 1] <- allformulas_reddrum[i]
-reddrum_env[i, 2] <- t$mean[1]
-reddrum_env[i, 3] <- t$mean[2]
+reddrum_env_bc_forage_cv <- reddrum_env_bc_forage_wf %>% fit_resamples(folds)
+reddrum_env_bc_forage_cv2 <- collect_metrics(reddrum_env_bc_forage_cv)
 
 #workflow: creates workflow, aggregate information required to fit and predict from a model
 #fit_resamples(): analysis set (division within training data set) is used for prediction, 4/5 of data are used to fit the model, 1/5 is used for predictions, 5 predictions in non-repeated CV 
+```
+
+#### Southern kingfish
+```{r}
+
+```
+
+#### Black drum 
+```{r}
+
 ```

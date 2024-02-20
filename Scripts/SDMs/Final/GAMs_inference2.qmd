@@ -1,0 +1,82 @@
+---
+title: "GAMs_inference2"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(smallbluecrabP120)", "s(reddrumP915forageP120)", "s(reddrumP915forageP120)"))
+
+allformulas_sk <- dredgeform(pred = "southernkingfishP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(southernkingfishP915forageP915)", "s(southernkingfishP915forageP120)"))
+
+allformulas_blackdrum <- dredgeform(pred = "blackdrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(smallbluecrabP120"))
+
+#Divide dataset
+div_ss <- floor(0.7*nrow(df_CPUE_length_wide_both))
+picked= sample(seq_len(nrow(df_CPUE_length_wide_both)),size = div_ss)
+
+#inference dataset
+df_inf = df_CPUE_length_wide_both[picked,]
+
+#prediction dataset
+df_pred = df_CPUE_length_wide_both[-picked,]
+```
+
+```{r}
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_inf, family= tw(link= "log"))
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+print(i)
+}
+
+write.csv(compare_var_tw_reddrum, "/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/compare_var_tw_reddrum_best.csv")
+
+compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
+#"reddrumP915~factor(Yearfactor)+s(avgdepth)+s(avgstemp)+s(avgsdo)+s(NoFishRest)"
+#"reddrumP915~factor(Yearfactor)+s(avgssal)+s(avgsdo)+s(NoFishRest)"
+#"reddrumP915~factor(Yearfactor)+s(avgssal)+s(NoFishRest)"
+```
+
+```{r}
+compare_var_tw_sk <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_sk) <- c("formula", "AIC")
+for (i in 1:length(allformulas_sk)) {
+model_tw_sk <- gam(as.formula(allformulas_sk[i]), data=df_inf, family= tw(link= "log"))
+compare_var_tw_sk[i, 1] <- allformulas_sk[i]
+compare_var_tw_sk[i, 2] <- AIC(model_tw_sk)
+print(i)
+}
+
+write.csv(compare_var_tw_sk, "/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/compare_var_tw_sk_best.csv")
+
+compare_var_tw_sk %>% arrange(AIC) %>% .[1,1]
+
+#"southernkingfishP915~factor(Yearfactor)+s(avgdepth)+s(avgssal)+s(avgsdo)+s(NoFishRest)"
+```
+
+```{r}
+compare_var_tw_blackdrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_blackdrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_blackdrum)) {
+model_tw_blackdrum <- gam(as.formula(allformulas_blackdrum[i]), data=df_inf, family= tw(link= "log"))
+compare_var_tw_blackdrum[i, 1] <- allformulas_blackdrum[i]
+compare_var_tw_blackdrum[i, 2] <- AIC(model_tw_blackdrum)
+print(i)
+}
+
+write.csv(compare_var_tw_blackdrum, "/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/compare_var_tw_blackdrum_best.csv")
+
+compare_var_tw_blackdrum %>% arrange(AIC) %>% .[1,1]
+
+#"blackdrumP915~factor(Yearfactor)+s(avgdepth)+s(avgstemp)+s(avgsdo)+s(NoFishRest)"
+#"blackdrumP915~factor(Yearfactor)+s(avgdepth)+s(avgssal)+s(NoFishRest)"
+# "blackdrumP915~factor(Yearfactor)+s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)"
+```
+

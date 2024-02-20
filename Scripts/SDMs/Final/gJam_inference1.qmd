@@ -1,0 +1,38 @@
+---
+title: "gJam_inference1"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+#### Red drum
+```{r}
+#Environment, total forage 
+xdata <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+ydata <- df_CPUE_length_wide_both %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120) 
+
+# ml <- list(ng = 60000, burnin = 50000, typeNames = 'DA')
+ml <- list(ng= 100, burnin= 50, typeNames= 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+modo_allx <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+save(modo_allx, file= "~/Desktop/modo_allx.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '~/Desktop/modo_allx_plots2/')
+gjamPlot(output = modo_allx, plotPars = plot)
+modo_allx$fit$DIC
+modo_allx$fit$rmspeAll
+modo_allx$fit$rmspeBySpec
+
+#conditional and unconditional prediction 
+
+#mean values of predator or probability of presence from environmental covariate values and fitted coefficients 
+#conditional predictions which adds in information from residual covariance 
+#conditional vs. unconditional prediction in sample 
+#can only compare environment vs. species importance through conditional vs. unconditional prediction 
+```
+

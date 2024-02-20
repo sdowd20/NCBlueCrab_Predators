@@ -500,6 +500,18 @@ unique(merged$Species_common)
 merged <- merged %>% filter(!Species_common %in% "8835022102") %>% rename("Speciescommonname"= Species_common)
 #removes 1 row 
 
-library(writexl)
-# write_xlsx(merged, "/Users/sallydowd/Desktop/Ch1Data/P100/p100_clean.xlsx") #02/06/23
+#Fix location issues - not working!! 
+P100_locations <- read_excel("~/Documents/GitHub/NCBlueCrab_Predators/Data/P100/P100_locations.xlsx")
+colnames(P100_locations) <- str_to_title(colnames(P100_locations))
+P100_locations <- P100_locations %>% dplyr::select(Station__, Location, Lat_dd, Long_dd, Loc_sta) %>% rename(Latitude= Lat_dd, Longitude= Long_dd, Station= Station__)
+P100_locations$Location <- as.numeric(P100_locations$Location)
+merged$Loc_sta <- paste(merged$Location, merged$Station, sep= "")
+# merged$LocStat <- paste(merged$Location, merged$Station, sep="")
+merged_edt <- merged %>% left_join(P100_locations, by= "Loc_sta") %>% filter(Gear1 %in% 535)
+
+unique(P100_locations$LocStat)
+P100_locations %>% filter(Location %in% 208000500)
+d <- merged_edt %>% filter(Latitude %in% NA) %>% dplyr::select(Latitude, Location, Station) 
+unique(d$LocStat)
+# write_xlsx(merged_edt, "/Users/sallydowd/Desktop/Ch1Data/P100/p100_clean.xlsx") #02/06/23
 

@@ -8,17 +8,19 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
--https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/algo-params/tweedie_link_power.html 
--Used tweedie with log link: https://www.ccamlr.org/ru/system/files/science_journal_papers/04candy.pdf
+-https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/algo-params/tweedie_link_power.html -Used tweedie with log link: https://www.ccamlr.org/ru/system/files/science_journal_papers/04candy.pdf
 
 #### Red drum
 
-##### Models: all model types 
+##### Models: all model types
 
 ```{r}
 #Red drum 
 reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
 summary(reddrum_env)
+
+#Outlier issue
+t <- df_CPUE_length_wide_both %>% filter(smallbluecrabP120 < 182)
 
 reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(smallbluecrabP120), family= tw(link= "log",), data=df_CPUE_length_wide_both)
 summary(reddrum_env_bc)
@@ -109,23 +111,6 @@ vif(reddrum_env2)
 cor(df_CPUE_length_wide_both %>% dplyr::select(avgdepth,avgssal, avgstemp, avgsdo, SAVkm, NoFishRest)) #SAVkm correlated by 0.40 with avgssal 
 ```
 
-##### Models: best
-```{r}
-#Predictions matter her e
-allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(SAVkm)", "s(NoFishRest)"))
-
-compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
-colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
-for (i in 1:length(allformulas_reddrum)) {
-model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=df_inf_train, family= tw(link= "log"))
-compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
-compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
-print(i)
-}
-
-write.csv(compare_var_tw_reddrum, "/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/Env/compare_var_tw_reddrum_both_env.csv")
-```
-
 #### Southern kingfish
 
 ##### Models
@@ -147,7 +132,9 @@ AIC(southernkingfish_env, southernkingfish_env_bc, southernkingfish_env_forage, 
 ```
 
 #### Black drum
-##### Models 
+
+##### Models
+
 ```{r}
 #Black drum
 blackdrum_env <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
