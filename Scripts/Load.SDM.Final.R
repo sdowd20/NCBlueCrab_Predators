@@ -51,7 +51,7 @@ dredgeform<- function(pred, covars, alwaysIn='factor(Yearfactor)'){ #always in i
 #Load in datasets
 ##CPUE
 
-df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.13.24.csv")
+df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.20.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
 df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
@@ -66,24 +66,24 @@ df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey 
 ###Add on forage index to CPUE data
 ####Total forage 
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915)), 
-                                                                reddrumP915forageP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), 
+                                                                reddrumP915forageP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, smallspotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), 
                                                                 southernkingfishP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, smallspotP915)),
-                                                                southernkingfishP915forageP120 = rowSums(dplyr::select(., atlanticmenhadenP120, smallatlanticcroakerP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
+                                                                southernkingfishP915forageP120 = rowSums(dplyr::select(., atlanticmenhadenP120, smallatlanticcroakerP120, smallspotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
                                                                 blackdrumP915forageP120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)))
 
-####Family forage
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915)), 
-                                                                clupeidaeP120 = rowSums(dplyr::select(., atlanticmenhadenP120)), 
-                                                                sciaenidaeP915 = rowSums(dplyr::select(., smallatlanticcroakerP915, smallspotP915)), 
-                                                                sciaenidaeP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, spotP120)),
-                                                                sparidaeP915 = rowSums(dplyr::select(., pinfishP915)),
-                                                                sparidaeP120 = rowSums(dplyr::select(., pinfishP120)),
-                                                                penaiedP120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
-                                                                paralichthyidaeP915 = rowSums(dplyr::select(., smallsouthernflounderP915)),
-                                                                paralichthyidaeP120 = rowSums(dplyr::select(., southernflounderP120)))
+# ####Family forage
+# df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(clupeidaeP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915)), 
+#                                                                 clupeidaeP120 = rowSums(dplyr::select(., atlanticmenhadenP120)), 
+#                                                                 sciaenidaeP915 = rowSums(dplyr::select(., smallatlanticcroakerP915, smallspotP915)), 
+#                                                                 sciaenidaeP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, spotP120)),
+#                                                                 sparidaeP915 = rowSums(dplyr::select(., pinfishP915)),
+#                                                                 sparidaeP120 = rowSums(dplyr::select(., pinfishP120)),
+#                                                                 penaiedP120 = rowSums(dplyr::select(., whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
+#                                                                 paralichthyidaeP915 = rowSums(dplyr::select(., smallsouthernflounderP915)),
+#                                                                 paralichthyidaeP120 = rowSums(dplyr::select(., southernflounderP120)))
 
 ##Select species of focus, refer to Final dataset & model formula 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, spotP120, reddrumP915forageP915:paralichthyidaeP120)
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120, reddrumP915forageP915:blackdrumP915forageP120)
 
 ##### INDIVIDUAL FORAGE #####
 # reddrumP915forage: smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120
@@ -109,14 +109,14 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avg
 # cor1 <- cor(check[, c(12:41)]) #abiotic, just indicates to not use individual species with total forage, makes sense
 # corrplot(cor1) 
 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDistkm, -FishingAllnum)
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDistkm, -FishingAllnum, -SAVkm)
 
 ##Make year a factor  
 df_CPUE_length_wide_both$Yearfactor <- as.factor(df_CPUE_length_wide_both$Year)
 
-##Filter out rare species in total forage or prey family forage (individual species don't matter)
+# ##Filter out rare species in total forage or prey family forage (individual species don't matter)
 # test <- df_CPUE_length_wide_both %>% dplyr::select(which(sapply(., function(col) sum(col>0) >= 50)))
 # t <- setdiff(colnames(df_CPUE_length_wide_both), colnames(test)) #paralichthyidae_P915
 
-###Remove paralichthyidaeP915
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-paralichthyidaeP915)
+# ###Remove paralichthyidaeP915
+# df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-paralichthyidaeP915)
