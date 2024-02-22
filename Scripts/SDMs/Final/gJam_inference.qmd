@@ -32,9 +32,6 @@ ml <- list(ng = 60000, burnin = 50000, typeNames = 'CA')
 
 out1 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml)
 
-save(out1, file='out_test_cpue/out_fishing.Rdata')
-
-
-
+save(out1, file="/Users/sallydowd/Desktop/out1.Rdata")
 ```
 
