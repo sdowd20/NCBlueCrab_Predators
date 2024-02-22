@@ -45,6 +45,7 @@ The dolphin code splits the data into 70 and 30%, runs on 70% and tests on 30%, 
 
 ```{r}
 #INCORPORATE YEAR
+#XDATA issue 
 
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -52,24 +53,27 @@ smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample 
 reddrum_env_bc_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
 colnames(reddrum_env_bc_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
 
-for(i in 1:1){
+for(i in 1:Bootstrap_times){
 train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
 train <- df_CPUE_length_wide_both[train_ind, ]
 test <- df_CPUE_length_wide_both[-train_ind, ]
 
-xdata_train <- train %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest)
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
 ydata_train <- train %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120) 
-xdata_test <- test %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest)
+xdata_test <- test #only accepts all data! 
 ydata_test <- test %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120)
 
-ml <- list(ng = 100, burnin = 50, typeNames = 'CA')
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'CA')
 
-mod2 <- gjam(formula = ~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
 
-#conditional prediction out of sample  
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+#version of xdata passed in newdata has the columns with same names and variable types as xdata passed to gJam
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
 newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
 p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+
 pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
 obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
 
@@ -82,12 +86,17 @@ pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %
 dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
 dat <- as.data.frame(dat)
 
-reddrum_env_bc_forage_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
-reddrum_env_bc_forage_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$obs_reddrum)
-reddrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$obs_reddrum, pred = dat$pred_reddrum_con)
-reddrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$obs_reddrum, pred = dat$pred_reddrum_un) 
+reddrum_env_bc_forage_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_env_bc_forage_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
 }
 
+mean(reddrum_env_bc_forage_gjam$r2_con)
+mean(reddrum_env_bc_forage_gjam$r2_uncon)
+
+write.csv(reddrum_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_out_sample_gjam.csv")
 ```
 
 The DIC is the deviance information criteria and is a generalization in AIC. It is used in model selection where the smaller the DIC, the better the model is at predicting replicate dataset. DIC should be used if we are interested in predicting the results of future classes in the actual schools (with data on them) in a country. BIC should be used if interested in predicting results for a new country. The root mean squared error (RMSE) measures the accuracy of a predictive model. It quantifies the difference b/w predicted and actual values, squares the errors, takes the mean, and findings the square root. Lower values of RMSE means better predictive accuracy. It is computed by taking the square root of MSE. A value of 0 would mean the model is perfectly fit to the data.

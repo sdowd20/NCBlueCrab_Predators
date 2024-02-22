@@ -1,0 +1,40 @@
+---
+title: "gJam_overall"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+
+df <- df_CPUE_length_wide_both
+```
+
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120)
+tot <- cbind(xdata, ydata)
+
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+```{r}
+ml <- list(ng = 60000, burnin = 50000, typeNames = 'CA')
+
+out1 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(out1, file='out_test_cpue/out_fishing.Rdata')
+
+
+
+```
+
