@@ -8,8 +8,20 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
-#### Red drum
 ```{r}
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+```
+
+#### Red drum
+
+```{r}
+setwd("~/Desktop/Ch1Data/Final_results/gJam/Prediction")
 #Environment, total forage 
 xdata <- df_CPUE_length_wide_both %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 ydata <- df_CPUE_length_wide_both %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120) 
@@ -18,21 +30,66 @@ ydata <- df_CPUE_length_wide_both %>% dplyr::select(reddrumP915, reddrumP915fora
 ml <- list(ng= 100, burnin= 50, typeNames= 'CA')
 formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 modo_allx <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
-save(modo_allx, file= "~/Desktop/modo_allx.RData")
+save(modo_allx, file= "modo_allx.RData")
 
 plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
                         SAVEPLOTS = T, PLOTALLY = T, 
-                        outFolder = '~/Desktop/modo_allx_plots2/')
+                        outFolder = 'modo_allx_plots')
 gjamPlot(output = modo_allx, plotPars = plot)
-modo_allx$fit$DIC
+modo_allx$fit$DIC 
 modo_allx$fit$rmspeAll
 modo_allx$fit$rmspeBySpec
-
-#conditional and unconditional prediction 
-
-#mean values of predator or probability of presence from environmental covariate values and fitted coefficients 
-#conditional predictions which adds in information from residual covariance 
-#conditional vs. unconditional prediction in sample 
-#can only compare environment vs. species importance through conditional vs. unconditional prediction 
 ```
 
+The dolphin code splits the data into 70 and 30%, runs on 70% and tests on 30%, gets out R2 and RMSE and does this 1000 times. This would be the same as repeated 5 fold cross validation (if data was split 80%, 20%) with 1000 repeats. You will need to check to see if you are removing a random subset of the data each time or not. If it isn't random (i.e. a different 20% chunk of your data each time), you'll need to code this in.
+
+```{r}
+#INCORPORATE YEAR
+
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+reddrum_env_bc_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_env_bc_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:1){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xdata_train <- train %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest)
+ydata_train <- train %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120) 
+xdata_test <- test %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest)
+ydata_test <- test %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120)
+
+ml <- list(ng = 100, burnin = 50, typeNames = 'CA')
+
+mod2 <- gjam(formula = ~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction out of sample  
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_env_bc_forage_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+reddrum_env_bc_forage_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$obs_reddrum)
+reddrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$obs_reddrum, pred = dat$pred_reddrum_con)
+reddrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$obs_reddrum, pred = dat$pred_reddrum_un) 
+}
+
+```
+
+The DIC is the deviance information criteria and is a generalization in AIC. It is used in model selection where the smaller the DIC, the better the model is at predicting replicate dataset. DIC should be used if we are interested in predicting the results of future classes in the actual schools (with data on them) in a country. BIC should be used if interested in predicting results for a new country. The root mean squared error (RMSE) measures the accuracy of a predictive model. It quantifies the difference b/w predicted and actual values, squares the errors, takes the mean, and findings the square root. Lower values of RMSE means better predictive accuracy. It is computed by taking the square root of MSE. A value of 0 would mean the model is perfectly fit to the data.
+
+When interested in comparing the importance of abiotic or biotic factors, conditional and unconditional prediction is needed. You can get the mean value of predator or probability of presence from environmental covariate values and fitted coefficients. Conditional prediction adds in information from residual covariance.

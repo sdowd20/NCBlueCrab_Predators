@@ -6,6 +6,9 @@ editor: visual
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+
+#outlier check
+df_CPUE_length_wide_both %>% identify_outliers(smallbluecrabP120) %>% filter(is.extreme== TRUE) %>% dplyr::select(smallbluecrabP120, is.extreme)
 ```
 
 -https://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/algo-params/tweedie_link_power.html -Used tweedie with log link: https://www.ccamlr.org/ru/system/files/science_journal_papers/04candy.pdf
@@ -18,11 +21,11 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 #Red drum 
 reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(link= "log"), data=df_CPUE_length_wide_both)
 summary(reddrum_env)
-
+gam.check(reddrum_env)
 # #Outlier issue
 # t <- df_CPUE_length_wide_both %>% filter(smallbluecrabP120 < 182)
 
-reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(smallbluecrabP120), family= tw(link= "log",), data=df_CPUE_length_wide_both)
+reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(smallbluecrabP120+1)), family= tw(link= "log",), data=df_CPUE_length_wide_both)
 summary(reddrum_env_bc)
 
 reddrum_env_forage <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(reddrumP915forageP915) + s(reddrumP915forageP120), family= tw(link= "log"), data=df_CPUE_length_wide_both)

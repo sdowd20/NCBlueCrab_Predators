@@ -35,6 +35,7 @@ folds <- vfold_cv(data_train, v= 5, strata= reddrumP915, repeats= 100) #10 fold 
 ```
 
 #### Red drum
+
 ```{r}
 set.seed(123)
 
@@ -67,11 +68,13 @@ reddrum_env_bc_forage_cv2 <- collect_metrics(reddrum_env_bc_forage_cv)
 ```
 
 #### Southern kingfish
+
 ```{r}
 
 ```
 
-#### Black drum 
+#### Black drum
+
 ```{r}
 
 ```

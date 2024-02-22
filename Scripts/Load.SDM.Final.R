@@ -65,7 +65,7 @@ df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey 
 
 ###Add on forage index to CPUE data
 ####Total forage 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915)), 
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallsouthernflounderP915)), 
                                                                 reddrumP915forageP120 = rowSums(dplyr::select(., smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, smallspotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120)), 
                                                                 southernkingfishP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, smallspotP915)),
                                                                 southernkingfishP915forageP120 = rowSums(dplyr::select(., atlanticmenhadenP120, smallatlanticcroakerP120, smallspotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120)),
