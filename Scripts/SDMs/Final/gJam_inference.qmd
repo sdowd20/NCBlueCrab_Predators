@@ -10,9 +10,13 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 df <- df_CPUE_length_wide_both
 ```
 
+#### Setup data
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+
 tot <- cbind(xdata, ydata)
 
 set.seed(123)
@@ -27,11 +31,178 @@ xdata_test <- test[,colnames(xdata)]
 ydata_test <- test[,colnames(ydata)]
 ```
 
+#### Run model 
 ```{r}
-ml <- list(ng = 60000, burnin = 50000, typeNames = 'CA')
+#Model
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
 
-out1 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+out1 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
 
-save(out1, file="/Users/sallydowd/Desktop/out1.Rdata")
+save(out1, file="/Users/sallydowd/Desktop/out1_year.Rdata")
+
+load('/Users/sallydowd/Desktop/out1.Rdata')
+
+#Conditional prediction
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
+pred_con <- gjamPredict(out1, newdata = newdata)
+
+#Unconditional prediction
+newdata <- list(xdata = xdata_test, nsim = 1000)
+pred_uncon <- gjamPredict(out1, newdata = newdata)
+```
+
+#### Predictions
+```{r}
+#Predictions 
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+pred_reddrum_un <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- out1$prediction$ypredMu[,colnames(out1$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+```
+
+#### Plots
+```{r}
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '/Users/sallydowd/Desktop/out1plots2/')
+
+gjamPlot(output = out1, plotPars = plot)
+```
+
+##### Extract parameters
+```{r}
+#posterior summaries 
+out <- out1
+
+betas <- out$parameters$betaStandXTable #SM by stats posterior summary
+sens <- out[["parameters"]][["sensTable"]] #sensitivity to predictor variables
+rmsetot <- out[["fit"]][["rmspeAll"]] #root mean squared prediction error all
+DIC <- out[["fit"]][["DIC"]]
+rmse_byspec <- out[["fit"]][["rmspeBySpec"]]
+cor <- out[["parameters"]][["corMu"]] #residual, correlation 
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+s_mat <- out[["parameters"]][["sigMu"]] #WsWs', Species x Species, covariance matrix
+#add cor from ydata for panel A
+ycor <- out[["inputs"]][["y"]] #response matrix 
+cor2 <- out[["parameters"]][["ematrix"]]
+
+#residual covariance
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+cor <-  as.data.frame(cor)
+rownames(cor) <- colnames(cor)
+cor$specs <- rownames(cor)
+
+#ematrix
+cor2 <- out[["parameters"]][["ematrix"]] #responses in matrix E 
+cor2 <-  as.data.frame(cor2)
+rownames(cor2) <- colnames(cor2)
+cor2$specs <- rownames(cor2)
+
+#latent vector wi that represents response variables all on a continuous scale
+#matrix E is the correlation among species in terms of their responses to X
+```
+
+```{r}
+#make big dataframe
+
+specs_all_dev <- as.data.frame(matrix(data=NA, nrow=length(cor2$specs), ncol=1))
+specs_all_dev$names <- cor2$specs
+specs_all_dev$env_cov <- cor2$reddrumP915
+specs_all_dev1 <- specs_all_dev[-1]
+
+# specs_all_dev$env_cov <- cor2$AbdPerArea
+# specs_all_dev$resid_cov <- cor$AbdPerArea
+```
+
+```{r}
+#S by S covariance matrix omega 
+ggcorrplot::ggcorrplot(s_mat, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-10, 10)) + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))+ scale_x_discrete(breaks = NULL)
+
+#co-occurence in ydata
+ycor <- cor(ycor, method = "spearman")
+
+cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+cooccur
+
+cor_again <- cor[,-14]
+#co-occurence modeled, residual correlation 
+comodel <- ggcorrplot::ggcorrplot(cor_again, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+comodel
+ggsave("/users/sallydowd/Desktop/comodol.jpeg", width= 7, height=5)
+
+#ematrix, covariance 
+cor2_again <- cor2[,-14]
+emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower") + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+emat
+ggsave("/users/sallydowd/Desktop/emat.jpeg", width= 7, height=5)
+```
+
+
+```{r}
+betas_tidy <- betas
+betas_tidy$variable <- rownames(betas_tidy)
+betas_tidy <- betas_tidy %>% separate(variable, c("species","variable"), sep = "([_])")
+
+betas_tidy <- betas_tidy %>% filter(variable != "intercept")
+
+# betas_tidy$variable <- factor(betas_tidy$variable, levels=c("SST","SSAL"))
+
+
+#
+betas_tidy$Estimate <- ifelse(betas_tidy$Estimate > 2, 2, betas_tidy$Estimate)
+betas_tidy$Estimate <- ifelse(betas_tidy$Estimate < -2,-2, betas_tidy$Estimate)
+
+betaplot <- ggplot(data = betas_tidy, aes(x=variable, y=species, fill=Estimate)) +
+  geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                                     midpoint = 0, space = "Lab",
+                                     name="Betas") + theme(axis.text.x = element_text(angle = 90, size = 12, vjust = 1, hjust = 1), axis.text.y = element_text(size = 12))
+ggsave("/users/sallydowd/Desktop/betas.jpeg", width= 7, height= 5)
+cooccur <- cooccur +
+  theme(legend.position="none") +
+  ggtitle("c) Co-occurence in Data")+
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+comodel <- comodel +
+  theme(legend.position="none")+
+  ggtitle("d) Residual Correlation") +
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+emat <- emat +
+  theme(legend.position="none")+
+  ggtitle("b) Covariance or E-matrix") +
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+betaplot <- betaplot +
+  theme(legend.position="none")+
+  theme(axis.title.x = element_blank()) +
+  theme(axis.title.y = element_blank())+
+  ggtitle("a) Environmental Response") +
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+
+
+# extract the legend from one of the plots
+# (clearly the whole thing only makes sense if all plots
+# have the same legend, so we can arbitrarily pick one.)
+legend_b <- get_legend(cooccur + theme(legend.position="bottom") + theme(legend.title = element_blank(), legend.text = element_blank()) +
+                         theme(legend.key.height= unit(2, 'cm'),
+                               legend.key.width= unit(4, 'cm')))
+
+# add the legend underneath the row we made earlier. Give it 10% of the height
+# of one plot (via rel_heights).
+p <- (betaplot + emat + cooccur + comodel)/legend_b + plot_layout(widths = c(1, 1), heights = c(1,.05))
+p
+ggsave(filename= "Figures/supp_gjam_coastal.jpg", plot=p, width = 40, height=40, units=c("cm"), dpi=500)
+
 ```
 

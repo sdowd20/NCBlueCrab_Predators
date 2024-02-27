@@ -1,0 +1,63 @@
+---
+title: "gJam_inference1"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+
+df <- df_CPUE_length_wide_both
+
+df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1))
+```
+
+```{r}
+#Environment + BC 
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(reddrumP915, logsmallbluecrabP120) 
+
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+modo_env <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+save(modo_env, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/modo_env_bc.RData")
+modo_env$fit$DIC
+```
+
+```{r}
+#Environment + forage 
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120) 
+
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+modo_env_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+save(modo_env_forage , file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/modo_env_forage.RData")
+modo_env_forage$fit$DIC
+load("/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/modo_env_forage.RData")
+```
+
+```{r}
+#Environment + forage + BC
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120, logsmallbluecrabP120) 
+
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+save(modo_env_bc_forage , file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/modo_env_bc_forage.RData")
+modo_env_bc_forage$fit$DIC
+```
+
+```{r}
+modo_env$fit$DIC
+modo_env_forage$fit$DIC
+modo_env_bc_forage$fit$DIC
+```
+

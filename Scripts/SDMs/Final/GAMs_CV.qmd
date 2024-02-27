@@ -47,6 +47,7 @@ reddrum_env_cv <- reddrum_env_wf %>% fit_resamples(folds)
 reddrum_env_cv2 <- collect_metrics(reddrum_env_cv)
 combined_df <- do.call(rbind, reddrum_env_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/reddrum_env_cv.csv")
+reddrum_env_cv <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/reddrum_env_cv.csv")
 
 #Environment + bc
 reddrum_env_bc_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, smallbluecrabP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(log(smallbluecrabP120+1))) %>% fit(data= df_CPUE_length_wide_both) 
