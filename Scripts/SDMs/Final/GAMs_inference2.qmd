@@ -79,4 +79,3 @@ compare_var_tw_blackdrum %>% arrange(AIC) %>% .[1,1]
 #"blackdrumP915~factor(Yearfactor)+s(avgdepth)+s(avgssal)+s(NoFishRest)"
 # "blackdrumP915~factor(Yearfactor)+s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)"
 ```
-

@@ -105,10 +105,10 @@ The DIC is the deviance information criteria and is a generalization in AIC. It 
 
 When interested in comparing the importance of abiotic or biotic factors, conditional and unconditional prediction is needed. You can get the mean value of predator or probability of presence from environmental covariate values and fitted coefficients. Conditional prediction adds in information from residual covariance.
 
+#### Log transform prey
 
-#### Log transform prey 
+##### Environment + BC + forage
 
-##### Environment + BC + forage 
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -165,6 +165,7 @@ write.csv(reddrum_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Pred
 ```
 
 ##### Environment + BC
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -220,7 +221,8 @@ sd(reddrum_env_bc_gjam$X2)
 write.csv(reddrum_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_log_oos.csv")
 ```
 
-##### Environment + total forage 
+##### Environment + total forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -273,3 +275,35 @@ mean(reddrum_env_forage_gjam$r2_uncon)
 
 write.csv(reddrum_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage_log_oos.csv")
 ```
+
+##### Xdata example issue
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+reddrum_env_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_env_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:1){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120) 
+xdata_test <- test[,colnames(test) %in% xnames] #only accepts all data! 
+ydata_test <- test %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120)
+
+ml <- list(ng = 1000, burnin = 500, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+#version of xdata passed in newdata has the columns with same names and variable types as xdata passed to gJam
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+}
+```
+
