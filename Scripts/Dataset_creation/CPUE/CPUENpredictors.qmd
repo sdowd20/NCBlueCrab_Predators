@@ -26,12 +26,12 @@ p120_CPUE_length_multi <- read_csv("/Users/sallydowd/Documents/GitHub/NCBlueCrab
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 #Filter datasets: Add back in Secchi size once get P195 data
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month %in% c(5,6,9)) #added in species of focus for now (still waiting on data)
-p915_CPUE_length_multiedt <- p915_CPUE_length_multi %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi, -...2, -Photoperiod) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021), Month %in% c(5,6,9)) 
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month %in% c(5,6))
-p120_CPUE_length_multiedt <- p120_CPUE_length_multi %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month %in% c(5,6))
-p120_CPUE_BCedt <- p120_CPUE_BC %>% filter(Core== 1|Core==2) %>% dplyr::select(-X, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month %in% c(5,6))
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm, -Photoperiod) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021), Month %in% c(5,6,9))
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2022), Month %in% c(5,6,9)) #added in species of focus for now (still waiting on data)
+p915_CPUE_length_multiedt <- p915_CPUE_length_multi %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi, -...2, -Photoperiod) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2022), Month %in% c(5,6,9)) 
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
+p120_CPUE_length_multiedt <- p120_CPUE_length_multi %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
+p120_CPUE_BCedt <- p120_CPUE_BC %>% filter(Core== 1|Core==2) %>% dplyr::select(-X, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi, -Photoperiod) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm, -Photoperiod) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2022), Month %in% c(5,6,9))
 
 p915_CPUEedt <- p915_CPUEedt %>% drop_na(Latitude, Longitude)
 p915_CPUEedt$Survey <- "P915"
@@ -114,7 +114,7 @@ ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coo
 
 #write.csv(CPUE_all_grid_pred,"~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred.11.21.23.csv")
 # write.csv(CPUE_all_grid_pred_BC, "~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_BC.02.01.24.csv")
-write.csv(CPUE_length_grid_pred, "~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_multi.02.20.24.csv")
+write.csv(CPUE_length_grid_pred, "~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_multi.03.04.24.csv")
 ```
 
 ```{r}
@@ -266,7 +266,7 @@ write.csv(CPUE_grid_BC_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_BCedt.02.0
 
 ```{r}
 #Form CPUE dataset- all length
-CPUE_dfs_gridded_final_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_multi.02.20.24.csv")
+CPUE_dfs_gridded_final_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_multi.03.04.24.csv")
 CPUE_dfs_gridded_final_length <- CPUE_dfs_gridded_final_length[,-1]
 
 ##Update on 02/13/24: remove month 9, remove P195 
@@ -301,7 +301,7 @@ summary(is.na(CPUE_grid_length_avg_edt)) #no NAs
 ##Make there be one column for each CPUE
 CPUE_grid_length_avg_edt <- CPUE_grid_length_avg_edt %>% group_by(Month, Year, gridID, Speciescommonname, Survey) %>% distinct(mean_CPUE, .keep_all= TRUE)
 
-write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.20.24.csv")
+write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.03.04.24.csv")
 ```
 
 ####################### didn't update on 02/08/24 with mean CPUE over standardized, not using this anymore

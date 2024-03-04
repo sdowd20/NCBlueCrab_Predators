@@ -51,7 +51,7 @@ dredgeform<- function(pred, covars, alwaysIn='factor(Yearfactor)'){ #always in i
 #Load in datasets
 ##CPUE
 
-df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.02.20.24.csv")
+df_CPUE_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.03.04.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
 df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
