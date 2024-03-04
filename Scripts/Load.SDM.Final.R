@@ -63,6 +63,9 @@ df_CPUE_length$SpeciesSurvey <- paste(df_CPUE_length$Speciescommonname, df_CPUE_
 df_CPUE_length$meanCPUE <- as.numeric(df_CPUE_length$meanCPUE)
 df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
 
+##Pivot-wider dataset: P915 
+df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
+  
 ###Add on forage index to CPUE data
 ####Total forage 
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallsouthernflounderP915)), 
@@ -113,7 +116,7 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDis
 
 ##Make year a factor  
 df_CPUE_length_wide_both$Yearfactor <- as.factor(df_CPUE_length_wide_both$Year)
-
+df_CPUE_length_wide_P915$Yearfactor <- as.factor(df_CPUE_length_wide_P915$Year)
 # ##Filter out rare species in total forage or prey family forage (individual species don't matter)
 # test <- df_CPUE_length_wide_both %>% dplyr::select(which(sapply(., function(col) sum(col>0) >= 50)))
 # t <- setdiff(colnames(df_CPUE_length_wide_both), colnames(test)) #paralichthyidae_P915
