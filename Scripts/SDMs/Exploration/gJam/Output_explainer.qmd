@@ -1,0 +1,61 @@
+---
+title: "Output_explainer"
+format: html
+editor: visual
+---
+
+```{r}
+load('/Users/sallydowd/Desktop/out1.Rdata')
+```
+
+```{r}
+#posterior summaries: beta as coefficients
+out$parameters$betaMu #S by M coefficient matrix unstandardized
+out$parameters$betaSe #S by M coefficient SE
+out$parameters$betaStandXmu #S by M standardized for X
+out$parameters$betaStandXWmu #(S-F) by M standardized for W/X, centered factors
+
+out$parameters$betaTable #SM by stats posterior summary
+out$parameters$betaStandXTable #SM by stats posterior summary
+out$parameters$betaStandXWTable #(S-F)M by stats posterior summary
+
+out$parameters$sensBeta #sensitivity to response variables
+out$parameters$sensTable #sensitivity to predictor variables
+ 
+out$parameters$sigMu #S by S covariance matrix omega
+out$parameters$sigSe #S by S covariance std errors
+```
+
+```{r}
+#posterior summaries 
+out <- out1
+
+out$parameters
+betas <- out$parameters$betaStandXTable #SM by stats posterior summary
+sens <- out[["parameters"]][["sensTable"]] #sensitivity to predictor variables
+rmsetot <- out[["fit"]][["rmspeAll"]] #root mean squared prediction error all
+DIC <- out[["fit"]][["DIC"]]
+rmse_byspec <- out[["fit"]][["rmspeBySpec"]]
+cor <- out[["parameters"]][["corMu"]] #residual, correlation 
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+s_mat <- out[["parameters"]][["sigMu"]] #WsWs', Species x Species, covariance matrix
+#add cor from ydata for panel A
+ycor <- out[["inputs"]][["y"]] #response matrix 
+cor2 <- out[["parameters"]][["ematrix"]]
+
+#residual covariance
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+cor <-  as.data.frame(cor)
+rownames(cor) <- colnames(cor)
+cor$specs <- rownames(cor)
+
+#ematrix
+cor2 <- out[["parameters"]][["ematrix"]] #responses in matrix E 
+cor2 <-  as.data.frame(cor2)
+rownames(cor2) <- colnames(cor2)
+cor2$specs <- rownames(cor2)
+
+#latent vector wi that represents response variables all on a continuous scale
+#matrix E is the correlation among species in terms of their responses to X
+```
+

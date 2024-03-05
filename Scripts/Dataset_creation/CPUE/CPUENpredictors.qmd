@@ -340,7 +340,9 @@ write.csv(CPUE_grid_BC_count_avg_edt,"~/Desktop/Ch1Data/CPUE/CPUE_grid_count_avg
 
 ```{r}
 ##Binary dataset (0 or 1) non-length data  
-CPUE_grid_binary_edt <- CPUE_grid_count_avg_edt %>% mutate(binary = ifelse(avg_count > 0, 1, 0))
+CPUE_grid_binary_edt <- CPUE_grid_count_avg_edt %>% mutate_at(smallatlanticcroakerP915:blackdrumP915forageP120, 
+  
+  binary = ifelse(avg_count > 0, 1, 0))
 
 write.csv(CPUE_grid_binary_edt,"~/Desktop/Ch1Data/CPUE/CPUE_grid_binary_edt.11.22.23.csv") 
 ```

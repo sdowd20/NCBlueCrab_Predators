@@ -6,13 +6,20 @@ editor: visual
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
 ```
 
 #### P915 and P120
+
 ##### Setup data
 
 ```{r}
-df <- df_CPUE_length_wide_both
+#2022 wasn't included
+df <- df_CPUE_length_wide_both 
+
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120)
 species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
@@ -58,10 +65,6 @@ pred_uncon <- gjamPredict(out1, newdata = newdata2)
 
 ```{r}
 #Predictions 
-r2_general <-function(preds,actual){ 
-  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
-}
-
 pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
 obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
 pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
@@ -98,7 +101,7 @@ plot <- list(SMALLPLOTS = T, GRIDPLOTS=T,
 gjamPlot(output = out1, plotPars = plot)
 ```
 
-###### Extract parameters
+##### Extract parameters
 
 ```{r}
 #posterior summaries 
@@ -225,9 +228,12 @@ ggsave(filename= "Figures/supp_gjam_coastal.jpg", plot=p, width = 40, height=40,
 
 ```
 
-#### P915: May and June
+#### Other models
+##### P915: May and June
+
 ```{r}
-df <- df_CPUE_length_wide_P915 %>% filter(Month %in% c(5,6))
+#2022 wasn't included
+df <- df_CPUE_length_wide_P915 %>% filter(Month %in% c(5,6), !Year == 2022) #redo w/ 2022
 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
@@ -267,11 +273,6 @@ pred_uncon <- gjamPredict(out2, newdata = newdata)
 ```
 
 ```{r}
-#in sample and out of sample 
-r2_general <-function(preds,actual){ 
-  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
-}
-
 pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
 obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
 pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
@@ -282,7 +283,8 @@ r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
 r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
 
-#### P915: all months
+##### P915: all months
+
 ```{r}
 df <- df_CPUE_length_wide_P915 
 
@@ -306,6 +308,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ```{r}
+#2022 was included 
 ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
 
 out3 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
@@ -325,9 +328,95 @@ pred_uncon <- gjamPredict(out3, newdata = newdata)
 
 ```{r}
 #in sample and out of sample 
-r2_general <-function(preds,actual){ 
-  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
-}
+pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
+dat <- as.data.frame(dat)
+r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+```
+
+##### No fishing restrictions
+```{r}
+#Run original model for loading in data
+xdata_train <- xdata_train %>% select(-NoFishRest)
+xdata_test <- xdata_test %>% select(-NoFishRest)
+
+#Model
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+
+out4 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(out4, file="/Users/sallydowd/Desktop/out4_year.Rdata")
+
+load('/Users/sallydowd/Desktop/out4.Rdata')
+
+#Conditional prediction
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
+pred_con <- gjamPredict(out4, newdata = newdata1)
+
+#Unconditional prediction
+newdata2 <- list(xdata = xdata_test, nsim = 1000)
+pred_uncon <- gjamPredict(out4, newdata = newdata2)
+
+#Predictions 
+pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
+dat <- as.data.frame(dat)
+r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+```
+
+
+##### Standardized environmental variables
+```{r}
+df <- df_CPUE_length_wide_both
+
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+xdata <- xdata %>% mutate_at(vars(-Yearfactor), ~(scale(.) %>% as.vector)) #(x- mean(x))/sd(x)
+
+ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+
+tot <- cbind(xdata, ydata)
+
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+```{r}
+#Model
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+
+out5 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(out5, file="/Users/sallydowd/Desktop/out5_year.Rdata")
+
+load('/Users/sallydowd/Desktop/out5.Rdata')
+
+#Conditional prediction
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
+pred_con <- gjamPredict(out5, newdata = newdata1)
+
+#Unconditional prediction
+newdata2 <- list(xdata = xdata_test, nsim = 1000)
+pred_uncon <- gjamPredict(out5, newdata = newdata2)
 
 pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
 obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
@@ -338,3 +427,164 @@ dat <- as.data.frame(dat)
 r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
 r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
+
+##### Presence/absence model
+```{r}
+df <- df_CPUE_length_wide_both %>% mutate_at(vars(smallatlanticcroakerP915:blackdrumP915forageP120), list(~ ifelse(. > 0, 1, 0)))                                         
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+
+tot <- cbind(xdata, ydata)
+
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+```{r}
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'PA')
+
+out8 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(out8, file="/Users/sallydowd/Desktop/out8_year.Rdata")
+
+load('/Users/sallydowd/Desktop/out8.Rdata')
+
+#Conditional prediction
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
+pred_con <- gjamPredict(out8, newdata = newdata1)
+
+#Unconditional prediction
+newdata2 <- list(xdata = xdata_test, nsim = 1000)
+pred_uncon <- gjamPredict(out8, newdata = newdata2)
+
+pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
+dat <- as.data.frame(dat)
+r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+```
+
+##### Logged prey abundance gJam
+```{r}
+df <- df_CPUE_length_wide_both
+
+df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1))
+
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120) 
+
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+
+tot <- cbind(xdata, ydata)
+
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+```{r}
+#Model
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+
+out6 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(out6, file="/Users/sallydowd/Desktop/out6_year.Rdata")
+
+load('/Users/sallydowd/Desktop/out6.Rdata')
+
+#Conditional prediction
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
+pred_con <- gjamPredict(out6, newdata = newdata1)
+
+#Unconditional prediction
+newdata2 <- list(xdata = xdata_test, nsim = 1000)
+pred_uncon <- gjamPredict(out6, newdata = newdata2)
+
+pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
+dat <- as.data.frame(dat)
+r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+```
+
+##### Non-logged prey abundance gJam
+```{r}
+df <- df_CPUE_length_wide_both
+
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(reddrumP915, reddrumP915forageP915, reddrumP915forageP120) 
+
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+
+tot <- cbind(xdata, ydata)
+
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+```{r}
+#Model
+ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+
+out7 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(out7, file="/Users/sallydowd/Desktop/out7_year.Rdata")
+
+load('/Users/sallydowd/Desktop/out7.Rdata')
+
+#Conditional prediction
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
+pred_con <- gjamPredict(out7, newdata = newdata1)
+
+#Unconditional prediction
+newdata2 <- list(xdata = xdata_test, nsim = 1000)
+pred_uncon <- gjamPredict(out7, newdata = newdata2)
+
+pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
+dat <- as.data.frame(dat)
+r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
+r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+```
+
+
