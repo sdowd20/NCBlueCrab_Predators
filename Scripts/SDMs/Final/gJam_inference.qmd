@@ -229,6 +229,7 @@ ggsave(filename= "Figures/supp_gjam_coastal.jpg", plot=p, width = 40, height=40,
 ```
 
 #### Other models
+
 ##### P915: May and June
 
 ```{r}
@@ -338,20 +339,21 @@ r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
 r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
 
-##### No fishing restrictions
+  ##### No fishing restrictions
+
 ```{r}
 #Run original model for loading in data
-xdata_train <- xdata_train %>% select(-NoFishRest)
-xdata_test <- xdata_test %>% select(-NoFishRest)
+xdata_train <- xdata_train %>% dplyr::select(-NoFishRest)
+xdata_test <- xdata_test %>% dplyr::select(-NoFishRest)
 
 #Model
 ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
 
-out4 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+out4 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo  + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
 
 save(out4, file="/Users/sallydowd/Desktop/out4_year.Rdata")
 
-load('/Users/sallydowd/Desktop/out4.Rdata')
+load('/Users/sallydowd/Desktop/out4_year.Rdata')
 
 #Conditional prediction
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
@@ -373,8 +375,8 @@ r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
 r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
 
-
 ##### Standardized environmental variables
+
 ```{r}
 df <- df_CPUE_length_wide_both
 
@@ -407,7 +409,7 @@ out5 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, 
 
 save(out5, file="/Users/sallydowd/Desktop/out5_year.Rdata")
 
-load('/Users/sallydowd/Desktop/out5.Rdata')
+load('/Users/sallydowd/Desktop/out5_year.Rdata')
 
 #Conditional prediction
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
@@ -429,6 +431,7 @@ r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
 
 ##### Presence/absence model
+
 ```{r}
 df <- df_CPUE_length_wide_both %>% mutate_at(vars(smallatlanticcroakerP915:blackdrumP915forageP120), list(~ ifelse(. > 0, 1, 0)))                                         
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -458,7 +461,7 @@ out8 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, 
 
 save(out8, file="/Users/sallydowd/Desktop/out8_year.Rdata")
 
-load('/Users/sallydowd/Desktop/out8.Rdata')
+load('/Users/sallydowd/Desktop/out8_year.Rdata')
 
 #Conditional prediction
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
@@ -480,6 +483,7 @@ r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
 
 ##### Logged prey abundance gJam
+
 ```{r}
 df <- df_CPUE_length_wide_both
 
@@ -513,7 +517,7 @@ out6 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, 
 
 save(out6, file="/Users/sallydowd/Desktop/out6_year.Rdata")
 
-load('/Users/sallydowd/Desktop/out6.Rdata')
+load('/Users/sallydowd/Desktop/out6_year.Rdata')
 
 #Conditional prediction
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
@@ -535,6 +539,7 @@ r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
 
 ##### Non-logged prey abundance gJam
+
 ```{r}
 df <- df_CPUE_length_wide_both
 
@@ -566,7 +571,7 @@ out7 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, 
 
 save(out7, file="/Users/sallydowd/Desktop/out7_year.Rdata")
 
-load('/Users/sallydowd/Desktop/out7.Rdata')
+load('/Users/sallydowd/Desktop/out7_year.Rdata')
 
 #Conditional prediction
 ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
@@ -586,5 +591,3 @@ dat <- as.data.frame(dat)
 r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
 r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
 ```
-
-
