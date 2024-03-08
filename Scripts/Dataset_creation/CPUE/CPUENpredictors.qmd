@@ -110,7 +110,7 @@ CPUE_all_grid_pred_BC <- CPUE_all_grid_pred_BC %>% separate(lat_lon, into= c("La
 CPUE_length_grid_pred <- CPUE_length %>% left_join(gridpred_lat_lon, by= "lat_lon") %>% dplyr::select(lat_lon, everything())
 CPUE_length_grid_pred <- CPUE_length_grid_pred %>% drop_na(gridID) #drops 41 rows in each dataset
 CPUE_length_grid_pred <- CPUE_length_grid_pred %>% separate(lat_lon, into= c("Latitude", "Longitude"), sep = "_", convert= TRUE, remove=FALSE) 
-ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_length_grid_pred, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
+#ggplot(data = world) + geom_sf() + geom_sf(data =globe_grid_30, fill = NA) + coord_sf(xlim=c(-78, -75), ylim=c(33.5,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + standard_theme + geom_point(data = CPUE_length_grid_pred, aes(x = Longitude, y = Latitude, color= Survey), size = .2) #it worked! 
 
 #write.csv(CPUE_all_grid_pred,"~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred.11.21.23.csv")
 # write.csv(CPUE_all_grid_pred_BC, "~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_BC.02.01.24.csv")

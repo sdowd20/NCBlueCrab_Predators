@@ -1,0 +1,47 @@
+---
+title: "Species_overlap"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
+globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID")
+
+df <- df_CPUE_length_wide_both %>% left_join(globe_grid_30_edt, by= "gridID")
+```
+
+```{r}
+#Red drum, BC
+library(gganimate)
+library(transformr)
+library(gifski)
+
+t1 <- ggplot(data = world) + geom_sf() + geom_sf(data= subset(df, Month %in% 5), aes(geometry= geometry, fill= reddrumP915)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(title = 'Year: {frame_time}') +
+  transition_time(Year) + 
+  ease_aes('cubic-in-out')
+animate(t1, duration = 45)
+anim_save("/users/sallydowd/Desktop/RedDrumOverTime.gif", width = 6, height = 4, unit = "in")
+t2 <- ggplot(data = world) + geom_sf() + geom_sf(data= subset(df, Month %in% 5), aes(geometry= geometry, fill= smallbluecrabP120)) + coord_sf(xlim=c(-78, -75), ylim=c(34,37), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + labs(title = 'Year: {frame_time}') +
+  transition_time(Year) + 
+  ease_aes('cubic-in-out')
+  animate(t2, duration = 45)
+  anim_save("/users/sallydowd/Desktop/BCOverTime.gif", width = 6, height = 4, unit = "in",renderer = gifski_renderer())
+
+```
+
+```{r}
+schoenr(df$reddrumP915, df$smallbluecrabP120) 
+
+??schoenr()
+
+install.packages("schoenr")
+```
+
