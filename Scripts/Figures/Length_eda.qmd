@@ -5,6 +5,9 @@ editor: visual
 ---
 
 ```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot", "mgcv", "GGally", "gjam", "report", "broom", "tidymodels", "car")
+invisible(lapply(packages, library, character.only= TRUE))
+
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 ```
 
@@ -64,15 +67,13 @@ ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P120_ls_length.jpeg")
 ```
 
 ##### Fig. 3: NEW, length frequency overall
+
 ```{r}
 #Length datasets
 p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
-p915_len_f <- p915_len_f %>% dplyr::select(-X) 
+p915_len_f <- p915_len_f %>% dplyr::select(-X) %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
 P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
-P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2) 
-
-packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "geosphere")
-invisible(lapply(packages, library, character.only= TRUE))
+P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2) %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
 ```
 
 ```{r}
@@ -104,21 +105,18 @@ P120_os_prop_edt$Survey <- "P120"
 #Combine datasets 
 p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
 
-#Check
-p915_gg %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
-  
 p120_gg <- P120_os_prop_edt %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
 p120_gg %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
+
+#Check
+p915_gg %>% ungroup() %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
+
+p120_gg %>% ungroup() %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
 
 combo <- rbind(p915_gg, p120_gg)
 ```
 
 ```{r}
-ggplot(data= p915_length_toplot) + geom_histogram(aes(x= Length)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free")
-
-p915_gg %>% group_by(Speciescommonname) %>% summarize(count= sum(Colnum))
-
 combo %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey") + xlim(0,750)
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/length_both_new.jpeg", width= 9, height=7)
 ```
-
-
