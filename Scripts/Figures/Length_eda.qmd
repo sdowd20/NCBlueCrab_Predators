@@ -4,7 +4,11 @@ format: html
 editor: visual
 ---
 
-##### Fig. 1: Length frequency overall
+```{r}
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+```
+
+##### Fig. 1: Length frequency overall, old
 
 ```{r}
 #data processing 
@@ -30,7 +34,7 @@ ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/length_both.jpeg", width= 9, he
 ##P120
 ```
 
-##### Fig. 2: Length frequency upon division
+##### Fig. 2: Length frequency upon division, old
 
 ```{r}
 #data processing
@@ -58,4 +62,63 @@ facet_wrap(~Basespp, scale = "free_x") + scale_fill_manual(values= c(darker_shad
 guides(fill = guide_legend(reverse = TRUE))
 ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/P120_ls_length.jpeg")
 ```
+
+##### Fig. 3: NEW, length frequency overall
+```{r}
+#Length datasets
+p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
+p915_len_f <- p915_len_f %>% dplyr::select(-X) 
+P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
+P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2) 
+
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "geosphere")
+invisible(lapply(packages, library, character.only= TRUE))
+```
+
+```{r}
+#P915
+species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "atlantic menhaden", "spot", "southern flounder", "pinfish", "red drum", "black drum", "southern kingfish")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
+
+##Count # of individuals of a length for a mesh size, sum_count as # of individuals total 
+species_edt <- species %>% group_by(Sample, Colnum, Length, Control2, Speciescommonname) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(sum_count= sum(count)) 
+
+##Counted # of observations at each length for a sample, computed a frequency, multiplied frequency by total Colnum
+species2_freq <- species_edt %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(Freq= count/sum_count) %>% ungroup() %>% mutate(Number= Freq*Colnum) #each row as length so don't group by length
+p915_length_toplot <- species2_freq %>% group_by(Sample, Length, Speciescommonname) %>% summarize(Num_sum = sum(Number)) %>% rename("Colnum"= "Num_sum")
+p915_length_toplot$Survey <- "P915"
+```
+
+```{r}
+#P120 
+species_p120 <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic croaker", "atlantic menhaden", "spot", "southern flounder", "pinfish", "white shrimp", "pink shrimp", "brown shrimp", "blue crab")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
+
+P120_other_species_edt <- species_p120 %>% group_by(Control1, Colnum, Length, Speciescommonname) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #duplicates rows according to Frequency
+
+P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Length, Colnum, Speciescommonname) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum, Speciescommonname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Length, Count, Total_sampled, Proportion)
+
+P120_os_prop_edt <- P120_os_prop %>% mutate(Number= Colnum*Proportion) %>% group_by(Control1, Length, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) %>% rename("Colnum"= "Number_new")
+P120_os_prop_edt$Survey <- "P120"
+```
+
+```{r}
+#Combine datasets 
+p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
+
+#Check
+p915_gg %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
+  
+p120_gg <- P120_os_prop_edt %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
+p120_gg %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
+
+combo <- rbind(p915_gg, p120_gg)
+```
+
+```{r}
+ggplot(data= p915_length_toplot) + geom_histogram(aes(x= Length)) + standard_theme + facet_wrap(~Speciescommonname, scales= "free")
+
+p915_gg %>% group_by(Speciescommonname) %>% summarize(count= sum(Colnum))
+
+combo %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey") + xlim(0,750)
+```
+
 
