@@ -12,7 +12,7 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 
 #### Red drum
 
-##### Models: all model types
+##### Models
 
 ```{r}
 #Red drum 
@@ -121,6 +121,7 @@ df_env_bc_forage %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom
 ```{r}
 southernkingfish_env <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 summary(southernkingfish_env)
+gam.check(southernkingfish_env)
 
 southernkingfish_env_bc <- gam(southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
 summary(southernkingfish_env_bc)
