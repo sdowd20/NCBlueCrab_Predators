@@ -60,4 +60,3 @@ modo_env$fit$DIC
 modo_env_forage$fit$DIC
 modo_env_bc_forage$fit$DIC
 ```
-

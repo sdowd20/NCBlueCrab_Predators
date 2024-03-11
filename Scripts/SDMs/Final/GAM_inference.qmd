@@ -1,0 +1,122 @@
+---
+title: "GAM_inference"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+#### Red drum
+
+##### Models: all model types
+
+```{r}
+reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+
+reddrum_bc <- gam(reddrumP915~ s(log(smallbluecrabP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+
+reddrum_forage <- gam(reddrumP915~ s(log(reddrumP915forageP915+1)) + s(log(reddrumP915forageP120+1) + factor(Yearfactor)), family= tw(), data=df_CPUE_length_wide_both)
+
+reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+
+reddrum_env_forage <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(reddrumP915forageP915+1)) + s(log(reddrumP915forageP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+
+reddrum_env_bc_forage <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp) + s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(reddrumP915forageP120+1)) + s(log(reddrumP915forageP915+1)) + s(log(smallbluecrabP120+1)), family= tw(),  data=df_CPUE_length_wide_both)
+
+AIC(reddrum_env, reddrum_bc, reddrum_forage, reddrum_env_bc, reddrum_env_forage, reddrum_env_bc_forage) %>% arrange(AIC)
+```
+
+##### Diagnostics
+```{r}
+summary(reddrum_env)
+summary(reddrum_bc)
+summary(reddrum_forage)
+summary(reddrum_env_bc)
+summary(reddrum_env_forage)
+summary(reddrum_env_bc_forage)
+
+gam.check(reddrum_env)
+gam.check(reddrum_bc)
+gam.check(reddrum_forage)
+gam.check(reddrum_env_bc)
+gam.check(reddrum_env_forage)
+gam.check(reddrum_env_bc_forage)
+
+vif(reddrum_env)
+vif(reddrum_bc)
+vif(reddrum_forage)
+vif(reddrum_env_bc)
+vif(reddrum_env_forage)
+vif(reddrum_env_bc_forage)
+
+cor(df_CPUE_length_wide_both %>% dplyr::select(avgdepth,avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120))
+
+#Partial effect plots
+plot(reddrum_env, shade= "true") 
+plot(reddrum_bc, shade= "true") 
+plot(reddrum_forage, shade= "true") 
+plot(reddrum_env_bc, shade= "true") 
+plot(reddrum_env_forage, shade= "true") 
+plot(reddrum_env_bc_forage, shade= "true") 
+
+#Predictions
+df_env <- pred_gam(reddrum_env, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Yearfactor, reddrumP915))
+df_env_long <- df_env %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915), names_to= "predictor")
+graphs(df_env_long, df_env)
+
+df_bc <- pred_gam(reddrum_bc, c(smallbluecrabP120, Yearfactor, reddrumP915))
+df_bc$smallbluecrabP120 <- log(df_bc$smallbluecrabP120+1)
+df_bc_long <- df_bc %>% pivot_longer(cols= c(smallbluecrabP120, reddrumP915), names_to= "predictor")
+graphs(df_bc_long, df_bc)
+
+df_forage <- pred_gam(reddrum_forage, c(reddrumP915forageP915, reddrumP915forageP120, Yearfactor, reddrumP915))
+df_forage$reddrumP915forageP915 <- log(df_forage$reddrumP915forageP915+1)
+df_forage$reddrumP915forageP120 <- log(df_forage$reddrumP915forageP120+1)
+df_forage_long <- df_forage %>% pivot_longer(cols= c(reddrumP915forageP915, reddrumP915forageP120, reddrumP915), names_to= "predictor")
+graphs(df_forage_long, df_forage)
+
+df_env_bc <- pred_gam(reddrum_env_bc, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Yearfactor, reddrumP915, smallbluecrabP120))
+df_env_bc$smallbluecrabP120 <- log(df_env_bc$smallbluecrabP120+1)
+df_env_bc_long <- df_env_bc %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, smallbluecrabP120), names_to= "predictor")
+graphs(df_env_bc_long, df_env_bc)
+
+df_env_forage <- pred_gam(reddrum_env_forage, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120))
+df_env_forage$reddrumP915forageP915 <- log(df_env_forage$reddrumP915forageP915+1)
+df_env_forage$reddrumP915forageP120 <- log(df_env_forage$reddrumP915forageP120+1)
+df_env_forage_long <- df_env_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120), names_to= "predictor")
+graphs(df_env_forage_long, df_env_forage)
+
+df_env_bc_forage <- pred_gam(reddrum_env_bc_forage, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120))
+df_env_bc_forage$smallbluecrabP120 <- log(df_env_bc_forage$smallbluecrabP120+1)
+df_env_bc_forage$reddrumP915forageP915 <- log(df_env_bc_forage$reddrumP915forageP915+1)
+df_env_bc_forage$reddrumP915forageP120 <- log(df_env_bc_forage$reddrumP915forageP120+1)
+df_env_bc_forage_long <- df_env_bc_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120), names_to= "predictor")
+graphs(df_env_bc_forage_long, df_env_bc_forage)
+```
+
+#### Southern kingfish
+
+##### Models: all model types
+```{r}
+
+```
+
+##### Diagnostics
+```{r}
+
+```
+
+#### Black drum
+
+##### Models: all model types
+```{r}
+
+```
+
+##### Diagnostics
+```{r}
+
+```
+

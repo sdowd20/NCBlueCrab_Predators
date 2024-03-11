@@ -80,6 +80,7 @@ df_count_wide_both06 <- df_count %>% filter(Survey == "P915"|Survey == "P120") %
 ```
 
 #### 0.24 x 0.24 size
+
 ```{r}
 gridded_0.24 <- read.csv("~/Documents/GitHub/NCBlueCrab_Predators/Data/gridded_24km.01.30.24.csv")
 
@@ -145,6 +146,7 @@ ggsave("/Users/sallydowd/Desktop/Ch1Data/Figures/gridcell_just.jpeg", height= 5,
 ```
 
 #### Fig. 2: grid pts
+
 ```{r}
 #0.24
 #join P915 CPUE and P120 CPUE with gridID dataset
@@ -206,4 +208,3 @@ ya <- ggarrange(t1 + rremove("ylab") + rremove("xlab"),t2 + rremove("ylab") + rr
 annotate_figure(ya, bottom= text_grob("Longitude"), left= text_grob("Latitude", rot= 90))
 ggsave("~/Desktop/Ch1Data/Figures/gridded_map_compare.jpeg", width= 12, height=7)
 ```
-
