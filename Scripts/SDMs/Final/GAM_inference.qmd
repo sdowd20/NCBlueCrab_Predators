@@ -29,6 +29,7 @@ AIC(reddrum_env, reddrum_bc, reddrum_forage, reddrum_env_bc, reddrum_env_forage,
 ```
 
 ##### Diagnostics
+
 ```{r}
 summary(reddrum_env)
 summary(reddrum_bc)
@@ -81,13 +82,12 @@ df_env_bc <- pred_gam(reddrum_env_bc, c(avgdepth, avgssal, avgstemp, avgsdo, NoF
 df_env_bc$smallbluecrabP120 <- log(df_env_bc$smallbluecrabP120+1)
 df_env_bc_long <- df_env_bc %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, smallbluecrabP120), names_to= "predictor")
 graphs(df_env_bc_long, df_env_bc)
-
+ggsave("/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/reddrumbest_partial.jpeg", width= 10, height= 8)
 df_env_forage <- pred_gam(reddrum_env_forage, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120))
 df_env_forage$reddrumP915forageP915 <- log(df_env_forage$reddrumP915forageP915+1)
 df_env_forage$reddrumP915forageP120 <- log(df_env_forage$reddrumP915forageP120+1)
 df_env_forage_long <- df_env_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120), names_to= "predictor")
 graphs(df_env_forage_long, df_env_forage)
-
 df_env_bc_forage <- pred_gam(reddrum_env_bc_forage, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120))
 df_env_bc_forage$smallbluecrabP120 <- log(df_env_bc_forage$smallbluecrabP120+1)
 df_env_bc_forage$reddrumP915forageP915 <- log(df_env_bc_forage$reddrumP915forageP915+1)
@@ -99,6 +99,7 @@ graphs(df_env_bc_forage_long, df_env_bc_forage)
 #### Southern kingfish
 
 ##### Models
+
 ```{r}
 southernkingfish_env <- gam(southernkingfishP915~s(avgdepth, k=11)+s(avgssal, k=11)+s(avgstemp, k=11)+s(avgsdo, k=11)+s(NoFishRest, k=11)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
@@ -119,6 +120,7 @@ AIC(southernkingfish_env, southernkingfish_bc, southernkingfish_forage, southern
 ```
 
 ##### Diagnostics
+
 ```{r}
 summary(southernkingfish_env)
 summary(southernkingfish_bc)
@@ -189,6 +191,7 @@ graphs(df_env_bc_forage_long, df_env_bc_forage)
 #### Black drum
 
 ##### Models
+
 ```{r}
 blackdrum_env <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
@@ -206,6 +209,7 @@ AIC(blackdrum_env, blackdrum_bc, blackdrum_forage, blackdrum_env_bc, blackdrum_e
 ```
 
 ##### Diagnostics
+
 ```{r}
 summary(blackdrum_env)
 summary(blackdrum_bc)
@@ -228,7 +232,7 @@ vif(blackdrum_env_bc)
 vif(blackdrum_env_forage)
 vif(blackdrum_env_bc_forage)
 
-cor(df_CPUE_length_wide_both %>% dplyr::select(avgdepth,avgssal, avgstemp, avgsdo, NoFishRest, blackdrumP915forageP915, blackdrumP915forageP120, smallbluecrabP120))
+cor(df_CPUE_length_wide_both %>% dplyr::select(avgdepth,avgssal, avgstemp, avgsdo, NoFishRest, blackdrumP915forageP120, smallbluecrabP120))
 
 #Partial effect plots
 plot(blackdrum_env, shade= "true") 
@@ -262,11 +266,18 @@ df_env_forage <- pred_gam(blackdrum_env_forage, c(avgdepth, avgssal, avgstemp, a
 df_env_forage$blackdrumP915forageP120 <- log(df_env_forage$blackdrumP915forageP120+1)
 df_env_forage_long <- df_env_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, blackdrumP915, blackdrumP915forageP120), names_to= "predictor")
 graphs(df_env_forage_long, df_env_forage)
-
+ggsave("/users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/blackdrumbest_partial.jpeg", width= 10, height= 8)
 df_env_bc_forage <- pred_gam(blackdrum_env_bc_forage, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, blackdrumP915, blackdrumP915forageP120, smallbluecrabP120))
 df_env_bc_forage$smallbluecrabP120 <- log(df_env_bc_forage$smallbluecrabP120+1)
 df_env_bc_forage$blackdrumP915forageP120 <- log(df_env_bc_forage$blackdrumP915forageP120+1)
 df_env_bc_forage_long <- df_env_bc_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, blackdrumP915, blackdrumP915forageP120, smallbluecrabP120), names_to= "predictor")
 graphs(df_env_bc_forage_long, df_env_bc_forage)
-```
 
+df_env_bc_forage_long %>% ggplot(aes(x= value, y= pred2)) + geom_point() + facet_wrap(~predictor, scales= "free") + geom_smooth(method= "gam", formula= blackdrumP915 ~ avgsdo+avgdepth+avgssal+avgstemp+blackdrumP915forageP120+NoFishRest+smallbluecrabP120)
+
+graphs <- function(df, df2){
+  plot1 <- df %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE") + geom_smooth(method= "gam", formula= reddrumP915 ~ avgsdo)
+  # plot2 <-df2 %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
+  print(plot1)
+}
+```

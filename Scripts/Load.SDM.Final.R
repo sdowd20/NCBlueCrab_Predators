@@ -59,16 +59,8 @@ pred_gam <- function(model, colnames){
 
 graphs <- function(df, df2){
   plot1 <- df %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE")
-  plot2 <-df2 %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
+  # plot2 <-df2 %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
   print(plot1)
-  print(plot2)
-}
-
-graphs_sk <- function(df, df2){
-  plot1 <- df %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted southern kingfish CPUE")
-  plot2 <-df2 %>% ggplot(aes(x= southernkingfishP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
-  print(plot1)
-  print(plot2)
 }
 
 #Load in datasets
