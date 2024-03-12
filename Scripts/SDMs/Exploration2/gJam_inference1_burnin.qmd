@@ -137,4 +137,3 @@ plot <- list(SMALLPLOTS = T, GRIDPLOTS=T,
                         outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/black_drum/Env_bc_forage/modo4')
 gjamPlot(output = modo4, plotPars = plot)
 ```
-
