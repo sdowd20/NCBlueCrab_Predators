@@ -1,0 +1,31 @@
+---
+title: "GAM_CV"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+#Define model 
+gam_mod <- gen_additive_mod() %>%
+set_engine(engine = 'mgcv', family= tw(link= "log")) %>% set_mode('regression')
+```
+
+```{r}
+folds <- vfold_cv(df_CPUE_length_wide_both, v= 5, strata= reddrumP915, repeats= 100) #5 fold cross-validation repeated 100 times on the dataset
+#strata: create a stratified CV object, too little data to stratify by Year 
+```
+
+#### Red drum
+```{r}
+#Environment
+reddrum_env_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Yearfactor)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest)) %>% fit(data= df_CPUE_length_wide_both) 
+
+reddrum_env_cv <- reddrum_env_wf %>% fit_resamples(folds)
+reddrum_env_cv2 <- collect_metrics(reddrum_env_cv)
+combined_df <- do.call(rbind, reddrum_env_cv)
+```
+

@@ -38,6 +38,13 @@ summary(reddrum_env_bc)
 summary(reddrum_env_forage)
 summary(reddrum_env_bc_forage)
 
+anova(reddrum_env) #p-value for year variable across all years
+anova(reddrum_bc)
+anova(reddrum_forage)
+anova(reddrum_env_bc)
+anova(reddrum_env_forage)
+anova(reddrum_env_bc_forage)
+
 gam.check(reddrum_env)
 gam.check(reddrum_bc)
 gam.check(reddrum_forage)
@@ -66,6 +73,8 @@ plot(reddrum_env_bc_forage, shade= "true")
 df_env <- pred_gam(reddrum_env, c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, Yearfactor, reddrumP915))
 df_env_long <- df_env %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915), names_to= "predictor")
 graphs(df_env_long, df_env)
+
+ggplot(df_CPUE_length_wide_both) + geom_point() + 
 
 df_bc <- pred_gam(reddrum_bc, c(smallbluecrabP120, Yearfactor, reddrumP915))
 df_bc$smallbluecrabP120 <- log(df_bc$smallbluecrabP120+1)
@@ -96,19 +105,28 @@ df_env_bc_forage_long <- df_env_bc_forage %>% pivot_longer(cols= c(avgdepth, avg
 graphs(df_env_bc_forage_long, df_env_bc_forage)
 ```
 
+##### year as numeric
+```{r}
+reddrum_env2 <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year), family= tw(), data=df_CPUE_length_wide_both)
+plot(reddrum_env2, shade= "true") 
+
+blackdrum_env2 <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year), family= tw(), data=df_CPUE_length_wide_both)
+plot(blackdrum_env2, shade= "true") 
+
+blackdrum_env2 <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+plot(blackdrum_env2, shade= "true") 
+```
+
 #### Southern kingfish
 
 ##### Models
 
 ```{r}
-southernkingfish_env <- gam(southernkingfishP915~s(avgdepth, k=11)+s(avgssal, k=11)+s(avgstemp, k=11)+s(avgsdo, k=11)+s(NoFishRest, k=11)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
-summary(southernkingfish_env)
-
 southernkingfish_env <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
-southernkingfish_bc <- gam(southernkingfishP915~ s(log(smallbluecrabP120+1), k=22) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+southernkingfish_bc <- gam(southernkingfishP915~ s(log(smallbluecrabP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
-southernkingfish_forage <- gam(southernkingfishP915~ s(log(southernkingfishP915forageP915+1), k= 66) + s(log(southernkingfishP915forageP120+1), k=66) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+southernkingfish_forage <- gam(southernkingfishP915~ s(log(southernkingfishP915forageP915+1)) + s(log(southernkingfishP915forageP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
 southernkingfish_env_bc <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
 
@@ -118,7 +136,7 @@ southernkingfish_env_bc_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal
 
 AIC(southernkingfish_env, southernkingfish_bc, southernkingfish_forage, southernkingfish_env_bc, southernkingfish_env_forage, southernkingfish_env_bc_forage) %>% arrange(AIC)
 
-#Error: algorithm can't take a step in parameter space that would result in an improvement in the optimizaiton criterion
+#Warning: algorithm can't take a step in parameter space that would result in an improvement in the optimizaiton criterion
 #technique: increase k until doesn't fail anymore 
 ```
 
@@ -131,6 +149,13 @@ summary(southernkingfish_forage)
 summary(southernkingfish_env_bc)
 summary(southernkingfish_env_forage)
 summary(southernkingfish_env_bc_forage)
+
+anova(southernkingfish_env) #p-value for year variable across all years
+anova(southernkingfish_bc)
+anova(southernkingfish_forage)
+anova(southernkingfish_env_bc)
+anova(southernkingfish_env_forage)
+anova(southernkingfish_env_bc_forage)
 
 gam.check(southernkingfish_env)
 gam.check(southernkingfish_bc)
@@ -221,6 +246,13 @@ summary(blackdrum_env_bc)
 summary(blackdrum_env_forage)
 summary(blackdrum_env_bc_forage)
 
+anova(blackdrum_env) #p-value for year variable across all years
+anova(blackdrum_bc)
+anova(blackdrum_forage)
+anova(blackdrum_env_bc)
+anova(blackdrum_env_forage)
+anova(blackdrum_env_bc_forage)
+
 gam.check(blackdrum_env)
 gam.check(blackdrum_bc)
 gam.check(blackdrum_forage)
@@ -283,4 +315,24 @@ graphs <- function(df, df2){
   # plot2 <-df2 %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
   print(plot1)
 }
+```
+
+#### Year is important:
+```{r}
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+df <- df_CPUE_length_wide_both
+sample_size_both = floor(0.8*nrow(df))
+picked_both = sample(seq_len(nrow(df)),size = sample_size_both) 
+df_test = df[-picked_both,]
+df_train = df[picked_both,]
+
+reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_train)
+
+df2 <- as.data.frame(predict(reddrum_env), newdata= df_test, type= "response")
+colnames(df2) <- "prediction"
+df2 <- df2 %>% mutate(pred2= exp(prediction))
+r2_general(df2$pred2, df_train$reddrumP915)
 ```
