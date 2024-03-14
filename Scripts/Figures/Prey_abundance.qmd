@@ -1,0 +1,32 @@
+---
+title: "Prey_abundance"
+format: html
+editor: visual
+---
+
+```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+```
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/reddrumP915forage.jpeg", width= 7, height= 5, dpi= 300)
+ggplot() + geom_histogram(aes(x= reddrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P120 total prey CPUE") + ylab("Count") + labs(tag= "A)")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/reddrumP120forage.jpeg", width= 7, height= 5, dpi= 300)
+
+ggplot() + geom_histogram(aes(x= southernkingfishP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P915 total prey CPUE") + ylab("Count") + labs(tag= "B)")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/skP915forage.jpeg", width= 7, height= 5, dpi= 300)
+ggplot() + geom_histogram(aes(x= southernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P120 total prey CPUE") + ylab("Count") + labs(tag= "B)")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/skP120forage.jpeg", width= 7, height= 5, dpi= 300)
+
+ggplot() + geom_histogram(aes(x= blackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/bdP120forage.jpeg", width= 7, height= 5, dpi= 300)
+```
+

@@ -63,7 +63,6 @@ plot <- list(SMALLPLOTS = T, GRIDPLOTS=T,
                         SAVEPLOTS = T, PLOTALLY = T, 
                         outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Red_drum/Env_bc_forage/modo3')
 gjamPlot(output = modo3, plotPars = plot)
-2+2
 ```
 
 ##### Modo4
@@ -136,4 +135,29 @@ plot <- list(SMALLPLOTS = T, GRIDPLOTS=T,
                         SAVEPLOTS = T, PLOTALLY = T, 
                         outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/black_drum/Env_bc_forage/modo4')
 gjamPlot(output = modo4, plotPars = plot)
+```
+
+#### Southern kingfish
+
+```{r}
+df <- df_CPUE_length_wide_both
+
+df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1))
+```
+
+##### Modo3
+```{r}
+#20,000, 8,000
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(southernkingfishP915, logsmallbluecrabP120, logsouthernkingfishP915forageP120, logsouthernkingfishP915forageP915) 
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+modo3 <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+save(modo3, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Southern_kingfish/Env_bc_forage/modo3/modo3.RData")
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Southern_kingfish/Env_bc_forage/modo3')
+gjamPlot(output = modo3, plotPars = plot)
+library(beepr)
+beep(sound=8)
 ```

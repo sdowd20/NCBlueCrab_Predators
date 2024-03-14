@@ -106,6 +106,7 @@ graphs(df_env_bc_forage_long, df_env_bc_forage)
 ```
 
 ##### year as numeric
+
 ```{r}
 reddrum_env2 <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year), family= tw(), data=df_CPUE_length_wide_both)
 plot(reddrum_env2, shade= "true") 
@@ -115,6 +116,89 @@ plot(blackdrum_env2, shade= "true")
 
 blackdrum_env2 <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
 plot(blackdrum_env2, shade= "true") 
+```
+
+##### Plots 
+```{r}
+df <- as.data.frame(predict(model), df_CPUE_length_wide_both, type= "response")
+df <- df %>% mutate(pred2= exp(prediction))
+```
+
+```{r}
+df <- df_CPUE_length_wide_both
+grid.res <- 22
+grid.bin <- data.frame("avgdepth"= mean)
+
+  grid.bin <- data.frame(
+  "year"=c(2001:2022),
+  "avgdepth"=mean(df$avgdepth), 
+  "avgssal"=mean(df$avgssal),
+  "avgstemp"=mean(df$avgstemp),
+  "avgsdo"=mean(df$julian),
+  "NoFishRest"=mean(df$NoFishRest))
+  
+pred.bin <- predict(reddrum_env, df_CPUE_length_wide_both, type="response", se=T)
+niter <- 10000  # number of replicates
+pred.bin.boot <- matrix(NA,nrow=grid.res,ncol=niter)
+for(i in 1:grid.res){
+  pred.bin.boot[i,] <- rnorm(niter, pred.bin$fit[i], pred.bin$se.fit[i])}
+pred.mean <- apply(pred.bin.boot,1,mean)
+pred.95CI <- apply(pred.bin.boot,1,quantile,probs=c(0.025,0.975)) # to get 95% CIs
+plot(grid.bin$year, pred.mean, type="p",mgp=c(2,0.7,0), ylim=c(0,0.31),xlab="",lwd=2,cex.lab=1.4,ylab="",boxwex=0.01,cex.axis=1.1)
+points(grid.bin$year,pred.mean, type="p",cex=1.5,pch=19)
+points(grid.bin$year,pred.mean, type="l")
+lines(grid.bin$year, pred.95CI[1,], lty=2)
+lines(grid.bin$year, pred.95CI[2,], lty=2)
+```
+
+```{r}
+df <- df_CPUE_length_wide_both
+pred <- predict(reddrum_env, df_CPUE_length_wide_both, type="response", se=T) 
+
+df$reddrumP915_pred <- pred$fit
+df$lower <- pred$fit - 1.96 * pred$se.fit
+df$upper <- pred$fit + 1.96 * pred$se.fit
+
+ggplot(df, aes(avgdepth, reddrumP915)) +
+  geom_point() +
+  geom_ribbon(data = df, alpha = 0.3,
+              aes(ymin = lower, ymax = upper, fill = "confidence interval")) +
+  geom_line(data = df, aes(color = "GAM")) +
+  scale_fill_manual(values = "lightblue", name = NULL) +
+  scale_color_manual(values = "darkblue", name = NULL) +
+  theme_minimal(base_size = 16)
+```
+
+```{r}
+df <- df_CPUE_length_wide_both
+pred <- predict(reddrum_env, df_CPUE_length_wide_both, type="response", se=T) 
+pred <- cbind(pred, df)
+pred <- transform(pred, lwr_ci = (fit - (2 * se.fit)),
+                        upr_ci = (fit + (2 * se.fit)),
+                        fitted = (fit))
+ggplot(pred, aes(x = avgdepth, y = fitted)) +
+  geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
+  geom_line()
+```
+
+```{r}
+df <- gamSim()
+m <- gam(y ~ s(x0) + s(x1) + s(x2) + s(x3), data = df, method = "REML")
+new_data <- with(df, expand.grid(x2 = seq(min(x2), max(x2), length = 200),
+                                 x0 = median(x0),
+                                 x1 = median(x1),
+                                 x3 = median(x3)))
+
+ilink <- family(m)$linkinv
+pred <- predict(m, new_data, type = "link", se.fit = TRUE)
+pred <- cbind(pred, new_data)
+pred <- transform(pred, lwr_ci = ilink(fit - (2 * se.fit)),
+                        upr_ci = ilink(fit + (2 * se.fit)),
+                        fitted = ilink(fit))
+
+ggplot(pred, aes(x = x2, y = fitted)) +
+  geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
+  geom_line()
 ```
 
 #### Southern kingfish
@@ -317,8 +401,8 @@ graphs <- function(df, df2){
 }
 ```
 
-
 #### Year is important:
+
 ```{r}
 df <- df_CPUE_length_wide_both
 sample_size_both = floor(0.8*nrow(df))
@@ -333,5 +417,3 @@ colnames(df2) <- "prediction"
 df2 <- df2 %>% mutate(pred2= exp(prediction))
 r2_general(df2$pred2, df_train$reddrumP915)
 ```
-
-
