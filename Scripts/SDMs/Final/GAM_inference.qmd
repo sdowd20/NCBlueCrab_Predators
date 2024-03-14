@@ -317,12 +317,9 @@ graphs <- function(df, df2){
 }
 ```
 
+
 #### Year is important:
 ```{r}
-r2_general <-function(preds,actual){ 
-  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
-}
-
 df <- df_CPUE_length_wide_both
 sample_size_both = floor(0.8*nrow(df))
 picked_both = sample(seq_len(nrow(df)),size = sample_size_both) 
@@ -336,3 +333,5 @@ colnames(df2) <- "prediction"
 df2 <- df2 %>% mutate(pred2= exp(prediction))
 r2_general(df2$pred2, df_train$reddrumP915)
 ```
+
+
