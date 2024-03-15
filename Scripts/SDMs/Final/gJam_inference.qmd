@@ -15,8 +15,9 @@ df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP9
 #### Red drum
 
 ##### Environment + BC
+
 ```{r}
-#Environment + forage 
+#Environment + BC 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
 ydata <- df %>% dplyr::select(reddrumP915, logsmallbluecrabP120) 
@@ -30,6 +31,7 @@ rd_modo_env$fit$DIC
 ```
 
 ##### Environment + forage
+
 ```{r}
 #Environment + forage 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -45,6 +47,7 @@ rd_modo_env_forage$fit$DIC
 ```
 
 ##### Environment + forage + BC
+
 ```{r}
 #Environment + forage + BC
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -62,7 +65,9 @@ rd_modo_env_bc_forage$fit$DIC
 #### Southern kingfish
 
 ##### Environment + BC
+
 ```{r}
+#Environment + BC
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
 ydata <- df %>% dplyr::select(southernkingfishP915, logsmallbluecrabP120) 
@@ -76,6 +81,7 @@ sk_modo_env$fit$DIC
 ```
 
 ##### Environment + forage
+
 ```{r}
 #Environment + forage 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -91,6 +97,7 @@ sk_modo_env_forage$fit$DIC
 ```
 
 ##### Environment + forage + BC
+
 ```{r}
 #Environment + forage + BC
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -103,11 +110,14 @@ formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 sk_modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
 save(sk_modo_env_bc_forage , file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/sk_modo_env_bc_forage.RData")
 sk_modo_env_bc_forage$fit$DIC
+library(beepr)
+beep(sound=8)
 ```
 
 #### Black drum
 
 ##### Environment + BC
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -122,6 +132,7 @@ bd_modo_env$fit$DIC
 ```
 
 ##### Environment + forage
+
 ```{r}
 #Environment + forage 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -134,9 +145,11 @@ formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 bd_modo_env_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
 save(bd_modo_env_forage , file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/bd_modo_env_forage.RData")
 bd_modo_env_forage$fit$DIC
+beep(sound=8)
 ```
 
 ##### Environment + forage + BC
+
 ```{r}
 #Environment + forage + BC
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
