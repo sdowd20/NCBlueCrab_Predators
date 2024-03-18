@@ -145,7 +145,7 @@ formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 bd_modo_env_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
 save(bd_modo_env_forage , file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference1/bd_modo_env_forage.RData")
 bd_modo_env_forage$fit$DIC
-beep(sound=8)
+
 ```
 
 ##### Environment + forage + BC

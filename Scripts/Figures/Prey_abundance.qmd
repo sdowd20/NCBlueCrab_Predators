@@ -28,5 +28,7 @@ ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/skP120forage.jpeg", width= 7, h
 
 ggplot() + geom_histogram(aes(x= blackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
 ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/bdP120forage.jpeg", width= 7, height= 5, dpi= 300)
-```
 
+ggplot() + geom_histogram(aes(x= smallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
+ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/bc.jpeg", width= 7, height= 5, dpi= 300)
+```
