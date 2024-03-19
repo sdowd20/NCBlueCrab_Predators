@@ -1,0 +1,58 @@
+---
+title: "GAM_plots"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+
+globe_bb <- matrix(c(-78.900147,33.802938,
+                      -78.900147,36.672128,
+                      -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) %>% rename("gridID"= "ID")
+```
+
+#### Predicted vs. observed 
+
+##### Best GAMs
+```{r}
+reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+
+southernkingfish_env_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(southernkingfishP915forageP915+1)) + s(log(southernkingfishP915forageP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+
+blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(blackdrumP915forageP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+```
+
+##### Predict
+```{r}
+df_rd <- as.data.frame(predict(reddrum_env_bc), df_CPUE_length_wide_both, type= "response")
+colnames(df_rd) <- "prediction"
+df_rd <- df_rd %>% mutate(pred_reddrum= exp(prediction)) %>% dplyr::select(pred_reddrum)
+
+df_sk <- as.data.frame(predict(southernkingfish_env_forage), df_CPUE_length_wide_both, type= "response")
+colnames(df_sk) <- "prediction"
+df_sk <- df_sk %>% mutate(pred_southernkingfish = exp(prediction)) %>% dplyr::select(pred_southernkingfish)
+
+df_bd <- as.data.frame(predict(blackdrum_env_forage), df_CPUE_length_wide_both, type= "response")
+colnames(df_bd) <- "prediction"
+df_bd <- df_bd %>% mutate(pred_blackdrum= exp(prediction)) %>% dplyr::select(pred_blackdrum)
+
+df_pred <- cbind(df_CPUE_length_wide_both, df_rd, df_sk, df_bd)
+df_pred <- df_pred %>% mutate(diff_reddrum= ((reddrumP915 - pred_reddrum)/reddrumP915)*100, diff_southernkingfish= ((southernkingfishP915 - pred_southernkingfish)/southernkingfishP915)*100, diff_blackdrum= ((blackdrumP915 - pred_blackdrum)/blackdrumP915)*100) %>% left_join(globe_grid_30, by= "gridID")
+
+df_pred2 <- cbind(df_CPUE_length_wide_both, df_rd, df_sk, df_bd)
+df_pred2 <- df_pred2 %>% mutate(diff_reddrum= reddrumP915 - pred_reddrum, diff_southernkingfish= southernkingfishP915 - pred_southernkingfish, diff_blackdrum= blackdrumP915 - pred_blackdrum) %>% left_join(globe_grid_30, by= "gridID")
+```
+
+```{r}
+#Predict
+ggplot(data = world) + geom_sf() + geom_sf(data = df_pred2, aes(geometry= geometry, fill = diff_reddrum), show.legend= TRUE) +  theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme
+
+ggplot(data = world) + geom_sf() + geom_sf(data = df_pred, aes(geometry= geometry, fill = diff_southernkingfish), show.legend= TRUE) +  theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme
+
+ggplot(data = world) + geom_sf() + geom_sf(data = df_pred, aes(geometry= geometry, fill = diff_blackdrum), show.legend= TRUE) +  theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme
+```
+

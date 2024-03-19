@@ -63,6 +63,14 @@ graphs <- function(df, df2){
   print(plot1)
 }
 
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+
 #Load in datasets
 ##CPUE
 

@@ -118,7 +118,8 @@ blackdrum_env2 <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)
 plot(blackdrum_env2, shade= "true") 
 ```
 
-##### Plots 
+##### Plots
+
 ```{r}
 df <- as.data.frame(predict(model), df_CPUE_length_wide_both, type= "response")
 df <- df %>% mutate(pred2= exp(prediction))
@@ -170,18 +171,6 @@ ggplot(df, aes(avgdepth, reddrumP915)) +
 ```
 
 ```{r}
-df <- df_CPUE_length_wide_both
-pred <- predict(reddrum_env, df_CPUE_length_wide_both, type="response", se=T) 
-pred <- cbind(pred, df)
-pred <- transform(pred, lwr_ci = (fit - (2 * se.fit)),
-                        upr_ci = (fit + (2 * se.fit)),
-                        fitted = (fit))
-ggplot(pred, aes(x = avgdepth, y = fitted)) +
-  geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
-  geom_line()
-```
-
-```{r}
 df <- gamSim()
 m <- gam(y ~ s(x0) + s(x1) + s(x2) + s(x3), data = df, method = "REML")
 new_data <- with(df, expand.grid(x2 = seq(min(x2), max(x2), length = 200),
@@ -197,6 +186,33 @@ pred <- transform(pred, lwr_ci = ilink(fit - (2 * se.fit)),
                         fitted = ilink(fit))
 
 ggplot(pred, aes(x = x2, y = fitted)) +
+  geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
+  geom_line()
+```
+
+```{r}
+df <- df_CPUE_length_wide_both
+new_data <- data.frame("Yearfactor"= c(2001:2019), avgdepth= mean(df$avgdepth), avgssal= mean(df$avgssal), avgstemp= mean(df$avgstemp), avgsdo= mean(df$avgsdo), NoFishRest= mean(df$NoFishRest))
+
+ilink <- family(reddrum_env)$linkinv
+pred <- predict(reddrum_env, new_data, type = "link", se.fit = TRUE)
+pred <- transform(pred, lwr_ci = ilink(fit - (2 * se.fit)),
+                        upr_ci = ilink(fit + (2 * se.fit)),
+                        fitted = ilink(fit))
+
+ggplot(aes(x = avgdepth, y = fitted), data= pred) +
+  geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), data= pred, alpha = 0.2) +
+  geom_line()
+```
+
+```{r}
+df <- df_CPUE_length_wide_both
+pred <- predict(reddrum_env, df_CPUE_length_wide_both, type="response", se=T) 
+pred <- cbind(pred, df)
+pred <- transform(pred, lwr_ci = (fit - (2 * se.fit)),
+                        upr_ci = (fit + (2 * se.fit)),
+                        fitted = (fit))
+ggplot(pred, aes(x = avgdepth, y = fitted)) +
   geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
   geom_line()
 ```
@@ -416,4 +432,67 @@ df2 <- as.data.frame(predict(reddrum_env), newdata= df_test, type= "response")
 colnames(df2) <- "prediction"
 df2 <- df2 %>% mutate(pred2= exp(prediction))
 r2_general(df2$pred2, df_train$reddrumP915)
+```
+
+#### Explore weird residuals: still just bad at predicting
+
+```{r}
+df <- df_CPUE_length_wide_both
+sample_size_both = floor(0.8*nrow(df_CPUE_length_wide_both))
+picked = sample(seq_len(nrow(df)),size = sample_size_both) 
+df2 <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1))
+
+test = df2[-picked,]
+train = df2[picked,]
+
+#Load cross-validation functions 
+library(gtools)
+
+pastePerm<- function(row, names){
+  keep<- which(row==1)
+  if(length(keep)==0){
+    return('1')
+  }else{
+    return(paste(names[keep],collapse='+'))
+  }
+}
+my_sqrt <- function(var1){
+  sqrt(var1) #take square root of variable 
+} #construct model formulas 
+
+dredgeform<- function(pred, covars, alwaysIn='Yearfactor'){ #always in is set to empty string
+  p<- length(covars) #number of independent variables
+  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T) #for different combinations of predictor variables
+  myforms<- NULL #store formulas 
+  for(j in 1:nrow(perm.tab)){
+    myforms[j]<- pastePerm(perm.tab[j,], covars) #function above
+  }
+  myforms<- paste0(pred, '~',myforms) #predicted variable and formula
+  return(myforms)
+}
+
+
+allformulas_reddrum <- dredgeform(pred = "reddrumP915", covars = c("s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(logsmallbluecrabP120)"))
+
+compare_var_tw_reddrum <- as.data.frame(matrix(ncol = 2, nrow = 0))
+colnames(compare_var_tw_reddrum) <- c("formula", "AIC")
+for (i in 1:length(allformulas_reddrum)) {
+model_tw_reddrum <- gam(as.formula(allformulas_reddrum[i]), data=train, family= tw(link= "log"))
+compare_var_tw_reddrum[i, 1] <- allformulas_reddrum[i]
+compare_var_tw_reddrum[i, 2] <- AIC(model_tw_reddrum)
+print(i)
+}
+
+compare_var_tw_reddrum %>% arrange(AIC) %>% .[1,1]
+
+real_gam <- gam(reddrumP915~s(avgstemp)+s(logsmallbluecrabP120), data=train, family= tw(link= "log"))
+
+
+df2 <- as.data.frame(predict(real_gam), newdata= test, type= "response")
+colnames(df2) <- "prediction"
+df2 <- df2 %>% mutate(pred2= exp(prediction))
+r2_general(df2$pred2, train$reddrumP915)
+
+
+gam.check(real_gam)
 ```

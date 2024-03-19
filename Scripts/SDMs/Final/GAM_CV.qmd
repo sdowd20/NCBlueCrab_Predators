@@ -8,6 +8,8 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
+-Parsnip details: https://www.tidymodels.org/learn/develop/models/
+
 ```{r}
 #Define model 
 gam_mod <- gen_additive_mod() %>%
@@ -79,6 +81,7 @@ beep(sound=8)
 ```
 
 #### Southern kingfish
+
 ```{r}
 folds <- vfold_cv(df_CPUE_length_wide_both, v= 5, strata= southernkingfishP915, repeats= 100)
 ```
@@ -140,6 +143,7 @@ write.csv(southernkingfish_env_bc_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/
 ```
 
 #### Black drum
+
 ```{r}
 folds <- vfold_cv(df_CPUE_length_wide_both, v= 5, strata= blackdrumP915, repeats= 100)
 ```
@@ -199,4 +203,3 @@ write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/b
 write.csv(blackdrum_env_bc_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv2.csv")
 beep(sound=8)
 ```
-
