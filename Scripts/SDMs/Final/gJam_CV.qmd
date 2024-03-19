@@ -7,6 +7,476 @@ editor: visual
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishforageP120+1))
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1))
 ```
 
+#### Red drum
+
+##### Environment + BC
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
+
+reddrum_env_bc_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_env_bc_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(reddrumP915, logsmallbluecrabP120) 
+xdata_test <- test  
+ydata_test <- test %>% dplyr::select(reddrumP915, logsmallbluecrabP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_env_bc_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_env_bc_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_env_bc_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_env_bc_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
+}
+
+write.csv(reddrum_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc.csv")
+
+library(beepr)
+beep(sound= 8)
+
+mean(reddrum_env_bc_gjam$r2_con)
+mean(reddrum_env_bc_gjam$r2_uncon)
+```
+
+##### Environment + forage
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+reddrum_env_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_env_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120) 
+xdata_test <- test #only accepts all data! 
+ydata_test <- test %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+#version of xdata passed in newdata has the columns with same names and variable types as xdata passed to gJam
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_env_forage_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_env_forage_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_env_forage_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_env_forage_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
+}
+
+mean(reddrum_env_forage_gjam$r2_con)
+mean(reddrum_env_forage_gjam$r2_uncon)
+
+write.csv(reddrum_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage.csv")
+```
+
+##### Environment + BC + forage
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+reddrum_env_bc_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_env_bc_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120, logsmallbluecrabP120) 
+xdata_test <- test #only accepts all data! 
+ydata_test <- test %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120, logsmallbluecrabP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_env_bc_forage_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_env_bc_forage_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
+}
+
+write.csv(reddrum_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
+
+mean(reddrum_env_bc_forage_gjam$r2_con)
+mean(reddrum_env_bc_forage_gjam$r2_uncon)
+```
+
+#### Southern kingfish
+
+##### Environment + BC
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
+
+southernkingfish_env_bc_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_env_bc_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(southernkingfishP915, logsmallbluecrabP120) 
+xdata_test <- test  
+ydata_test <- test %>% dplyr::select(southernkingfishP915, logsmallbluecrabP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_env_bc_gjam[i,1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_env_bc_gjam[i,2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_env_bc_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_env_bc_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+print(i)
+}
+
+write.csv(southernkingfish_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc.csv")
+
+library(beepr)
+beep(sound=8)
+
+mean(southernkingfish_env_bc_gjam$r2_con)
+mean(southernkingfish_env_bc_gjam$r2_uncon)
+```
+
+##### Environment + forage
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+southernkingfish_env_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_env_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(southernkingfishP915, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120) 
+xdata_test <- test #only accepts all data! 
+ydata_test <- test %>% dplyr::select(southernkingfishP915, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+#version of xdata passed in newdata has the columns with same names and variable types as xdata passed to gJam
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_env_forage_gjam[i,1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_env_forage_gjam[i,2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_env_forage_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_env_forage_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+print(i)
+}
+
+mean(southernkingfish_env_forage_gjam$r2_con)
+mean(southernkingfish_env_forage_gjam$r2_uncon)
+
+write.csv(southernkingfish_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_forage.csv")
+```
+
+##### Environment + BC + forage
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+southernkingfish_env_bc_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_env_bc_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(southernkingfishP915, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120, logsmallbluecrabP120) 
+xdata_test <- test #only accepts all data! 
+ydata_test <- test %>% dplyr::select(southernkingfishP915, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120, logsmallbluecrabP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_env_bc_forage_gjam[i,1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_env_bc_forage_gjam[i,2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+print(i)
+}
+
+write.csv(southernkingfish_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
+```
+
+#### Black drum
+
+##### Environment + BC
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
+
+blackdrum_env_bc_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(blackdrum_env_bc_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(blackdrumP915, logsmallbluecrabP120) 
+xdata_test <- test  
+ydata_test <- test %>% dplyr::select(blackdrumP915, logsmallbluecrabP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_blackdrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"] #observed blackdrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_blackdrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "blackdrumP915"]
+
+dat <- cbind(pred_blackdrum_con, obs_blackdrum, pred_blackdrum_un)
+dat <- as.data.frame(dat)
+
+blackdrum_env_bc_gjam[i,1] <- r2_general(dat$pred_blackdrum_con, dat$blackdrumP915)
+blackdrum_env_bc_gjam[i,2] <- r2_general(dat$pred_blackdrum_un, dat$blackdrumP915)
+blackdrum_env_bc_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_con)
+blackdrum_env_bc_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
+print(i)
+}
+
+write.csv(blackdrum_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc.csv")
+```
+
+##### Environment + forage
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+blackdrum_env_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(blackdrum_env_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(blackdrumP915, logblackdrumP915forageP120) 
+xdata_test <- test #only accepts all data! 
+ydata_test <- test %>% dplyr::select(blackdrumP915, logblackdrumP915forageP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+#conditional prediction: ycondData holds columns to condition on, columns not included in ycondData will be predicted conditionally 
+#version of xdata passed in newdata has the columns with same names and variable types as xdata passed to gJam
+ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_blackdrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"] #observed blackdrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_blackdrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "blackdrumP915"]
+
+dat <- cbind(pred_blackdrum_con, obs_blackdrum, pred_blackdrum_un)
+dat <- as.data.frame(dat)
+
+blackdrum_env_forage_gjam[i,1] <- r2_general(dat$pred_blackdrum_con, dat$blackdrumP915)
+blackdrum_env_forage_gjam[i,2] <- r2_general(dat$pred_blackdrum_un, dat$blackdrumP915)
+blackdrum_env_forage_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_con)
+blackdrum_env_forage_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
+print(i)
+}
+
+mean(blackdrum_env_forage_gjam$r2_con)
+mean(blackdrum_env_forage_gjam$r2_uncon)
+
+write.csv(blackdrum_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_forage.csv")
+```
+
+##### Environment + BC + forage
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
+
+blackdrum_env_bc_forage_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(blackdrum_env_bc_forage_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train %>% dplyr::select(blackdrumP915, logblackdrumP915forageP120, logsmallbluecrabP120) 
+xdata_test <- test #only accepts all data! 
+ydata_test <- test %>% dplyr::select(blackdrumP915, logblackdrumP915forageP120, logsmallbluecrabP120)
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_blackdrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"] #observed blackdrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_blackdrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "blackdrumP915"]
+
+dat <- cbind(pred_blackdrum_con, obs_blackdrum, pred_blackdrum_un)
+dat <- as.data.frame(dat)
+
+blackdrum_env_bc_forage_gjam[i,1] <- r2_general(dat$pred_blackdrum_con, dat$blackdrumP915)
+blackdrum_env_bc_forage_gjam[i,2] <- r2_general(dat$pred_blackdrum_un, dat$blackdrumP915)
+blackdrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_con)
+blackdrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
+print(i)
+}
+
+write.csv(blackdrum_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
+```

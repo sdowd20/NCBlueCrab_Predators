@@ -13,7 +13,11 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ##### Models
 
 ```{r}
-reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+df <- df_CPUE_length_wide_both %>% filter(Year < 2022)
+reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df)
+summary(reddrum_env)
+gam.check(reddrum_env)
+reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year), family= tw(), data=df_CPUE_length_wide_both)
 
 reddrum_bc <- gam(reddrumP915~ s(log(smallbluecrabP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
@@ -104,6 +108,109 @@ df_env_bc_forage$reddrumP915forageP120 <- log(df_env_bc_forage$reddrumP915forage
 df_env_bc_forage_long <- df_env_bc_forage %>% pivot_longer(cols= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, reddrumP915, reddrumP915forageP915, reddrumP915forageP120, smallbluecrabP120), names_to= "predictor")
 graphs(df_env_bc_forage_long, df_env_bc_forage)
 ```
+
+This website here: https://cran.r-project.org/web/packages/gratia/vignettes/custom-plotting.html
+
+Evaluate smooths at values of their covariates through smooth_estimates() and add partial residuals to the partial effects plots.  
+
+
+```{r}
+library(tidygam)
+pred <- predict_gam(reddrum_env, tran_fun= exp, series= "avgssal")
+plot(pred, "avgssal") + geom_point(aes(x= avgdepth, y= reddrumP915), data=df)
+#11: 10 segments instead of 10 points (11 points), default is 10
+
+install.packages("gratia")
+library(gratia)
+
+smooth_estimates(reddrum_env) %>% add_partial_residuals(reddrum_env) %>% transform_fun(exp) 
+smooth_estimates(reddrum_env) %>% transform_fun(exp) %>% draw(residuals= TRUE, scales= "free", resid.col= "red") 
+
+#https://cran.r-project.org/web/packages/gratia/vignettes/custom-plotting.html
+
+library(gratia)
+
+df <- df_CPUE_length_wide_both %>% filter(Year < 2022)
+
+plotdf <- df %>%
+  add_partial_residuals(reddrum_env) %>%  #calculate partial residuals
+  transform_fun(fun = exp, column = "s(avgdepth)")
+
+smooth_estimates(reddrum_env) %>% transform_fun(exp) %>% 
+  filter(smooth == "s(avgdepth)") %>% draw() +
+  geom_point(aes(y = reddrumP915), data = plotdf, alpha = 0.1) +
+  geom_line(aes(x = avgdepth, y = est), lwd = 2, col = "red") +
+  theme_bw()
+
+#smooth_estimates: evaluate smooths at covariate values, 
+```
+
+We also want to add a rug plot with the observed values of the predictor variable, the credible interval around the esitmated smooth, the partial residuals as a point layer, and the estimated smooth as a line layer. 
+
+```{r}
+sm <- smooth_estimates(reddrum_env) %>% transform_fun(exp)  %>%
+  add_confint() 
+eg1 <- df %>% add_partial_residuals(reddrum_env) %>%  
+transform_fun(fun = exp, column = "s(avgdepth)")
+
+p_sx2 <- sm %>%
+  filter(smooth == "s(avgdepth)") %>%
+  ggplot() +
+  geom_rug(aes(x = avgdepth),
+    data = eg1,
+    sides = "b", length = grid::unit(0.02, "npc")
+  ) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = avgdepth),
+    alpha = 0.2
+  ) +
+  geom_point(aes(x = avgdepth, y = `s(avgdepth)`),
+    data = eg1, cex = 1.5, colour = "steelblue3"
+  ) +
+  geom_line(aes(x = avgdepth, y = est), lwd = 1.2) +
+  labs(y = "Partial effect", title = "s(avgdepth)") + geom_point(aes(x= avgdepth, y= reddrumP915), data=df)
+
+p_sx2
+
+ #smooth estimates b/w predictor variable and resopnse
+```
+
+```{r}
+sm <- smooth_estimates(reddrum_env) %>% transform_fun(exp)  %>%
+  add_confint() 
+eg1 <- df %>% add_partial_residuals(reddrum_env) %>%  
+transform_fun(fun = exp, column = "s(avgssal)")
+
+p_sx2 <- sm %>%
+  filter(smooth == "s(avgssal)") %>%
+  ggplot() +
+  geom_rug(aes(x = avgssal),
+    data = eg1,
+    sides = "b", length = grid::unit(0.02, "npc")
+  ) +
+  geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = avgssal),
+    alpha = 0.2
+  ) +
+  geom_point(aes(x = avgssal, y = `s(avgssal)`),
+    data = eg1, cex = 1.5, colour = "steelblue3"
+  ) +
+  geom_line(aes(x = avgssal, y = est), lwd = 1.2) +
+  labs(y = "Partial effect", title = "s(avgssal)") + geom_point(aes(x= avgssal, y= reddrumP915), data=df)
+
+p_sx2
+```
+
+```{r}
+df <- df_CPUE_length_wide_both
+pred <- predict(reddrum_env, df_CPUE_length_wide_both, type="response", se=T) 
+pred <- cbind(pred, df)
+pred <- transform(pred, lwr_ci = (fit - (2 * se.fit)),
+                        upr_ci = (fit + (2 * se.fit)),
+                        fitted = (fit))
+ggplot(pred, aes(x = avgdepth, y = fitted)) +
+  geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
+  geom_line()
+```
+
 
 ##### year as numeric
 

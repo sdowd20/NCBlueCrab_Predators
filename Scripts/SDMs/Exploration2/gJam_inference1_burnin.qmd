@@ -146,6 +146,7 @@ df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logsouthernk
 ```
 
 ##### Modo3
+
 ```{r}
 #20,000, 8,000
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)

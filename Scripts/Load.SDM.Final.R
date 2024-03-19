@@ -146,3 +146,10 @@ df_CPUE_length_wide_P915$Yearfactor <- as.factor(df_CPUE_length_wide_P915$Year)
 
 # ###Remove paralichthyidaeP915
 # df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-paralichthyidaeP915)
+
+##Get rid of 2022
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% filter(Year < 2022)
+
+
+##Add log of prey items
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1))
