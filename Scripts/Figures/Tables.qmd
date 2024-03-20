@@ -1,0 +1,30 @@
+---
+title: "Tables"
+format: html
+editor: visual
+---
+
+```{r}
+library(readxl)
+library(sp)
+library(gt)
+```
+
+#### Main text
+
+##### Table 1: 
+```{r}
+Species_foodweb <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/Species_foodweb.xlsx")
+tbl1 <- Species_foodweb %>% gt() %>% cols_width(Number ~ px(70), Species ~ px(100), "Consumed by" ~ px(150), Survey ~ px(70)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
+gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Species_foodweb.png")
+```
+
+#### Appendix A: 
+
+##### Table 1: 
+```{r}
+Methods_tbls <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/Methods_tbls.xlsx")
+tbl1 <- Methods_tbls %>% gt() %>% cols_width(everything() ~ px(120)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
+gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Methods_tbls.png")
+```
+
