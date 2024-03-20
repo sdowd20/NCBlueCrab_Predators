@@ -13,11 +13,7 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ##### Models
 
 ```{r}
-df <- df_CPUE_length_wide_both %>% filter(Year < 2022)
-reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df)
-summary(reddrum_env)
-gam.check(reddrum_env)
-reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+s(Year), family= tw(), data=df_CPUE_length_wide_both)
+reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
 reddrum_bc <- gam(reddrumP915~ s(log(smallbluecrabP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
 
@@ -111,8 +107,7 @@ graphs(df_env_bc_forage_long, df_env_bc_forage)
 
 This website here: https://cran.r-project.org/web/packages/gratia/vignettes/custom-plotting.html
 
-Evaluate smooths at values of their covariates through smooth_estimates() and add partial residuals to the partial effects plots.  
-
+Evaluate smooths at values of their covariates through smooth_estimates() and add partial residuals to the partial effects plots.
 
 ```{r}
 library(tidygam)
@@ -145,7 +140,7 @@ smooth_estimates(reddrum_env) %>% transform_fun(exp) %>%
 #smooth_estimates: evaluate smooths at covariate values, 
 ```
 
-We also want to add a rug plot with the observed values of the predictor variable, the credible interval around the esitmated smooth, the partial residuals as a point layer, and the estimated smooth as a line layer. 
+We also want to add a rug plot with the observed values of the predictor variable, the credible interval around the esitmated smooth, the partial residuals as a point layer, and the estimated smooth as a line layer.
 
 ```{r}
 sm <- smooth_estimates(reddrum_env) %>% transform_fun(exp)  %>%
@@ -210,7 +205,6 @@ ggplot(pred, aes(x = avgdepth, y = fitted)) +
   geom_ribbon(aes(ymin = lwr_ci, ymax = upr_ci), alpha = 0.2) +
   geom_line()
 ```
-
 
 ##### year as numeric
 

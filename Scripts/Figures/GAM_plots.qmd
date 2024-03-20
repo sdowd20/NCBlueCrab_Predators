@@ -13,6 +13,8 @@ globe_bb <- matrix(c(-78.900147,33.802938,
                      -75.263672, 33.802938,
                      -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
 globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) %>% rename("gridID"= "ID")
+
+library(gratia)
 ```
 
 #### Predicted vs. observed
@@ -20,12 +22,11 @@ globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'pol
 ##### Best GAMs
 
 ```{r}
-#Remove year! 
 reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logsmallbluecrabP120), family= tw(), data=df_CPUE_length_wide_both)
 
-southernkingfish_env_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(southernkingfishP915forageP915+1)) + s(log(southernkingfishP915forageP120+1)), family= tw(), data=df)
+southernkingfish_env_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logsouthernkingfishP915forageP915) + s(logsouthernkingfishP915forageP120), family= tw(), data=df_CPUE_length_wide_both)
 
-blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(blackdrumP915forageP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logblackdrumP915forageP120), family= tw(), data=df_CPUE_length_wide_both)
 ```
 
 ##### Predict
@@ -52,7 +53,7 @@ df_pred2 <- df_pred2 %>% mutate(diff_reddrum= reddrumP915 - pred_reddrum, diff_s
 
 ```{r}
 #Predict
-ggplot(data = world) + geom_sf() + geom_sf(data = df_pred2, aes(geometry= geometry, fill = diff_reddrum), show.legend= TRUE) +  theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme
+ggplot(data = world) + geom_sf() + geom_sf(data = df_pred, aes(geometry= geometry, fill = diff_reddrum), show.legend= TRUE) +  theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme
 
 ggplot(data = world) + geom_sf() + geom_sf(data = df_pred, aes(geometry= geometry, fill = diff_southernkingfish), show.legend= TRUE) +  theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.900147, -75.263672), ylim=c(33.802938,36.672128), expand = TRUE) + standard_theme
 
@@ -60,7 +61,16 @@ ggplot(data = world) + geom_sf() + geom_sf(data = df_pred, aes(geometry= geometr
 ```
 
 #### Partial effects
+
+https://cran.r-project.org/web/packages/gratia/vignettes/custom-plotting.html
+
+Evaluate smooths at values of their covariates through smooth_estimates() and add partial residuals to the partial effects plots.
+
+We also want to add a rug plot with the observed values of the predictor variable, the credible interval around the esitmated smooth, the partial residuals as a point layer, and the estimated smooth as a line layer.
+
 ```{r}
+df <- df_CPUE_length_wide_both
+
 sm <- smooth_estimates(reddrum_env_bc) %>% transform_fun(exp) %>%
 add_confint() 
 
@@ -70,27 +80,23 @@ transform_fun(fun = exp, column = "s(avgstemp)") %>%
 transform_fun(fun = exp, column = "s(avgdepth)") %>%  
 transform_fun(fun = exp, column = "s(avgsdo)") %>%  
 transform_fun(fun = exp, column = "s(NoFishRest)") %>%  
-transform_fun(fun = exp, column = "s(logsmallbluecrabP120")
-``` 
+transform_fun(fun = exp, column = "s(logsmallbluecrabP120)")
 
-```{r}
-plot <- function(smooth2, predictor, predictor2, predictor3, predator){
-sm %>%
-  filter(smooth == smooth2) %>%
-  ggplot() + geom_rug(aes(x= {{predictor}}), data= pr) + geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = {{predictor}}), alpha = 0.2) + geom_point(aes(x = {{predictor}}, y = {{predictor2}}), data = pr, cex = 1.5, colour = "steelblue3")+ geom_line(aes(x = {{predictor}}, y = est), lwd = 1.2) + labs(y = "Partial effect", title = predictor3) + geom_point(aes(x= {{predictor}}, y= {{predator}}), data=df)
-}
-
-plot("s(avgssal)", avgssal, `s(avgssal)`, "s(avgssal)", reddrumP915)
-plot("s(avgstemp)", avgstemp, `s(avgstemp)`, "s(avgstemp)", reddrumP915)
-plot("s(avgdepth)", avgdepth, `s(avgdepth)`, "s(avgdepth)", reddrumP915)
-plot("s(avgsdo)", avgsdo, `s(avgsdo)`, "s(avgsdo)", reddrumP915)
-plot("s(NoFishRest)", NoFishRest, `s(NoFishRest)`, "s(NoFishRest)", reddrumP915)
-plot("logsmallbluecrabP120)", logsmallbluecrabP120, `s(logsmallbluecrabP120)`, "s(logsmallbluecrabP120)", reddrumP915)
+#this changed when updated dataset
 ```
 
+```{r}
+plot <- function(smooth2, predictor, predictor2, predictor3, predator, xlabel){
+sm %>%
+  filter(smooth == smooth2) %>%
+  ggplot() + geom_rug(aes(x= {{predictor}}), data= pr) + geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = {{predictor}}), alpha = 0.2) + geom_point(aes(x = {{predictor}}, y = {{predictor2}}), data = pr, cex = 1.5, colour = "steelblue3")+ geom_line(aes(x = {{predictor}}, y = est), lwd = 1.2) + labs(y = "Partial effect", title = predictor3) + geom_point(aes(x= {{predictor}}, y= {{predator}}), data=df) + standard_theme + xlab(xlabel) + labs(title=NULL)
+}
 
-
-
-
-
+plot("s(avgssal)", avgssal, `s(avgssal)`, "s(avgssal)", reddrumP915, "Average surface salinity")
+plot("s(avgstemp)", avgstemp, `s(avgstemp)`, "s(avgstemp)", reddrumP915, "Average surface temperature")
+plot("s(avgdepth)", avgdepth, `s(avgdepth)`, "s(avgdepth)", reddrumP915, "Average depth")
+plot("s(avgsdo)", avgsdo, `s(avgsdo)`, "s(avgsdo)", reddrumP915, "Average surface dissolved oxygen")
+plot("s(NoFishRest)", NoFishRest, `s(NoFishRest)`, "s(NoFishRest)", reddrumP915, "NoFishRest")
+plot("s(logsmallbluecrabP120)", logsmallbluecrabP120, `s(logsmallbluecrabP120)`, "s(logsmallbluecrabP120)", reddrumP915, "Small blue crab CPUE") 
+```
 

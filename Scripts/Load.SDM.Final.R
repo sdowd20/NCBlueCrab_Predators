@@ -152,4 +152,4 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% filter(Year < 2022)
 
 
 ##Add log of prey items
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1))
+df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1), logblackdrumP915forageP120= log(blackdrumP915forageP120+1))
