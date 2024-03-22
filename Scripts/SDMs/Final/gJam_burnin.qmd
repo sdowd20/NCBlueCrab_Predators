@@ -8,8 +8,6 @@ editor: visual
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 
 df <- df_CPUE_length_wide_both
-
-df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1))
 ```
 
 #### Red drum
@@ -162,3 +160,56 @@ gjamPlot(output = modo3, plotPars = plot)
 library(beepr)
 beep(sound=8)
 ```
+
+#### Both ind
+
+##### Modo2
+```{r}
+df <- df_CPUE_length_wide_both 
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120, atlanticmenhadenP120)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+tot <- cbind(xdata, ydata)
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+```{r}
+#10,000, 400
+ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
+
+both_ind_burn2 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(both_ind_burn2, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Both_ind/modo2/both_ind_burn2.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Both_ind/modo2")
+gjamPlot(output = both_ind_burn2, plotPars = plot)
+```
+
+##### Modo3
+```{r}
+#20,000, 8,000
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+both_ind_burn3 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(both_ind_burn3, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Both_ind/modo3/both_ind_burn3.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Both_ind/modo3")
+gjamPlot(output = both_ind_burn3, plotPars = plot)
+beep(sound=8)
+```
+
+#### One ind

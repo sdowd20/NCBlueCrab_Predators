@@ -6,13 +6,12 @@ editor: visual
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
-
-df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1))
 ```
 
 #### Red drum
 
 ##### Environment + BC
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -63,11 +62,19 @@ write.csv(reddrum_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/
 library(beepr)
 beep(sound= 8)
 
-mean(reddrum_env_bc_gjam$r2_con)
 mean(reddrum_env_bc_gjam$r2_uncon)
+mean(reddrum_env_bc_gjam$r2_con)
+sd(reddrum_env_bc_gjam$r2_uncon)
+sd(reddrum_env_bc_gjam$r2_con)
+
+mean(reddrum_env_bc_gjam$rmse_uncon)
+mean(reddrum_env_bc_gjam$rmse_con)
+sd(reddrum_env_bc_gjam$rmse_uncon)
+sd(reddrum_env_bc_gjam$rmse_con)
 ```
 
 ##### Environment + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -114,13 +121,21 @@ reddrum_env_forage_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$p
 print(i)
 }
 
-mean(reddrum_env_forage_gjam$r2_con)
-mean(reddrum_env_forage_gjam$r2_uncon)
-
 write.csv(reddrum_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage.csv")
+
+mean(reddrum_env_forage_gjam$r2_uncon)
+mean(reddrum_env_forage_gjam$r2_con)
+sd(reddrum_env_forage_gjam$r2_uncon)
+sd(reddrum_env_forage_gjam$r2_con)
+
+mean(reddrum_env_forage_gjam$rmse_uncon)
+mean(reddrum_env_forage_gjam$rmse_con)
+sd(reddrum_env_forage_gjam$rmse_uncon)
+sd(reddrum_env_forage_gjam$rmse_con)
 ```
 
 ##### Environment + BC + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -167,13 +182,21 @@ print(i)
 
 write.csv(reddrum_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
 
-mean(reddrum_env_bc_forage_gjam$r2_con)
 mean(reddrum_env_bc_forage_gjam$r2_uncon)
+mean(reddrum_env_bc_forage_gjam$r2_con)
+sd(reddrum_env_bc_forage_gjam$r2_uncon)
+sd(reddrum_env_bc_forage_gjam$r2_con)
+
+mean(reddrum_env_bc_forage_gjam$rmse_uncon)
+mean(reddrum_env_bc_forage_gjam$rmse_con)
+sd(reddrum_env_bc_forage_gjam$rmse_uncon)
+sd(reddrum_env_bc_forage_gjam$rmse_con)
 ```
 
 #### Southern kingfish
 
 ##### Environment + BC
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -229,6 +252,7 @@ mean(southernkingfish_env_bc_gjam$r2_uncon)
 ```
 
 ##### Environment + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -282,6 +306,7 @@ write.csv(southernkingfish_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJa
 ```
 
 ##### Environment + BC + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -332,6 +357,7 @@ write.csv(southernkingfish_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/
 #### Black drum
 
 ##### Environment + BC
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -381,6 +407,7 @@ write.csv(blackdrum_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Predictio
 ```
 
 ##### Environment + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -434,6 +461,7 @@ write.csv(blackdrum_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Predi
 ```
 
 ##### Environment + BC + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
