@@ -320,11 +320,9 @@ CPUE_grid_length$CPUE <- CPUE_grid_length$Colnum/CPUE_grid_length$Effort
 P915_ind <- CPUE_grid_length
 P915_ind_edt <- P915_ind %>% ungroup() %>% mutate(Stemp= ifelse(P915_ind$Stemp <= 11.8, NA, P915_ind$Stemp), Ssal= ifelse(P915_ind$Ssal==0.0, NA, P915_ind$Ssal), Sdo= ifelse(P915_ind$Sdo==0.0, NA, P915_ind$Sdo), Depth= ifelse(P915_ind$Depth==0.0, NA, P915_ind$Depth)) %>% dplyr::select(-ITP, -Sedsize_new, -Btmcomp_new, -Bdo, -Btemp, -Bsal)
 summary(is.na(P915_ind_edt))
-P915_ind_edt <- P915_ind_edt %>% drop_na() %>% dplyr::select(-Day, -Location, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -Colnum, -Date, -Ym_date, -"Strata.station", -Waterbody_A, -Effort, -Control1, -ShorelineType)
+P915_ind_edt <- P915_ind_edt %>% drop_na() %>% dplyr::select(-Day, -Location, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -Colnum, -Date, -Ym_date, -"Strata.station", -Waterbody_A, -Effort, -ShorelineType)
 
-#lots of NAs for Stemp
-
-%>% group_by(Month, Year, gridID) %>% mutate(avg_depth= mean(Depth, na.rm= TRUE), avg_ssal= mean(Ssal, na.rm= TRUE), avg_bsal= mean(Bsal, na.rm= TRUE), avg_stemp= mean(Stemp, na.rm= TRUE), avg_btemp= mean(Btemp, na.rm= TRUE), avg_sdo= mean(Sdo, na.rm= TRUE), avg_bdo= mean(Bdo, na.rm= TRUE), avg_latitude= mean(Latitude, na.rm= TRUE), avg_longitude= mean(Longitude), na.rm= TRUE) %>% dplyr::select(-avg_bsal, -avg_btemp, -avg_bdo, -Stemp, -Btemp, -Sdo, -Bdo, -Ssal, -Bsal, -Season, -Sedsize_new, -Btmcomp_new, -Depth, -na.rm, -avg_latitude, -avg_longitude, -Sciname, -ITP)
+write.csv(P915_ind_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.22.24.csv")
 ```
 
 ####################### didn't update on 02/08/24 with mean CPUE over standardized, not using this anymore

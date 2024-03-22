@@ -81,6 +81,18 @@ df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
 colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
+##03/22/24: P915 non-averaged
+df_CPUE_ind_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.22.24.csv")
+df_CPUE_ind_length <- df_CPUE_ind_length[,-1]
+df_CPUE_ind_length <- df_CPUE_ind_length %>% mutate_at("Survey", as.factor)
+df_CPUE_ind_length$Speciescommonname <- gsub(" ", "", df_CPUE_ind_length$Speciescommonname)
+colnames(df_CPUE_ind_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_ind_length))
+
+length(unique(df_CPUE_ind_length$Control1))
+length(unique(df_CPUE_ind_length$Speciescommonname))
+
+colnames(df_CPUE_ind_length)
+
 #Form datasets! 
 ##Pivot-wider dataset: P915 and P120 
 df_CPUE_length$SpeciesSurvey <- paste(df_CPUE_length$Speciescommonname, df_CPUE_length$Survey, sep= "")
@@ -90,6 +102,12 @@ df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey 
 ##Pivot-wider dataset: P915 
 df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
   
+##Pivot-wider dataset: P915 non-averaged
+df_CPUE_ind_length$SpeciesSurvey <- paste(df_CPUE_ind_length$Speciescommonname, df_CPUE_ind_length$Survey, sep= "") 
+df_CPUE_ind_length <- df_CPUE_ind_length %>% dplyr::select(-Speciescommonname, -latlon, -Season, -Latitude, -Longitude, -Season, -Sciname, -gridID, -Survey, -InletDistkm, -SAVkm, -Sedsizecommon, -FishingAllnum)
+df_CPUE_length_wide_indP915 <- df_CPUE_ind_length %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "CPUE") %>% drop_na()
+#this drop NA drops 121 Control1s- some Control1s got two rows where some species had NAs, this is because a different value was recorded for an environmental variable, just get rid of these
+
 ###Add on forage index to CPUE data
 ####Total forage 
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forageP915 = rowSums(dplyr::select(., smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallsouthernflounderP915)), 
