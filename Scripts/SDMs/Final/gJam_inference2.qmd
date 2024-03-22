@@ -11,6 +11,7 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 #### P915 and P120
 
 ##### Setup data
+
 ```{r}
 df <- df_CPUE_length_wide_both 
 
@@ -34,6 +35,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ##### Run model
+
 ```{r}
 #BURNIN!? 
 
@@ -83,6 +85,7 @@ gjamPlot(output = both_ind, plotPars = plot)
 #### P915
 
 ##### Setup data
+
 ```{r}
 #May and June, 2001-2019
 df <- df_CPUE_length_wide_P915
@@ -107,6 +110,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ##### Run model
+
 ```{r}
 #BURNIN!? 
 
@@ -130,6 +134,7 @@ pred_uncon <- gjamPredict(one_ind, newdata = newdata2)
 ```
 
 ##### Predictions
+
 ```{r}
 #Predictions 
 pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
@@ -151,3 +156,5 @@ plot <- list(SMALLPLOTS = T, GRIDPLOTS=T,
 
 gjamPlot(output = one_ind, plotPars = plot)
 ```
+
+#### P915 non-averaging 
