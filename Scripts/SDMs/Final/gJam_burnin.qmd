@@ -164,6 +164,7 @@ beep(sound=8)
 #### Both ind
 
 ##### Modo2
+
 ```{r}
 df <- df_CPUE_length_wide_both 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -197,6 +198,7 @@ gjamPlot(output = both_ind_burn2, plotPars = plot)
 ```
 
 ##### Modo3
+
 ```{r}
 #20,000, 8,000
 ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
@@ -213,6 +215,7 @@ beep(sound=8)
 ```
 
 #### One ind
+
 ```{r}
 #May and June, 2001-2019
 df <- df_CPUE_length_wide_P915
@@ -237,6 +240,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ##### Modo 2
+
 ```{r}
 #10,000, 400
 ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
@@ -252,16 +256,92 @@ gjamPlot(output = one_ind_burn2, plotPars = plot)
 ```
 
 ##### Modo 3
+
+```{r}
+#20,000, 8,000
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+one_ind_burn3 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(one_ind_burn3, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/One_ind/modo3/one_ind_burn3.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/One_ind/modo3")
+gjamPlot(output = one_ind_burn3, plotPars = plot)
+beep(sound=8)
+```
+
+#### Non-averaged
+
+```{r}
+#May and June, 2001-2019
+df <- df_CPUE_length_wide_indP915
+                                          
+xdata <- df %>% dplyr::select(Depth, Stemp, Ssal, Sdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+
+tot <- cbind(xdata, ydata)
+
+set.seed(123)
+smp_size <- floor(0.70 * nrow(df))
+train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
+train <- tot[train_ind, ]
+test <- tot[-train_ind, ]
+
+xdata_train <- train[,colnames(xdata)]
+ydata_train <- train[,colnames(ydata)]
+xdata_test <- test[,colnames(xdata)]
+ydata_test <- test[,colnames(ydata)]
+```
+
+##### Modo 1
+
+```{r}
+#5,000 800
+ml <- list(ng = 5000, burnin = 800, typeNames = 'CA')
+
+non_avg1 <- gjam(~Depth + Stemp + Ssal + Sdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(non_avg1, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Non_avg/modo1/non_avg1.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Non_avg/modo1")
+gjamPlot(output = non_avg1, plotPars = plot)
+beep(sound=8)
+```
+
+##### Modo 2
+
 ```{r}
 #10,000, 400
 ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
 
-one_ind_burn2 <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+non_avg2 <- gjam(~Depth + Stemp + Ssal + Sdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
 
-save(one_ind_burn2, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/One_ind/modo2/one_ind_burn2.RData")
+save(non_avg2, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Non_avg/modo2/non_avg2.RData")
 
 plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
                         SAVEPLOTS = T, PLOTALLY = T, 
-                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/One_ind/modo2")
-gjamPlot(output = one_ind_burn2, plotPars = plot)
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Non_avg/modo2")
+gjamPlot(output = non_avg2, plotPars = plot)
+```
+
+##### Modo 3
+
+```{r}
+#20,000, 8,000
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+non_avg3 <- gjam(~Depth + Stemp + Ssal + Sdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+
+save(non_avg3, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Non_avg/modo3/non_avg3.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Non_avg/modo3")
+gjamPlot(output = non_avg3, plotPars = plot)
 ```

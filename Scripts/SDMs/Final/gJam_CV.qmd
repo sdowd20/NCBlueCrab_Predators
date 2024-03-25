@@ -247,8 +247,15 @@ write.csv(southernkingfish_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Pr
 library(beepr)
 beep(sound=8)
 
-mean(southernkingfish_env_bc_gjam$r2_con)
 mean(southernkingfish_env_bc_gjam$r2_uncon)
+mean(southernkingfish_env_bc_gjam$r2_con)
+sd(southernkingfish_env_bc_gjam$r2_uncon)
+sd(southernkingfish_env_bc_gjam$r2_con)
+
+mean(southernkingfish_env_bc_gjam$rmse_uncon)
+mean(southernkingfish_env_bc_gjam$rmse_con)
+sd(southernkingfish_env_bc_gjam$rmse_uncon)
+sd(southernkingfish_env_bc_gjam$rmse_con)
 ```
 
 ##### Environment + forage
@@ -299,8 +306,15 @@ southernkingfish_env_forage_gjam[i,4] <- RMSE_func(actual = dat$southernkingfish
 print(i)
 }
 
-mean(southernkingfish_env_forage_gjam$r2_con)
 mean(southernkingfish_env_forage_gjam$r2_uncon)
+mean(southernkingfish_env_forage_gjam$r2_con)
+sd(southernkingfish_env_forage_gjam$r2_uncon)
+sd(southernkingfish_env_forage_gjam$r2_con)
+
+mean(southernkingfish_env_forage_gjam$rmse_uncon)
+mean(southernkingfish_env_forage_gjam$rmse_con)
+sd(southernkingfish_env_forage_gjam$rmse_uncon)
+sd(southernkingfish_env_forage_gjam$rmse_con)
 
 write.csv(southernkingfish_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_forage.csv")
 ```
@@ -350,6 +364,16 @@ southernkingfish_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$southernkingf
 southernkingfish_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
 print(i)
 }
+
+mean(southernkingfish_env_bc_forage_gjam$r2_uncon)
+mean(southernkingfish_env_bc_forage_gjam$r2_con)
+sd(southernkingfish_env_bc_forage_gjam$r2_uncon)
+sd(southernkingfish_env_bc_forage_gjam$r2_con)
+
+mean(southernkingfish_env_bc_forage_gjam$rmse_uncon)
+mean(southernkingfish_env_bc_forage_gjam$rmse_con)
+sd(southernkingfish_env_bc_forage_gjam$rmse_uncon)
+sd(southernkingfish_env_bc_forage_gjam$rmse_con)
 
 write.csv(southernkingfish_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
 ```
@@ -403,6 +427,16 @@ blackdrum_env_bc_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$p
 print(i)
 }
 
+mean(blackdrum_env_bc_gjam$r2_uncon)
+mean(blackdrum_env_bc_gjam$r2_con)
+sd(blackdrum_env_bc_gjam$r2_uncon)
+sd(blackdrum_env_bc_gjam$r2_con)
+
+mean(blackdrum_env_bc_gjam$rmse_uncon)
+mean(blackdrum_env_bc_gjam$rmse_con)
+sd(blackdrum_env_bc_gjam$rmse_uncon)
+sd(blackdrum_env_bc_gjam$rmse_con)
+
 write.csv(blackdrum_env_bc_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc.csv")
 ```
 
@@ -454,8 +488,15 @@ blackdrum_env_forage_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = d
 print(i)
 }
 
-mean(blackdrum_env_forage_gjam$r2_con)
 mean(blackdrum_env_forage_gjam$r2_uncon)
+mean(blackdrum_env_forage_gjam$r2_con)
+sd(blackdrum_env_forage_gjam$r2_uncon)
+sd(blackdrum_env_forage_gjam$r2_con)
+
+mean(blackdrum_env_forage_gjam$rmse_uncon)
+mean(blackdrum_env_forage_gjam$rmse_con)
+sd(blackdrum_env_forage_gjam$rmse_uncon)
+sd(blackdrum_env_forage_gjam$rmse_con)
 
 write.csv(blackdrum_env_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_forage.csv")
 ```
@@ -505,6 +546,16 @@ blackdrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred 
 blackdrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
 print(i)
 }
+
+mean(blackdrum_env_bc_forage_gjam$r2_uncon)
+mean(blackdrum_env_bc_forage_gjam$r2_con)
+sd(blackdrum_env_bc_forage_gjam$r2_uncon)
+sd(blackdrum_env_bc_forage_gjam$r2_con)
+
+mean(blackdrum_env_bc_forage_gjam$rmse_uncon)
+mean(blackdrum_env_bc_forage_gjam$rmse_con)
+sd(blackdrum_env_bc_forage_gjam$rmse_uncon)
+sd(blackdrum_env_bc_forage_gjam$rmse_con)
 
 write.csv(blackdrum_env_bc_forage_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
 ```

@@ -24,29 +24,12 @@ standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-library(gtools)
-
-pastePerm<- function(row, names){
-  keep<- which(row==1)
-  if(length(keep)==0){
-    return('1')
-  }else{
-    return(paste(names[keep],collapse='+'))
-  }
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
 }
-my_sqrt <- function(var1){
-  sqrt(var1) #take square root of variable 
-} #construct model formulas 
 
-dredgeform<- function(pred, covars, alwaysIn='factor(Yearfactor)'){ #always in is set to factor Year
-  p<- length(covars) #number of independent variables
-  perm.tab<- permutations(2, p, v=c(0,1), repeats.allowed=T) #for different combinations of predictor variables
-  myforms<- NULL #store formulas 
-  for(j in 1:nrow(perm.tab)){
-    myforms[j]<- pastePerm(perm.tab[j,], c(alwaysIn, covars)) #function above
-  }
-  myforms<- paste0(pred, '~', alwaysIn, '+', myforms) #predicted variable and formula
-  return(myforms)
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
 }
 
 pred_gam <- function(model, colnames){
@@ -62,14 +45,6 @@ graphs <- function(df, df2){
   plot1 <- df %>% ggplot(aes(x= value, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + facet_wrap(~predictor, scales= "free") + standard_theme + ylab("Predicted red drum CPUE")
   # plot2 <-df2 %>% ggplot(aes(x= reddrumP915, y= pred2)) + geom_point() + geom_smooth(loess=TRUE) + standard_theme
   print(plot1)
-}
-
-r2_general <-function(preds,actual){ 
-  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
-}
-
-RMSE_func <- function(preds, actual){
-  return(sqrt(mean((actual - preds)^2)))
 }
 
 #Load in datasets
@@ -88,10 +63,8 @@ df_CPUE_ind_length <- df_CPUE_ind_length %>% mutate_at("Survey", as.factor)
 df_CPUE_ind_length$Speciescommonname <- gsub(" ", "", df_CPUE_ind_length$Speciescommonname)
 colnames(df_CPUE_ind_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_ind_length))
 
-length(unique(df_CPUE_ind_length$Control1))
-length(unique(df_CPUE_ind_length$Speciescommonname))
-
-colnames(df_CPUE_ind_length)
+length(unique(df_CPUE_ind_length$Control1)) #8542
+length(unique(df_CPUE_ind_length$Speciescommonname)) #41, total rows is 350130 instead of 350222
 
 #Form datasets! 
 ##Pivot-wider dataset: P915 and P120 
@@ -107,6 +80,8 @@ df_CPUE_ind_length$SpeciesSurvey <- paste(df_CPUE_ind_length$Speciescommonname, 
 df_CPUE_ind_length <- df_CPUE_ind_length %>% dplyr::select(-Speciescommonname, -latlon, -Season, -Latitude, -Longitude, -Season, -Sciname, -gridID, -Survey, -InletDistkm, -SAVkm, -Sedsizecommon, -FishingAllnum)
 df_CPUE_length_wide_indP915 <- df_CPUE_ind_length %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "CPUE") %>% drop_na()
 #this drop NA drops 121 Control1s- some Control1s got two rows where some species had NAs, this is because a different value was recorded for an environmental variable, just get rid of these
+#before the drop NA, dataset gained 113 rows, even though unique # of Control1s is the same, dropped these Control1s
+#8542 rows after drop_na over 8655, same as unique Control1
 
 ###Add on forage index to CPUE data
 ####Total forage 
@@ -130,6 +105,7 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(reddrumP915forag
 ##Select species of focus, refer to Final dataset & model formula 
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120, atlanticmenhadenP120, reddrumP915forageP915:blackdrumP915forageP120)
 df_CPUE_length_wide_P915 <- df_CPUE_length_wide_P915 %>% dplyr::select(Month:avgsdo, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
+df_CPUE_length_wide_indP915 <- df_CPUE_length_wide_indP915 %>% dplyr::select(Control1:NoFishRest, smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
 
 ##### INDIVIDUAL FORAGE #####
 # reddrumP915forage: smallatlanticmenhadenP915, smallatlanticcroakerP915, pinfishP915, smallspotP915, smallatlanticcroakerP120, atlanticmenhadenP120, pinfishP120, spotP120, whiteshrimpP120, pinkshrimpP120, brownshrimpP120, southernflounderP120
@@ -160,6 +136,7 @@ df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% dplyr::select(-InletDis
 ##Make year a factor  
 df_CPUE_length_wide_both$Yearfactor <- as.factor(df_CPUE_length_wide_both$Year)
 df_CPUE_length_wide_P915$Yearfactor <- as.factor(df_CPUE_length_wide_P915$Year)
+df_CPUE_length_wide_indP915$Yearfactor <- as.factor(df_CPUE_length_wide_indP915$Year)
 # ##Filter out rare species in total forage or prey family forage (individual species don't matter)
 # test <- df_CPUE_length_wide_both %>% dplyr::select(which(sapply(., function(col) sum(col>0) >= 50)))
 # t <- setdiff(colnames(df_CPUE_length_wide_both), colnames(test)) #paralichthyidae_P915
@@ -170,6 +147,7 @@ df_CPUE_length_wide_P915$Yearfactor <- as.factor(df_CPUE_length_wide_P915$Year)
 ##Get rid of 2022
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% filter(Year < 2022)
 df_CPUE_length_wide_P915 <- df_CPUE_length_wide_P915 %>% filter(between(Year, 2001, 2019), Month %in% c(5,6))
+#df_CPUE_length_wide_indP915 is already filtered for < 2022 
 
 ##Add log of prey items
 df_CPUE_length_wide_both <- df_CPUE_length_wide_both %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1), logblackdrumP915forageP120= log(blackdrumP915forageP120+1))
