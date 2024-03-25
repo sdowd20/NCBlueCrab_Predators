@@ -5,34 +5,39 @@ editor: visual
 ---
 
 ```{r}
+packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
+invisible(lapply(packages, library, character.only= TRUE))
+
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+```
+
+```{r}
 prediction_boxplot <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/prediction_new.xlsx") 
 df <- prediction_boxplot
 
 df$Model < - factor(df$Model, levels=c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))
 df_rd <- df %>% filter(Species %in% "Red drum")
-
-ggplot(data= df_rd) + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 3*sdR2, ymax= meanR2+3*sdR2, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle(expression(paste("Red drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2")))
-ggsave("/users/sallydowd/desktop/Ch1Data/Figures/R2_reddrum.png", width= 10, height= 7, dpi= 500)
-
 df_sk <- df %>% filter(Species %in% "Southern kingfish")
-
-ggplot(data= df_sk) + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 3*sdR2, ymax= meanR2+3*sdR2, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle(expression(paste("Southern kingfish, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2")))
-ggsave("/users/sallydowd/desktop/Ch1Data/Figures/R2_sk.png", width= 10, height= 7, dpi= 500)
-
 df_bd <- df %>% filter(Species %in% "Black drum")
 
-ggplot(data= df_bd) + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 3*sdR2, ymax= meanR2+3*sdR2, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle(expression(paste("Black drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2")))
+ggplot(data= df_rd) + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 3*sdR2, ymax= meanR2+3*sdR2, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle(expression(paste("Red drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)")
+ggsave("/users/sallydowd/desktop/Ch1Data/Figures/R2_reddrum.png", width= 10, height= 7, dpi= 500)
+
+ggplot(data= df_sk) + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 3*sdR2, ymax= meanR2+3*sdR2, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle(expression(paste("Southern kingfish, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2")))  + labs(tag= "A)")
+ggsave("/users/sallydowd/desktop/Ch1Data/Figures/R2_sk.png", width= 10, height= 7, dpi= 500)
+
+ggplot(data= df_bd) + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 3*sdR2, ymax= meanR2+3*sdR2, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle(expression(paste("Black drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2")))  + labs(tag= "A)")
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/R2_bd.png", width= 10, height= 7, dpi= 500)
 ```
 
 ```{r}
-ggplot(data= df_rd) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 3*sdRMSE, ymax= meanRMSE+3*sdRMSE, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle("Red drum, RMSE") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE")
+ggplot(data= df_rd) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 3*sdRMSE, ymax= meanRMSE+3*sdRMSE, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle("Red drum, RMSE") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)")
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/RMSE_reddrum.png", width= 10, height= 7, dpi= 500)
 
-ggplot(data= df_sk) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 3*sdRMSE, ymax= meanRMSE+3*sdRMSE, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle("Southern kingfish, RMSE") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE")
+ggplot(data= df_sk) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 3*sdRMSE, ymax= meanRMSE+3*sdRMSE, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle("Southern kingfish, RMSE") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)")
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/RMSE_sk.png", width= 10, height= 7, dpi= 500)
 
-ggplot(data= df_bd) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 3*sdRMSE, ymax= meanRMSE+3*sdRMSE, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle("Black drum, RMSE") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE")
+ggplot(data= df_bd) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 3*sdRMSE, ymax= meanRMSE+3*sdRMSE, x= Model_type), stat= "identity") + facet_wrap(~factor(Model, c("Environment", "Blue crab", "Prey", "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ggtitle("Black drum, RMSE") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)")
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/RMSE_bd.png", width= 10, height= 7, dpi= 500)
 ```
 
@@ -44,4 +49,3 @@ ggsave("/users/sallydowd/desktop/Ch1Data/Figures/RMSE_bd.png", width= 10, height
 # min(subset(df_rd, Model_type %in% "gJam_cond")$meanR2, na.rm= TRUE)
 # max(subset(df_rd, Model_type %in% "gJam_cond")$meanR2, na.rm= TRUE)
 ```
-
