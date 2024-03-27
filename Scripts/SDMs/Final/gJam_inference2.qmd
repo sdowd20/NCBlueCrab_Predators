@@ -5,228 +5,213 @@ editor: visual
 ---
 
 ```{r}
-source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.gJam.R")
 ```
 
-##### Predictions
+##### Model 1: both_ind_burn3
+###### Predictions
 
 ```{r}
 #Red drum 
-load('/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/both_ind.Rdata')
-
 ##Conditional prediction
-ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
-newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
-pred_con <- gjamPredict(both_ind, newdata = newdata1)
+ycond1 <- ydata_test1[,!colnames(ydata_test1) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test1, ydata = ycond1, nsim = 1000)
+pred_con1 <- gjamPredict(both_ind_burn3, newdata = newdata1)
 
 ##Unconditional prediction
-newdata2 <- list(xdata = xdata_test, nsim = 1000)
-pred_uncon <- gjamPredict(both_ind, newdata = newdata2)
+newdata1<- list(xdata = xdata_test1, nsim = 1000)
+pred_uncon1 <- gjamPredict(both_ind_burn3, newdata = newdata1)
 
-pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
-obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
-pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_con1 <- pred_con1$sdList$yMu[,colnames(pred_con1$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum1 <- ydata_test1[,colnames(ydata_test1) %in% "reddrumP915"]
+pred_reddrum_uncon1 <- pred_uncon1$sdList$yMu[,colnames(pred_uncon1$sdList$yMu) %in% "reddrumP915"]
 
-dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
-dat <- as.data.frame(dat)
-r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
-r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+dat1 <- cbind(pred_reddrum_con1, obs_reddrum1, pred_reddrum_uncon1)
+dat1 <- as.data.frame(dat1)
+r2_general(dat1$pred_reddrum_con1, dat1$obs_reddrum1)
+r2_general(dat1$pred_reddrum_uncon1, dat1$obs_reddrum1)
 ```
 
 ```{r}
 #Southern kingfish
 ##Conditional prediction
-ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
-newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
-pred_con <- gjamPredict(both_ind, newdata = newdata1)
+ycond1 <- ydata_test1[,!colnames(ydata_test1) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test1, ydata = ycond1, nsim = 1000)
+pred_con1 <- gjamPredict(both_ind_burn3, newdata = newdata1)
 
 ##Unconditional prediction
-newdata2 <- list(xdata = xdata_test, nsim = 1000)
-pred_uncon <- gjamPredict(both_ind, newdata = newdata2)
+newdata1<- list(xdata = xdata_test1, nsim = 1000)
+pred_uncon1 <- gjamPredict(both_ind_burn3, newdata = newdata1)
 
-pred_sk_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "southernkingfishP915"]
-obs_sk <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed reddrum
-pred_sk_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_con1 <- pred_con1$sdList$yMu[,colnames(pred_con1$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish1 <- ydata_test1[,colnames(ydata_test1) %in% "southernkingfishP915"]
+pred_southernkingfish_uncon1 <- pred_uncon1$sdList$yMu[,colnames(pred_uncon1$sdList$yMu) %in% "southernkingfishP915"]
 
-dat_sk <- cbind(pred_sk_con, obs_sk, pred_sk_uncon)
-dat_sk <- as.data.frame(dat_sk)
-r2_general(dat_sk$pred_sk_con, dat_sk$obs_sk)
-r2_general(dat_sk$pred_sk_uncon, dat_sk$obs_sk)
+dat1 <- cbind(pred_southernkingfish_con1, obs_southernkingfish1, pred_southernkingfish_uncon1)
+dat1 <- as.data.frame(dat1)
+r2_general(dat1$pred_southernkingfish_con1, dat1$obs_southernkingfish1)
+r2_general(dat1$pred_southernkingfish_uncon1, dat1$obs_southernkingfish1)
 ```
 
 ```{r}
 #Black drum
 ##Conditional prediction
-ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
-newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
-pred_con <- gjamPredict(both_ind, newdata = newdata1)
+ycond1 <- ydata_test1[,!colnames(ydata_test1) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test1, ydata = ycond1, nsim = 1000)
+pred_con1 <- gjamPredict(both_ind_burn3, newdata = newdata1)
 
 ##Unconditional prediction
-newdata2 <- list(xdata = xdata_test, nsim = 1000)
-pred_uncon <- gjamPredict(both_ind, newdata = newdata2)
+newdata1<- list(xdata = xdata_test1, nsim = 1000)
+pred_uncon1 <- gjamPredict(both_ind_burn3, newdata = newdata1)
 
-pred_bd_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "blackdrumP915"]
-obs_bd <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"]
-pred_bd_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_con1 <- pred_con1$sdList$yMu[,colnames(pred_con1$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum1 <- ydata_test1[,colnames(ydata_test1) %in% "blackdrumP915"]
+pred_blackdrum_uncon1 <- pred_uncon1$sdList$yMu[,colnames(pred_uncon1$sdList$yMu) %in% "blackdrumP915"]
 
-dat_bd <- cbind(pred_bd_con, obs_bd, pred_bd_uncon)
-dat_bd <- as.data.frame(dat_bd)
-r2_general(dat_bd$pred_bd_con, dat_bd$obs_bd)
-r2_general(dat_bd$pred_bd_uncon, dat_bd$obs_bd)
+dat1 <- cbind(pred_blackdrum_con1, obs_blackdrum1, pred_blackdrum_uncon1)
+dat1 <- as.data.frame(dat1)
+r2_general(dat1$pred_blackdrum_con1, dat1$obs_blackdrum1)
+r2_general(dat1$pred_blackdrum_uncon1, dat1$obs_blackdrum1)
 ```
 
-##### Plots
-
+###### RMSE
 ```{r}
-plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
-                        SAVEPLOTS = T, PLOTALLY = T, 
-                        outFolder = '/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/both_ind_plots/')
-
-gjamPlot(output = both_ind, plotPars = plot)
+rmsetot1 <- both_ind_burn3[["fit"]][["rmspeAll"]]
+rmse_byspec <- both_ind_burn3[["fit"]][["rmspeBySpec"]]
 ```
 
-#### P915
-
-##### Setup data
-
+###### AUC 
 ```{r}
-#Don't need this- load in from burnin! 
-#May and June, 2001-2019
-df <- df_CPUE_length_wide_P915
-                                          
-xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
-ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
-species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
-ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
 
-tot <- cbind(xdata, ydata)
-
-set.seed(123)
-smp_size <- floor(0.70 * nrow(df))
-train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
-train <- tot[train_ind, ]
-test <- tot[-train_ind, ]
-
-xdata_train <- train[,colnames(xdata)]
-ydata_train <- train[,colnames(ydata)]
-xdata_test <- test[,colnames(xdata)]
-ydata_test <- test[,colnames(ydata)]
 ```
 
-##### Run model
+##### Model 2: one_ind_burn3
 
+###### Predictions
 ```{r}
-#BURNIN!? 
+#Red drum 
+##Conditional prediction
+ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "reddrumP915"]
+newdata2 <- list(xdata = xdata_test2, ydata = ycond2, nsim = 1000)
+pred_con2 <- gjamPredict(one_ind_burn3, newdata = newdata2)
 
-#Model-- hmmm
-ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
+##Unconditional prediction
+newdata2<- list(xdata = xdata_test2, nsim = 1000)
+pred_uncon2 <- gjamPredict(one_ind_burn3, newdata = newdata2)
 
-one_ind <- gjam(~avgdepth + avgstemp + avgssal + avgsdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+pred_reddrum_con2 <- pred_con2$sdList$yMu[,colnames(pred_con2$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum2 <- ydata_test2[,colnames(ydata_test2) %in% "reddrumP915"]
+pred_reddrum_uncon2 <- pred_uncon2$sdList$yMu[,colnames(pred_uncon2$sdList$yMu) %in% "reddrumP915"]
 
-save(one_ind, file="/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/one_ind.Rdata")
-
-load('/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/one_ind.Rdata')
+dat2 <- cbind(pred_reddrum_con2, obs_reddrum2, pred_reddrum_uncon2)
+dat2 <- as.data.frame(dat2)
+r2_general(dat2$pred_reddrum_con2, dat2$obs_reddrum2)
+r2_general(dat2$pred_reddrum_uncon2, dat2$obs_reddrum2)
 ```
 
 ```{r}
-#Conditional prediction
-ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
-newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
-pred_con <- gjamPredict(one_ind, newdata = newdata1)
+#Southern kingfish
+##Conditional prediction
+ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "southernkingfishP915"]
+newdata2 <- list(xdata = xdata_test2, ydata = ycond2, nsim = 1000)
+pred_con2 <- gjamPredict(one_ind_burn3, newdata = newdata2)
 
-#Unconditional prediction
-newdata2 <- list(xdata = xdata_test, nsim = 1000)
-pred_uncon <- gjamPredict(one_ind, newdata = newdata2)
+##Unconditional prediction
+newdata2 <- list(xdata = xdata_test2, nsim = 1000)
+pred_uncon2 <- gjamPredict(one_ind_burn3, newdata = newdata2)
+
+pred_southernkingfish_con2 <- pred_con2$sdList$yMu[,colnames(pred_con2$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish2 <- ydata_test2[,colnames(ydata_test2) %in% "southernkingfishP915"]
+pred_southernkingfish_uncon2 <- pred_uncon2$sdList$yMu[,colnames(pred_uncon2$sdList$yMu) %in% "southernkingfishP915"]
+
+dat2 <- cbind(pred_southernkingfish_con2, obs_southernkingfish2, pred_southernkingfish_uncon2)
+dat2 <- as.data.frame(dat2)
+r2_general(dat2$pred_southernkingfish_con2, dat2$obs_southernkingfish2)
+r2_general(dat2$pred_southernkingfish_uncon2, dat2$obs_southernkingfish2)
 ```
 
-##### Predictions
-
 ```{r}
-#Change this to be like P915 and P120 
-#Predictions 
-pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
-obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
-pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
+#Black drum
+##Conditional prediction
+ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "blackdrumP915"]
+newdata2 <- list(xdata = xdata_test2, ydata = ycond2, nsim = 1000)
+pred_con2 <- gjamPredict(one_ind_burn3, newdata = newdata2)
 
-dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
-dat <- as.data.frame(dat)
-r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
-r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+##Unconditional prediction
+newdata2 <- list(xdata = xdata_test2, nsim = 1000)
+pred_uncon2 <- gjamPredict(one_ind_burn3, newdata = newdata2)
+
+pred_blackdrum_con2 <- pred_con2$sdList$yMu[,colnames(pred_con2$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum2 <- ydata_test2[,colnames(ydata_test2) %in% "blackdrumP915"]
+pred_blackdrum_uncon2 <- pred_uncon2$sdList$yMu[,colnames(pred_uncon2$sdList$yMu) %in% "blackdrumP915"]
+
+dat2 <- cbind(pred_blackdrum_con2, obs_blackdrum2, pred_blackdrum_uncon2)
+dat2 <- as.data.frame(dat2)
+r2_general(dat2$pred_blackdrum_con2, dat2$obs_blackdrum2)
+r2_general(dat2$pred_blackdrum_uncon2, dat2$obs_blackdrum2)
 ```
 
-##### Plots
-
+##### Model 3: non_avg2
+###### Predictions
 ```{r}
-plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
-                        SAVEPLOTS = T, PLOTALLY = T, 
-                        outFolder = '/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/one_ind_plots/')
+#Red drum 
+##Conditional prediction
+ycond3 <- ydata_test3[,!colnames(ydata_test3) %in% "reddrumP915"]
+newdata3 <- list(xdata = xdata_test3, ydata = ycond3, nsim = 1000)
+pred_con3 <- gjamPredict(non_avg2, newdata = newdata3)
 
-gjamPlot(output = one_ind, plotPars = plot)
+##Unconditional prediction
+newdata3<- list(xdata = xdata_test3, nsim = 1000)
+pred_uncon3 <- gjamPredict(non_avg2, newdata = newdata3)
+
+pred_reddrum_con3 <- pred_con3$sdList$yMu[,colnames(pred_con3$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum3 <- ydata_test3[,colnames(ydata_test3) %in% "reddrumP915"]
+pred_reddrum_uncon3 <- pred_uncon3$sdList$yMu[,colnames(pred_uncon3$sdList$yMu) %in% "reddrumP915"]
+
+dat3 <- cbind(pred_reddrum_con3, obs_reddrum3, pred_reddrum_uncon3)
+dat3 <- as.data.frame(dat3)
+r2_general(dat3$pred_reddrum_con3, dat3$obs_reddrum3)
+r2_general(dat3$pred_reddrum_uncon3, dat3$obs_reddrum3)
 ```
 
-#### P915 non-averaging
-
-##### Setup data
-
 ```{r}
-#May and June, 2001-2019
-df <- df_CPUE_length_wide_indP915
-                                          
-xdata <- df %>% dplyr::select(Depth, Stemp, Ssal, Sdo, NoFishRest, Yearfactor)
-ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
-species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
-ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+#Southern kingfish
+##Conditional prediction
+ycond3 <- ydata_test3[,!colnames(ydata_test3) %in% "southernkingfishP915"]
+newdata3 <- list(xdata = xdata_test3, ydata = ycond3, nsim = 1000)
+pred_con3 <- gjamPredict(non_avg2, newdata = newdata3)
 
-tot <- cbind(xdata, ydata)
+##Unconditional prediction
+newdata3 <- list(xdata = xdata_test3, nsim = 1000)
+pred_uncon3 <- gjamPredict(non_avg2, newdata = newdata3)
 
-set.seed(123)
-smp_size <- floor(0.70 * nrow(df))
-train_ind <- sample(seq_len(nrow(tot)), size = smp_size)
-train <- tot[train_ind, ]
-test <- tot[-train_ind, ]
+pred_southernkingfish_con3 <- pred_con3$sdList$yMu[,colnames(pred_con3$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish3 <- ydata_test3[,colnames(ydata_test3) %in% "southernkingfishP915"]
+pred_southernkingfish_uncon3 <- pred_uncon3$sdList$yMu[,colnames(pred_uncon3$sdList$yMu) %in% "southernkingfishP915"]
 
-xdata_train <- train[,colnames(xdata)]
-ydata_train <- train[,colnames(ydata)]
-xdata_test <- test[,colnames(xdata)]
-ydata_test <- test[,colnames(ydata)]
+dat3 <- cbind(pred_southernkingfish_con3, obs_southernkingfish3, pred_southernkingfish_uncon3)
+dat3 <- as.data.frame(dat3)
+r2_general(dat3$pred_southernkingfish_con3, dat3$obs_southernkingfish3)
+r2_general(dat3$pred_southernkingfish_uncon3, dat3$obs_southernkingfish3)
 ```
 
-##### Run model
-
 ```{r}
-#BURNIN!? 
+#Black drum
+##Conditional prediction
+ycond3 <- ydata_test3[,!colnames(ydata_test3) %in% "blackdrumP915"]
+newdata3 <- list(xdata = xdata_test3, ydata = ycond3, nsim = 1000)
+pred_con3 <- gjamPredict(non_avg2, newdata = newdata3)
 
-#Model-- hmmm
-ml <- list(ng = 60000, burnin = 10000, typeNames = 'CA')
+##Unconditional prediction
+newdata3<- list(xdata = xdata_test3, nsim = 1000)
+pred_uncon3 <- gjamPredict(non_avg2, newdata = newdata3)
 
-non_avg <- gjam(~Depth + Stemp + Ssal + Sdo + NoFishRest + Yearfactor, xdata = xdata_train, ydata = ydata_train, modelList = ml)
+pred_blackdrum_con3 <- pred_con3$sdList$yMu[,colnames(pred_con3$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum3 <- ydata_test3[,colnames(ydata_test3) %in% "blackdrumP915"]
+pred_blackdrum_uncon3 <- pred_uncon3$sdList$yMu[,colnames(pred_uncon3$sdList$yMu) %in% "blackdrumP915"]
 
-save(non_avg, file="/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/non_avg.Rdata")
-
-load('/Users/sallydowd/Desktop/Ch1Data/gJam/Inference2/Models/non_avg.Rdata')
-
-#Need to do this with all predators!! 
-#Conditional prediction
-ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
-newdata1 <- list(xdata = xdata_test, ydata = ycond, nsim = 1000)
-pred_con <- gjamPredict(one_ind, newdata = newdata1)
-
-#Unconditional prediction
-newdata2 <- list(xdata = xdata_test, nsim = 1000)
-pred_uncon <- gjamPredict(one_ind, newdata = newdata2)
-```
-
-##### Predictions
-
-```{r}
-#Predictions 
-pred_reddrum_con <- pred_con$sdList$yMu[,colnames(pred_con$sdList$yMu) %in% "reddrumP915"]
-obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
-pred_reddrum_uncon <- pred_uncon$sdList$yMu[,colnames(pred_uncon$sdList$yMu) %in% "reddrumP915"]
-
-dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_uncon)
-dat <- as.data.frame(dat)
-r2_general(dat$pred_reddrum_con, dat$obs_reddrum)
-r2_general(dat$pred_reddrum_uncon, dat$obs_reddrum)
+dat3 <- cbind(pred_blackdrum_con3, obs_blackdrum3, pred_blackdrum_uncon3)
+dat3 <- as.data.frame(dat3)
+r2_general(dat3$pred_blackdrum_con3, dat3$obs_blackdrum3)
+r2_general(dat3$pred_blackdrum_uncon3, dat3$obs_blackdrum3)
 ```
