@@ -20,7 +20,8 @@ tbl1 <- Species_foodweb %>% gt() %>% cols_width(Number ~ px(70), Species ~ px(10
 gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Species_foodweb.png")
 ```
 
-##### Table 2: 
+##### Table 2:
+
 ```{r}
 GAM_gJam_inf <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_gJam_inf.xlsx")
 
@@ -34,7 +35,6 @@ gtsave(data=tbl2, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_gJam_inf.png")
 # %>% cols_width("Model" ~ px(100), "GAM ∆AIC 1" ~ px(70), "gJam ∆DIC 1" ~ px(70), "GAM ∆AIC 2" ~ px(70), "gJam ∆DIC 2" ~ px(70), "GAM ∆AIC 3" ~ px(70), "gJam ∆DIC 3" ~ px(70))
 ```
 
-
 #### Appendix A:
 
 ##### Table 1:
@@ -45,7 +45,8 @@ tbl1 <- Methods_tbls %>% gt() %>% cols_width(everything() ~ px(120)) %>% cols_al
 gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Methods_tbls.png")
 ```
 
-##### Table 2: 
+##### Table 2:
+
 ```{r}
 GAM_inference_rd <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference.xlsx", sheet=1)
 GAM_inference_sk <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference.xlsx", sheet=2)
@@ -59,5 +60,12 @@ gtsave(data=tbl_sk, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_sk.pn
 
 tbl_bd <- GAM_inference_bd %>% gt() %>% cols_width("Model" ~ px(67), "GAM" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5))
 gtsave(data=tbl_bd, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_bd.png")
+```
+
+##### Prey abundance 
+```{r}
+Prey_index <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/Prey_index.xlsx", sheet=1)
+tbl <- Prey_index %>% gt() %>% cols_width("Predator" ~ px(85), "Survey" ~ px(70), "Prey species" ~ px(300)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
+gtsave(data=tbl, "/users/sallydowd/Desktop/Ch1Data/Tables/Prey_index.png")
 ```
 

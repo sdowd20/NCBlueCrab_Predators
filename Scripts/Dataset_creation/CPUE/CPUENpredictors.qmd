@@ -305,7 +305,7 @@ write.csv(CPUE_grid_length_avg_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_length
 ```
 
 ```{r}
-#P915 with length, updated on 04/22
+#P915 with length, updated on 03/27
 CPUE_dfs_gridded_final_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_all_grid_pred_multi.03.04.24.csv")
 CPUE_dfs_gridded_final_length <- CPUE_dfs_gridded_final_length[,-1]
 
@@ -322,7 +322,10 @@ P915_ind_edt <- P915_ind %>% ungroup() %>% mutate(Stemp= ifelse(P915_ind$Stemp <
 summary(is.na(P915_ind_edt))
 P915_ind_edt <- P915_ind_edt %>% drop_na() %>% dplyr::select(-Day, -Location, -DPA_aA:-RestrictedArea_pA, -ShrimpTrawl_aA:-GillPound_aA, -Colnum, -Date, -Ym_date, -"Strata.station", -Waterbody_A, -Effort, -ShorelineType)
 
-write.csv(P915_ind_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.22.24.csv")
+#Filtered out outlier lat_lon from CPUE_grid_avg_lengthedtP915.03.22.24.csv on 03/27 through QGIS 
+P915_ind_edt <- P915_ind_edt %>% filter(!lat_lon %in% c("34.41389_-76.66028", "34.33806_-76.14472", "34.02639_-77.85167", "35.95639_-76.6975", "35.91361_-78.00861")) #drops 168 rows 
+  
+write.csv(P915_ind_edt, "~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.27.24.csv")
 ```
 
 ####################### didn't update on 02/08/24 with mean CPUE over standardized, not using this anymore

@@ -56,8 +56,8 @@ df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
 colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
-##03/22/24: P915 non-averaged
-df_CPUE_ind_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.22.24.csv")
+##03/27/24: P915 non-averaged
+df_CPUE_ind_length <- read.csv("~/Desktop/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.27.24.csv")
 df_CPUE_ind_length <- df_CPUE_ind_length[,-1]
 df_CPUE_ind_length <- df_CPUE_ind_length %>% mutate_at("Survey", as.factor)
 df_CPUE_ind_length$Speciescommonname <- gsub(" ", "", df_CPUE_ind_length$Speciescommonname)
@@ -73,7 +73,7 @@ df_CPUE_length$meanCPUE <- as.numeric(df_CPUE_length$meanCPUE)
 df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
 
 ##Pivot-wider dataset: P915 
-df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
+df_CPUE_length_wide_P915 <- df_CPUE_length %>% filter(Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na() %>% filter(!gridID %in% c(398, 707, 679)) #drop gridID outliers (QGIS analysis)
   
 ##Pivot-wider dataset: P915 non-averaged
 df_CPUE_ind_length$SpeciesSurvey <- paste(df_CPUE_ind_length$Speciescommonname, df_CPUE_ind_length$Survey, sep= "") 
