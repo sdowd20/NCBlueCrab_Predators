@@ -59,6 +59,9 @@ combined_df <- do.call(rbind, reddrum_env_bc_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/reddrum_env_bc_cv.csv")
 write.csv(reddrum_env_bc_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_cv2.csv")
 
+reddrum_env_bc_cv_unsumm <- collect_metrics(reddrum_env_bc_cv, summarize= FALSE)
+write.csv(reddrum_env_bc_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_cv_unsumm.csv")
+
 #Environment + forage
 reddrum_env_forage_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logreddrumP915forageP915, logreddrumP915forageP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logreddrumP915forageP915) + s(logreddrumP915forageP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
@@ -68,6 +71,9 @@ combined_df <- do.call(rbind, reddrum_env_forage_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/reddrum_env_forage_cv.csv")
 write.csv(reddrum_env_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_forage_cv2.csv")
 
+reddrum_env_forage_cv_unsumm <- collect_metrics(reddrum_env_forage_cv, summarize= FALSE)
+write.csv(reddrum_env_bc_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_forage_cv_unsumm.csv")
+
 #Environment + bc + forage 
 reddrum_env_bc_forage_wf <- workflow() %>% add_variables(outcomes= reddrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logreddrumP915forageP915, logreddrumP915forageP120, logsmallbluecrabP120)) %>% add_model(gam_mod, formula= reddrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logreddrumP915forageP915) + s(logreddrumP915forageP120) + s(logsmallbluecrabP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
@@ -76,8 +82,9 @@ reddrum_env_bc_forage_cv2 <- collect_metrics(reddrum_env_bc_forage_cv)
 combined_df <- do.call(rbind, reddrum_env_bc_forage_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/reddrum_env_bc_forage_cv.csv")
 write.csv(reddrum_env_bc_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_forage_cv2.csv")
-library(beepr)
-beep(sound=8)
+
+reddrum_env_bc_forage_cv_unsumm <- collect_metrics(reddrum_env_bc_forage_cv, summarize= FALSE)
+write.csv(reddrum_env_bc_forage_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_forage_cv_unsumm.csv")
 ```
 
 #### Southern kingfish
@@ -122,25 +129,34 @@ combined_df <- do.call(rbind, southernkingfish_env_bc_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/southernkingfish_env_bc_cv.csv")
 write.csv(southernkingfish_env_bc_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_cv2.csv")
 
+southernkingfish_env_bc_cv_unsumm <- collect_metrics(southernkingfish_env_bc_cv, summarize= FALSE)
+write.csv(southernkingfish_env_bc_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_cv_unsumm.csv")
+
 #Environment + forage
 southernkingfish_env_forage_wf <- workflow() %>% add_variables(outcomes= southernkingfishP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120)) %>% add_model(gam_mod, formula= southernkingfishP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logsouthernkingfishP915forageP915) + s(logsouthernkingfishP915forageP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 southernkingfish_env_forage_cv <- southernkingfish_env_forage_wf %>% fit_resamples(folds)
+beep(sound=8)
 southernkingfish_env_forage_cv2 <- collect_metrics(southernkingfish_env_forage_cv)
 combined_df <- do.call(rbind, southernkingfish_env_forage_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/southernkingfish_env_forage_cv.csv")
 write.csv(southernkingfish_env_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_forage_cv2.csv")
 
+southernkingfish_env_forage_cv_unsumm <- collect_metrics(southernkingfish_env_forage_cv, summarize= FALSE)
+write.csv(southernkingfish_env_forage_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_forage_cv_unsumm.csv")
+
 #Environment + bc + forage 
 southernkingfish_env_bc_forage_wf <- workflow() %>% add_variables(outcomes= southernkingfishP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120, logsmallbluecrabP120)) %>% add_model(gam_mod, formula= southernkingfishP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logsouthernkingfishP915forageP915) + s(logsouthernkingfishP915forageP120) + s(logsmallbluecrabP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 southernkingfish_env_bc_forage_cv <- southernkingfish_env_bc_forage_wf %>% fit_resamples(folds)
+beep(sound=8)
 southernkingfish_env_bc_forage_cv2 <- collect_metrics(southernkingfish_env_bc_forage_cv)
 combined_df <- do.call(rbind, southernkingfish_env_bc_forage_cv)
 write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/southernkingfish_env_bc_forage_cv.csv")
 write.csv(southernkingfish_env_bc_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_forage_cv2.csv")
 
-beep(sound=8)
+southernkingfish_env_bc_forage_cv_unsumm <- collect_metrics(southernkingfish_env_bc_forage_cv, summarize= FALSE)
+write.csv(southernkingfish_env_bc_forage_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_forage_cv_unsumm.csv")
 ```
 
 #### Black drum
@@ -180,27 +196,36 @@ write.csv(blackdrum_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/
 blackdrum_env_bc_wf <- workflow() %>% add_variables(outcomes= blackdrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logsmallbluecrabP120)) %>% add_model(gam_mod, formula= blackdrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logsmallbluecrabP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 blackdrum_env_bc_cv <- blackdrum_env_bc_wf %>% fit_resamples(folds)
-blackdrum_env_bc_cv2 <- collect_metrics(blackdrum_env_bc_cv)
-combined_df <- do.call(rbind, blackdrum_env_bc_cv)
-write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/blackdrum_env_bc_cv.csv")
-write.csv(blackdrum_env_bc_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv2.csv")
+# blackdrum_env_bc_cv2 <- collect_metrics(blackdrum_env_bc_cv)
+# combined_df <- do.call(rbind, blackdrum_env_bc_cv)
+# write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/blackdrum_env_bc_cv.csv")
+# write.csv(blackdrum_env_bc_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv2.csv")
+
+blackdrum_env_bc_cv_unsumm <- collect_metrics(blackdrum_env_bc_cv, summarize= FALSE)
+write.csv(blackdrum_env_bc_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv_unsumm.csv")
 
 #Environment + forage
 blackdrum_env_forage_wf <- workflow() %>% add_variables(outcomes= blackdrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logblackdrumP915forageP120)) %>% add_model(gam_mod, formula= blackdrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logblackdrumP915forageP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 blackdrum_env_forage_cv <- blackdrum_env_forage_wf %>% fit_resamples(folds)
-blackdrum_env_forage_cv2 <- collect_metrics(blackdrum_env_forage_cv)
-combined_df <- do.call(rbind, blackdrum_env_forage_cv)
-write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/blackdrum_env_forage_cv.csv")
-write.csv(blackdrum_env_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv2.csv")
+# blackdrum_env_forage_cv2 <- collect_metrics(blackdrum_env_forage_cv)
+# combined_df <- do.call(rbind, blackdrum_env_forage_cv)
+# write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/blackdrum_env_forage_cv.csv")
+# write.csv(blackdrum_env_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv2.csv")
+
+blackdrum_env_forage_cv_unsumm <- collect_metrics(blackdrum_env_forage_cv, summarize= FALSE)
+write.csv(blackdrum_env_forage_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv_unsumm.csv")
 
 #Environment + bc + forage 
 blackdrum_env_bc_forage_wf <- workflow() %>% add_variables(outcomes= blackdrumP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logblackdrumP915forageP120, logsmallbluecrabP120)) %>% add_model(gam_mod, formula= blackdrumP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logblackdrumP915forageP120) + s(logsmallbluecrabP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 blackdrum_env_bc_forage_cv <- blackdrum_env_bc_forage_wf %>% fit_resamples(folds)
-blackdrum_env_bc_forage_cv2 <- collect_metrics(blackdrum_env_bc_forage_cv)
-combined_df <- do.call(rbind, blackdrum_env_bc_forage_cv)
-write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/blackdrum_env_bc_forage_cv.csv")
-write.csv(blackdrum_env_bc_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv2.csv")
+# blackdrum_env_bc_forage_cv2 <- collect_metrics(blackdrum_env_bc_forage_cv)
+# combined_df <- do.call(rbind, blackdrum_env_bc_forage_cv)
+# write.csv(combined_df, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/blackdrum_env_bc_forage_cv.csv")
+# write.csv(blackdrum_env_bc_forage_cv2, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv2.csv")
+
+blackdrum_env_bc_forage_cv_unsumm <- collect_metrics(blackdrum_env_bc_forage_cv, summarize= FALSE)
+write.csv(blackdrum_env_bc_forage_cv_unsumm, "/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv_unsumm.csv")
 beep(sound=8)
 ```

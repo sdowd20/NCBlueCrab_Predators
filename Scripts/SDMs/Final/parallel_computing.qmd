@@ -1,0 +1,87 @@
+---
+title: "parallel"
+format: html
+editor: visual
+---
+
+-Helpful website: https://www.mjandrews.org/blog/rparallel/
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+df <- df_CPUE_length_wide_indP915[1:100,]
+```
+
+```{r}
+library(parallel)
+detectCores #8 cores
+the_cluster <- makeCluster(6) #use 6 cores
+```
+
+```{r}
+#fun <- 
+fun <- function(data_df){
+library(gjam)
+
+r2_general <-function(preds,actual){ 
+  return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
+}
+
+RMSE_func <- function(preds, actual){
+  return(sqrt(mean((actual - preds)^2)))
+}
+
+smp_size <- floor(0.80* nrow(data_df))
+
+southernkingfish_model3_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_model3_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+train_ind <- sample(seq_len(nrow(data_df)), size = smp_size)
+train <- data_df[train_ind, ]
+test <- data_df[-train_ind, ]
+
+xnames <- c("Depth", "Stemp", "Ssal", "Sdo", "NoFishRest")
+ynames <- c("smallatlanticmenhadenP915", "southernkingfishP915", "spotP915")
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 10, burnin = 5, typeNames = 'CA')
+
+mod2 <- gjam(~ Depth + Stemp + Ssal + Sdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+}
+
+
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_model3_gjam[1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_model3_gjam[2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_model3_gjam[3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_model3_gjam[4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+return(dat)
+}
+
+```
+
+```{r}
+clusterExport(cl = the_cluster, varlist = c('fun', 'df'))
+bootstrap_estimates <- parSapply(the_cluster, seq(6), 
+function(i) fun(df))
+```
+

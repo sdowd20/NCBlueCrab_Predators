@@ -12,6 +12,7 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.gJam.R")
 ###### Predictions
 
 ```{r}
+set.seed(123)
 #Red drum 
 ##Conditional prediction
 ycond1 <- ydata_test1[,!colnames(ydata_test1) %in% "reddrumP915"]
@@ -30,9 +31,12 @@ dat1 <- cbind(pred_reddrum_con1, obs_reddrum1, pred_reddrum_uncon1)
 dat1 <- as.data.frame(dat1)
 r2_general(dat1$pred_reddrum_con1, dat1$obs_reddrum1)
 r2_general(dat1$pred_reddrum_uncon1, dat1$obs_reddrum1)
+RMSE_func(actual= dat1$obs_reddrum1, pred= dat1$pred_reddrum_con1)
+RMSE_func(actual= dat1$obs_reddrum1, pred= dat1$pred_reddrum_uncon1)
 ```
 
 ```{r}
+set.seed(123)
 #Southern kingfish
 ##Conditional prediction
 ycond1 <- ydata_test1[,!colnames(ydata_test1) %in% "southernkingfishP915"]
@@ -51,9 +55,12 @@ dat1 <- cbind(pred_southernkingfish_con1, obs_southernkingfish1, pred_southernki
 dat1 <- as.data.frame(dat1)
 r2_general(dat1$pred_southernkingfish_con1, dat1$obs_southernkingfish1)
 r2_general(dat1$pred_southernkingfish_uncon1, dat1$obs_southernkingfish1)
+RMSE_func(actual= dat1$obs_southernkingfish1, pred= dat1$pred_southernkingfish_con1)
+RMSE_func(actual= dat1$obs_southernkingfish1, pred= dat1$pred_southernkingfish_uncon1)
 ```
 
 ```{r}
+set.seed(123)
 #Black drum
 ##Conditional prediction
 ycond1 <- ydata_test1[,!colnames(ydata_test1) %in% "blackdrumP915"]
@@ -72,23 +79,21 @@ dat1 <- cbind(pred_blackdrum_con1, obs_blackdrum1, pred_blackdrum_uncon1)
 dat1 <- as.data.frame(dat1)
 r2_general(dat1$pred_blackdrum_con1, dat1$obs_blackdrum1)
 r2_general(dat1$pred_blackdrum_uncon1, dat1$obs_blackdrum1)
+RMSE_func(actual= dat1$obs_blackdrum1, pred= dat1$pred_blackdrum_con1)
+RMSE_func(actual= dat1$obs_blackdrum1, pred= dat1$pred_blackdrum_uncon1)
 ```
 
-###### RMSE
+###### RMSPE
 ```{r}
-rmsetot1 <- both_ind_burn3[["fit"]][["rmspeAll"]]
-rmse_byspec <- both_ind_burn3[["fit"]][["rmspeBySpec"]]
-```
-
-###### AUC 
-```{r}
-
+rmspe_byspec <- both_ind_burn3[["fit"]][["rmspeBySpec"]]
+rmspetot <- both_ind_burn3[["fit"]][["rmspeAll"]]
 ```
 
 ##### Model 2: one_ind_burn3
 
 ###### Predictions
 ```{r}
+set.seed(123)
 #Red drum 
 ##Conditional prediction
 ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "reddrumP915"]
@@ -107,9 +112,14 @@ dat2 <- cbind(pred_reddrum_con2, obs_reddrum2, pred_reddrum_uncon2)
 dat2 <- as.data.frame(dat2)
 r2_general(dat2$pred_reddrum_con2, dat2$obs_reddrum2)
 r2_general(dat2$pred_reddrum_uncon2, dat2$obs_reddrum2)
+
+RMSE_func(actual= dat2$obs_reddrum2, pred= dat2$pred_reddrum_con2)
+RMSE_func(actual= dat2$obs_reddrum2, pred= dat2$pred_reddrum_uncon2)
+rmspe_byspec <- one_ind_burn3[["fit"]][["rmspeBySpec"]]
 ```
 
 ```{r}
+set.seed(123)
 #Southern kingfish
 ##Conditional prediction
 ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "southernkingfishP915"]
@@ -128,9 +138,12 @@ dat2 <- cbind(pred_southernkingfish_con2, obs_southernkingfish2, pred_southernki
 dat2 <- as.data.frame(dat2)
 r2_general(dat2$pred_southernkingfish_con2, dat2$obs_southernkingfish2)
 r2_general(dat2$pred_southernkingfish_uncon2, dat2$obs_southernkingfish2)
+RMSE_func(actual= dat2$obs_southernkingfish2, pred= dat2$pred_southernkingfish_con2)
+RMSE_func(actual= dat2$obs_southernkingfish2, pred= dat2$pred_southernkingfish_uncon2)
 ```
 
 ```{r}
+set.seed(123)
 #Black drum
 ##Conditional prediction
 ycond2 <- ydata_test2[,!colnames(ydata_test2) %in% "blackdrumP915"]
@@ -149,11 +162,20 @@ dat2 <- cbind(pred_blackdrum_con2, obs_blackdrum2, pred_blackdrum_uncon2)
 dat2 <- as.data.frame(dat2)
 r2_general(dat2$pred_blackdrum_con2, dat2$obs_blackdrum2)
 r2_general(dat2$pred_blackdrum_uncon2, dat2$obs_blackdrum2)
+RMSE_func(actual= dat2$obs_blackdrum2, pred= dat2$pred_blackdrum_con2)
+RMSE_func(actual= dat2$obs_blackdrum2, pred= dat2$pred_blackdrum_uncon2)
+```
+
+###### RMSPE
+```{r}
+rmspe_byspec2 <- one_ind_burn3[["fit"]][["rmspeBySpec"]]
+rmspetot2 <- one_ind_burn3[["fit"]][["rmspeAll"]]
 ```
 
 ##### Model 3: non_avg2
 ###### Predictions
 ```{r}
+set.seed(123)
 #Red drum 
 ##Conditional prediction
 ycond3 <- ydata_test3[,!colnames(ydata_test3) %in% "reddrumP915"]
@@ -172,9 +194,13 @@ dat3 <- cbind(pred_reddrum_con3, obs_reddrum3, pred_reddrum_uncon3)
 dat3 <- as.data.frame(dat3)
 r2_general(dat3$pred_reddrum_con3, dat3$obs_reddrum3)
 r2_general(dat3$pred_reddrum_uncon3, dat3$obs_reddrum3)
+RMSE_func(actual= dat3$obs_reddrum3, pred= dat3$pred_reddrum_con3)
+RMSE_func(actual= dat3$obs_reddrum3, pred= dat3$pred_reddrum_uncon3)
+rmspe_byspec <- non_avg2[["fit"]][["rmspeBySpec"]]
 ```
 
 ```{r}
+set.seed(123)
 #Southern kingfish
 ##Conditional prediction
 ycond3 <- ydata_test3[,!colnames(ydata_test3) %in% "southernkingfishP915"]
@@ -193,9 +219,12 @@ dat3 <- cbind(pred_southernkingfish_con3, obs_southernkingfish3, pred_southernki
 dat3 <- as.data.frame(dat3)
 r2_general(dat3$pred_southernkingfish_con3, dat3$obs_southernkingfish3)
 r2_general(dat3$pred_southernkingfish_uncon3, dat3$obs_southernkingfish3)
+RMSE_func(actual= dat3$obs_southernkingfish3, pred= dat3$pred_southernkingfish_con3)
+RMSE_func(actual= dat3$obs_southernkingfish3, pred= dat3$pred_southernkingfish_uncon3)
 ```
 
 ```{r}
+set.seed(123)
 #Black drum
 ##Conditional prediction
 ycond3 <- ydata_test3[,!colnames(ydata_test3) %in% "blackdrumP915"]
@@ -214,4 +243,25 @@ dat3 <- cbind(pred_blackdrum_con3, obs_blackdrum3, pred_blackdrum_uncon3)
 dat3 <- as.data.frame(dat3)
 r2_general(dat3$pred_blackdrum_con3, dat3$obs_blackdrum3)
 r2_general(dat3$pred_blackdrum_uncon3, dat3$obs_blackdrum3)
+RMSE_func(actual= dat3$obs_blackdrum3, pred= dat3$pred_blackdrum_con3)
+RMSE_func(actual= dat3$obs_blackdrum3, pred= dat3$pred_blackdrum_uncon)
 ```
+
+###### RMSPE
+```{r}
+rmspe_byspec3 <- non_avg2[["fit"]][["rmspeBySpec"]]
+rmspetot3 <- non_avg2[["fit"]][["rmspeAll"]]
+
+ 
+```
+
+
+
+```{r}
+non_avg2[["fit"]]$fractionExplained
+
+
+y_pred <- pred_con3$sdList$yMu
+y_obs <- ytest 
+```
+

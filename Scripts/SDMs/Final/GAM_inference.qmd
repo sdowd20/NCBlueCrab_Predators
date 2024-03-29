@@ -594,3 +594,27 @@ r2_general(df2$pred2, train$reddrumP915)
 
 gam.check(real_gam)
 ```
+
+
+```{r}
+#non-averaged GAM 
+sample_size_both = floor(0.8*nrow(df_CPUE_length_wide_indP915))
+picked_both = sample(seq_len(nrow(df_CPUE_length_wide_indP915)),size = sample_size_both) 
+df_test = df_CPUE_length_wide_indP915[-picked_both,]
+df_train = df_CPUE_length_wide_indP915[picked_both,]
+
+reddrum_env <- gam(reddrumP915~s(Depth)+s(Ssal)+s(Stemp)+s(Sdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_train)
+
+reddrum_env_pred <- as.data.frame(predict(reddrum_env), df_test, type= "response")
+colnames(reddrum_env_pred) <- "prediction"
+reddrum_env_pred <- reddrum_env_pred %>% mutate(pred2= exp(prediction)) #get predictions on correct scale 
+reddrum_env_pred2 <- reddrum_env_pred %>% mutate(pred2= exp(prediction))
+r2_general(reddrum_env_pred2$pred2, df_train$reddrumP915)
+
+
+predict(reddrum_env, df_test)
+summary(reddrum_env)
+
+
+```
+
