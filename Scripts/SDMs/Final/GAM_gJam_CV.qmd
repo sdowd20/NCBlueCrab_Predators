@@ -1,0 +1,157 @@
+---
+title: "GAM_gJam_CV"
+format: html
+editor: visual
+---
+
+```{r}
+library(stats)
+library(dplyr)
+```
+
+#### Red drum
+
+##### Load in data
+
+```{r}
+#Env_bc 
+reddrum_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_cv_unsumm.csv")
+reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_bc <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc.csv")
+
+#Env_forage
+reddrum_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_forage_cv_unsumm.csv")
+reddrum_gam_env_forage <- reddrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage.csv")
+
+#Env_bc_forage
+reddrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_forage_cv_unsumm.csv")
+reddrum_gam_env_bc_forage <- reddrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
+```
+
+##### Pairwise test
+
+```{r}
+#Env_bc 
+wilcox.test(reddrum_gam_env_bc$mean_rsq, reddrum_gJam_env_bc$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_gam_env_bc$mean_rsq, reddrum_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gJam_env_bc$r2_uncon, reddrum_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gam_env_bc$mean_rmse, reddrum_gJam_env_bc$rmse_uncon, paired = TRUE)
+wilcox.test(reddrum_gam_env_bc$mean_rmse, reddrum_gJam_env_bc$rmse_con, paired = TRUE) 
+wilcox.test(reddrum_gJam_env_bc$rmse_uncon, reddrum_gJam_env_bc$rmse_con, paired = TRUE) 
+
+#Env_forage
+wilcox.test(reddrum_gam_env_forage$mean_rsq, reddrum_gJam_env_forage$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_gam_env_forage$mean_rsq, reddrum_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gJam_env_forage$r2_uncon, reddrum_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gam_env_forage$mean_rmse, reddrum_gJam_env_forage$rmse_uncon, paired = TRUE)
+wilcox.test(reddrum_gam_env_forage$mean_rmse, reddrum_gJam_env_forage$rmse_con, paired = TRUE) 
+wilcox.test(reddrum_gJam_env_forage$rmse_uncon, reddrum_gJam_env_forage$rmse_con, paired = TRUE) 
+
+#Env_bc_forage
+wilcox.test(reddrum_gam_env_bc_forage$mean_rsq, reddrum_gJam_env_bc_forage$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_gam_env_bc_forage$mean_rsq, reddrum_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gJam_env_bc_forage$r2_uncon, reddrum_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gam_env_bc_forage$mean_rmse, reddrum_gJam_env_bc_forage$rmse_uncon, paired = TRUE)
+wilcox.test(reddrum_gam_env_bc_forage$mean_rmse, reddrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+wilcox.test(reddrum_gJam_env_bc_forage$rmse_uncon, reddrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
+
+#### Southern kingfish
+
+##### Load in data
+
+```{r}
+#Env_bc 
+southernkingfish_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_cv_unsumm.csv")
+southernkingfish_gam_env_bc <- southernkingfish_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_bc <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc.csv")
+
+#Env_forage
+southernkingfish_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_forage_cv_unsumm.csv")
+southernkingfish_gam_env_forage <- southernkingfish_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_forage.csv")
+
+#Env_bc_forage
+southernkingfish_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_forage_cv_unsumm.csv")
+southernkingfish_gam_env_bc_forage <- southernkingfish_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
+```
+
+##### Pairwise test
+
+```{r}
+#Env_bc 
+wilcox.test(southernkingfish_gam_env_bc$mean_rsq, southernkingfish_gJam_env_bc$r2_uncon, paired = TRUE)
+wilcox.test(southernkingfish_gam_env_bc$mean_rsq, southernkingfish_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gJam_env_bc$r2_uncon, southernkingfish_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gam_env_bc$mean_rmse, southernkingfish_gJam_env_bc$rmse_uncon, paired = TRUE)
+wilcox.test(southernkingfish_gam_env_bc$mean_rmse, southernkingfish_gJam_env_bc$rmse_con, paired = TRUE) 
+wilcox.test(southernkingfish_gJam_env_bc$rmse_uncon, southernkingfish_gJam_env_bc$rmse_con, paired = TRUE) 
+
+#Env_forage
+wilcox.test(southernkingfish_gam_env_forage$mean_rsq, southernkingfish_gJam_env_forage$r2_uncon, paired = TRUE)
+wilcox.test(southernkingfish_gam_env_forage$mean_rsq, southernkingfish_gJam_env_forage$r2_con, paired = TRUE)
+wilcox.test(southernkingfish_gJam_env_forage$r2_uncon, southernkingfish_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gam_env_forage$mean_rmse, southernkingfish_gJam_env_forage$rmse_uncon, paired = TRUE)
+wilcox.test(southernkingfish_gam_env_forage$mean_rmse, southernkingfish_gJam_env_forage$rmse_con, paired = TRUE) 
+wilcox.test(southernkingfish_gJam_env_forage$rmse_uncon, southernkingfish_gJam_env_forage$rmse_con, paired = TRUE) 
+
+#Env_bc_forage
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rsq, southernkingfish_gJam_env_bc_forage$r2_uncon, paired = TRUE)
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rsq, southernkingfish_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gJam_env_bc_forage$r2_uncon, southernkingfish_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_env_bc_forage$rmse_uncon, paired = TRUE)
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+wilcox.test(southernkingfish_gJam_env_bc_forage$rmse_uncon, southernkingfish_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
+
+#### Black drum
+
+##### Load in data
+
+```{r}
+#Env_bc 
+blackdrum_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv_unsumm.csv")
+blackdrum_gam_env_bc <- blackdrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_bc <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc.csv")
+
+#Env_forage
+blackdrum_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv_unsumm.csv")
+blackdrum_gam_env_forage <- blackdrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_forage.csv")
+
+#Env_bc_forage
+blackdrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv_unsumm.csv")
+blackdrum_gam_env_bc_forage <- blackdrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
+```
+
+##### Pairwise test
+
+```{r}
+#Env_bc 
+wilcox.test(blackdrum_gam_env_bc$mean_rsq, blackdrum_gJam_env_bc$r2_uncon, paired = TRUE)
+wilcox.test(blackdrum_gam_env_bc$mean_rsq, blackdrum_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gJam_env_bc$r2_uncon, blackdrum_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gam_env_bc$mean_rmse, blackdrum_gJam_env_bc$rmse_uncon, paired = TRUE)
+wilcox.test(blackdrum_gam_env_bc$mean_rmse, blackdrum_gJam_env_bc$rmse_con, paired = TRUE) 
+wilcox.test(blackdrum_gJam_env_bc$rmse_uncon, blackdrum_gJam_env_bc$rmse_con, paired = TRUE) 
+
+#Env_forage
+wilcox.test(blackdrum_gam_env_forage$mean_rsq, blackdrum_gJam_env_forage$r2_uncon, paired = TRUE)
+wilcox.test(blackdrum_gam_env_forage$mean_rsq, blackdrum_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gJam_env_forage$r2_uncon, blackdrum_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gam_env_forage$mean_rmse, blackdrum_gJam_env_forage$rmse_uncon, paired = TRUE)
+wilcox.test(blackdrum_gam_env_forage$mean_rmse, blackdrum_gJam_env_forage$rmse_con, paired = TRUE) 
+wilcox.test(blackdrum_gJam_env_forage$rmse_uncon, blackdrum_gJam_env_forage$rmse_con, paired = TRUE) 
+
+#Env_bc_forage
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rsq, blackdrum_gJam_env_bc_forage$r2_uncon, paired = TRUE)
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rsq, blackdrum_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gJam_env_bc_forage$r2_uncon, blackdrum_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$rmse_uncon, paired = TRUE)
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+wilcox.test(blackdrum_gJam_env_bc_forage$rmse_uncon, blackdrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
