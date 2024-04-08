@@ -9,6 +9,7 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.gJam.R")
 ```
 
 ##### Model 1: both_ind_burn3
+
 ###### Predictions
 
 ```{r}
@@ -84,6 +85,7 @@ RMSE_func(actual= dat1$obs_blackdrum1, pred= dat1$pred_blackdrum_uncon1)
 ```
 
 ###### RMSPE
+
 ```{r}
 rmspe_byspec <- both_ind_burn3[["fit"]][["rmspeBySpec"]]
 rmspetot <- both_ind_burn3[["fit"]][["rmspeAll"]]
@@ -92,6 +94,7 @@ rmspetot <- both_ind_burn3[["fit"]][["rmspeAll"]]
 ##### Model 2: one_ind_burn3
 
 ###### Predictions
+
 ```{r}
 set.seed(123)
 #Red drum 
@@ -167,13 +170,16 @@ RMSE_func(actual= dat2$obs_blackdrum2, pred= dat2$pred_blackdrum_uncon2)
 ```
 
 ###### RMSPE
+
 ```{r}
 rmspe_byspec2 <- one_ind_burn3[["fit"]][["rmspeBySpec"]]
 rmspetot2 <- one_ind_burn3[["fit"]][["rmspeAll"]]
 ```
 
 ##### Model 3: non_avg2
+
 ###### Predictions
+
 ```{r}
 set.seed(123)
 #Red drum 
@@ -248,6 +254,7 @@ RMSE_func(actual= dat3$obs_blackdrum3, pred= dat3$pred_blackdrum_uncon)
 ```
 
 ###### RMSPE
+
 ```{r}
 rmspe_byspec3 <- non_avg2[["fit"]][["rmspeBySpec"]]
 rmspetot3 <- non_avg2[["fit"]][["rmspeAll"]]
@@ -255,13 +262,64 @@ rmspetot3 <- non_avg2[["fit"]][["rmspeAll"]]
  
 ```
 
-
-
 ```{r}
 non_avg2[["fit"]]$fractionExplained
 
 
 y_pred <- pred_con3$sdList$yMu
 y_obs <- ytest 
+```
+
+
+
+```{r}
+#posterior summaries 
+out <- non_avg2
+
+betas <- out$parameters$betaStandXTable #SM by stats posterior summary
+sens <- out[["parameters"]][["sensTable"]] #sensitivity to predictor variables
+rmsetot <- out[["fit"]][["rmspeAll"]] #root mean squared prediction error all
+DIC <- out[["fit"]][["DIC"]]
+rmse_byspec <- out[["fit"]][["rmspeBySpec"]]
+cor <- out[["parameters"]][["corMu"]] #residual, correlation 
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+s_mat <- out[["parameters"]][["sigMu"]] #WsWs', Species x Species, covariance matrix
+#add cor from ydata for panel A
+ycor <- out[["inputs"]][["y"]] #response matrix 
+cor2 <- out[["parameters"]][["ematrix"]]
+
+#residual covariance
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+cor <-  as.data.frame(cor)
+rownames(cor) <- colnames(cor)
+cor$specs <- rownames(cor)
+
+#ematrix
+cor2 <- out[["parameters"]][["ematrix"]] #responses in matrix E 
+cor2 <-  as.data.frame(cor2)
+rownames(cor2) <- colnames(cor2)
+cor2$specs <- rownames(cor2)
+
+#latent vector wi that represents response variables all on a continuous scale
+#matrix E is the correlation among species in terms of their responses to X
+```
+
+```{r}
+specs_all_dev <- as.data.frame(matrix(data=NA, nrow=length(cor2$specs), ncol=1))
+specs_all_dev$names <- cor2$specs
+specs_all_dev$env_cov <- cor2$reddrumP915
+specs_all_dev1 <- specs_all_dev[-1]
+```
+
+```{r}
+cor_again <- cor[,-9]
+comodel <- ggcorrplot::ggcorrplot(cor_again, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+comodel
+ggsave("/users/sallydowd/Desktop/comodol.jpeg", width= 7, height=5)
+
+cor2_again <- cor2[,-9]
+emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower") + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+emat
+ggsave("/users/sallydowd/Desktop/emat.jpeg", width= 7, height=5)
 ```
 
