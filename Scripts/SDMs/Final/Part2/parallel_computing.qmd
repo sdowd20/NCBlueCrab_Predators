@@ -106,8 +106,8 @@ colnames(as2) <- paste("pred_con", 1:10, sep = "_")
 lets$V1
 ```
 
+#### New
 
-#### New 
 ```{r}
 #Load things into your environment 
 r2_general <-function(preds,actual){ 
@@ -185,4 +185,3 @@ Sys.time() - start #time it
 # data.frame(id= id, mean= mean(d), sd= sd(d))
 #automatically brings things in to your environment 
 ```
-
