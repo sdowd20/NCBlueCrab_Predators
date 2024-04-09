@@ -9,9 +9,10 @@ library(stats)
 library(dplyr)
 ```
 
-#### Red drum
+#### Part 1 
+##### Red drum
 
-##### Load in data
+###### Load in data
 
 ```{r}
 #Env_bc 
@@ -30,7 +31,7 @@ reddrum_gam_env_bc_forage <- reddrum_gam_env_bc_forage %>% dplyr::select(-X) %>%
 reddrum_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
 ```
 
-##### Pairwise test
+###### Pairwise test
 
 ```{r}
 #Env_bc 
@@ -58,9 +59,9 @@ wilcox.test(reddrum_gam_env_bc_forage$mean_rmse, reddrum_gJam_env_bc_forage$rmse
 wilcox.test(reddrum_gJam_env_bc_forage$rmse_uncon, reddrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
 ```
 
-#### Southern kingfish
+##### Southern kingfish
 
-##### Load in data
+###### Load in data
 
 ```{r}
 #Env_bc 
@@ -79,7 +80,7 @@ southernkingfish_gam_env_bc_forage <- southernkingfish_gam_env_bc_forage %>% dpl
 southernkingfish_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
 ```
 
-##### Pairwise test
+###### Pairwise test
 
 ```{r}
 #Env_bc 
@@ -107,9 +108,9 @@ wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_
 wilcox.test(southernkingfish_gJam_env_bc_forage$rmse_uncon, southernkingfish_gJam_env_bc_forage$rmse_con, paired = TRUE) 
 ```
 
-#### Black drum
+##### Black drum
 
-##### Load in data
+###### Load in data
 
 ```{r}
 #Env_bc 
@@ -128,7 +129,7 @@ blackdrum_gam_env_bc_forage <- blackdrum_gam_env_bc_forage %>% dplyr::select(-X)
 blackdrum_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
 ```
 
-##### Pairwise test
+###### Pairwise test
 
 ```{r}
 #Env_bc 
@@ -154,4 +155,143 @@ wilcox.test(blackdrum_gJam_env_bc_forage$r2_uncon, blackdrum_gJam_env_bc_forage$
 wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$rmse_uncon, paired = TRUE)
 wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
 wilcox.test(blackdrum_gJam_env_bc_forage$rmse_uncon, blackdrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
+
+#### Part 2 
+
+##### Red drum 
+
+###### Load in data
+```{r}
+reddrum_model1 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model1.csv")
+reddrum_model2 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model2.csv")
+reddrum_model3 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model3.csv")
+```
+
+###### Pairwise
+```{r}
+#Model to model: conditional
+wilcox.test(reddrum_model1$r2_con, reddrum_model2$r2_con, paired = TRUE)
+wilcox.test(reddrum_model1$r2_con, reddrum_model3$r2_con, paired = TRUE)
+wilcox.test(reddrum_model2$r2_con, reddrum_model3$r2_con, paired = TRUE)
+
+#Model to model: unconditional
+wilcox.test(reddrum_model1$r2_uncon, reddrum_model2$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model1$r2_uncon, reddrum_model3$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model2$r2_uncon, reddrum_model3$r2_uncon, paired = TRUE)
+
+#Within model
+wilcox.test(reddrum_model1$r2_con, reddrum_model1$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model2$r2_con, reddrum_model2$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model3$r2_con, reddrum_model3$r2_uncon, paired = TRUE)
+```
+
+###### Summary metrics
+```{r}
+mean(reddrum_model1$r2_uncon)
+sd(reddrum_model1$r2_uncon)
+mean(reddrum_model1$r2_con)
+sd(reddrum_model1$r2_con)
+
+mean(reddrum_model2$r2_uncon)
+sd(reddrum_model2$r2_uncon)
+mean(reddrum_model2$r2_con)
+sd(reddrum_model2$r2_con)
+
+mean(reddrum_model3$r2_uncon)
+sd(reddrum_model3$r2_uncon)
+mean(reddrum_model3$r2_con)
+sd(reddrum_model3$r2_con)
+```
+
+
+##### Southern kingfish 
+
+###### Load in data
+```{r}
+southern_kingfish_model1 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
+southern_kingfish_model2 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
+southern_kingfish_model3 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+```
+
+###### Pairwise
+```{r}
+#Model to model: conditional
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model2$r2_con, paired = TRUE)
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model3$r2_con, paired = TRUE)
+wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model3$r2_con, paired = TRUE)
+
+#Model to model: unconditional
+wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model2$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model3$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model2$r2_uncon, southern_kingfish_model3$r2_uncon, paired = TRUE)
+
+#Within model
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model1$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model2$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model3$r2_con, southern_kingfish_model3$r2_uncon, paired = TRUE)
+```
+
+###### Summary metrics
+```{r}
+mean(southern_kingfish_model1$r2_uncon)
+sd(southern_kingfish_model1$r2_uncon)
+mean(southern_kingfish_model1$r2_con)
+sd(southern_kingfish_model1$r2_con)
+
+mean(southern_kingfish_model2$r2_uncon)
+sd(southern_kingfish_model2$r2_uncon)
+mean(southern_kingfish_model2$r2_con)
+sd(southern_kingfish_model2$r2_con)
+
+mean(southern_kingfish_model3$r2_uncon)
+sd(southern_kingfish_model3$r2_uncon)
+mean(southern_kingfish_model3$r2_con)
+sd(southern_kingfish_model3$r2_con)
+```
+
+##### Black drum
+
+###### Load in data
+```{r}
+black_drum_model1 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
+black_drum_model2 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
+black_drum_model3 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+```
+
+###### Pairwise
+```{r}
+#Model to model: conditional
+wilcox.test(black_drum_model1$r2_con, black_drum_model2$r2_con, paired = TRUE)
+wilcox.test(black_drum_model1$r2_con, black_drum_model3$r2_con, paired = TRUE)
+wilcox.test(black_drum_model2$r2_con, black_drum_model3$r2_con, paired = TRUE)
+
+#Model to model: unconditional
+wilcox.test(black_drum_model1$r2_uncon, black_drum_model2$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model1$r2_uncon, black_drum_model3$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model2$r2_uncon, black_drum_model3$r2_uncon, paired = TRUE)
+
+#Within model
+wilcox.test(black_drum_model1$r2_con, black_drum_model1$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model2$r2_con, black_drum_model2$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model3$r2_con, black_drum_model3$r2_uncon, paired = TRUE)
+```
+
+
+###### Summary metrics
+```{r}
+mean(black_drum_model1$r2_uncon)
+sd(black_drum_model1$r2_uncon)
+mean(black_drum_model1$r2_con)
+sd(black_drum_model1$r2_con)
+
+mean(black_drum_model2$r2_uncon)
+sd(black_drum_model2$r2_uncon)
+mean(black_drum_model2$r2_con)
+sd(black_drum_model2$r2_con)
+
+mean(black_drum_model3$r2_uncon)
+sd(black_drum_model3$r2_uncon)
+mean(black_drum_model3$r2_con)
+sd(black_drum_model3$r2_con)
 ```
