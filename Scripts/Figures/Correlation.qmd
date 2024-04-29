@@ -1,0 +1,25 @@
+---
+title: "Figures"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+#run lines 1-132 in Load.SDM.Final.R (keep in InletDist and SAVkm)
+colnames(df_CPUE_length_wide_both)
+
+pdf(file = "/users/sallydowd/Desktop/graph.pdf")
+cor <- cor(df_CPUE_length_wide_both[, c(2, 4:5, 7:11)])
+corrplot(cor, mar= c(3,3,3,3)) #fishing variables are relatively correlated, for now, only select NoFishRest and FishingAll_num (not correlated), already removed bottom environmental variables previously
+
+dev.off()
+
+
+cor2 <- cor(df_CPUE_length_wide_both[, c(2, 7:11, 29:33)])
+corrplot(cor2)
+```
+

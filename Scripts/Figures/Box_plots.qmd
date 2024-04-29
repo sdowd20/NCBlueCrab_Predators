@@ -68,4 +68,3 @@ library(grid)
 annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/To_edit/CV_p2_metrics.pdf", width= 12, height= 4, dpi= 500)
 ```
-

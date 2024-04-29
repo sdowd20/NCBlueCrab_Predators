@@ -125,7 +125,7 @@ df <- df_CPUE_length_wide_indP915[1:100,]
 #supervisor
 library(foreach)
 library(doParallel)
-cl = makeCluster(2)
+cl = makeCluster(2) #make this into 30 
 registerDoParallel(cl) #communicates this to foreach
 set.seed(123)
 #workers 

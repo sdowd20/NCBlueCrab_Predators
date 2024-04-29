@@ -62,10 +62,10 @@ tbl_bd <- GAM_inference_bd %>% gt() %>% cols_width("Model" ~ px(67), "GAM" ~ px(
 gtsave(data=tbl_bd, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_bd.png")
 ```
 
-##### Prey abundance 
+##### Prey abundance
+
 ```{r}
 Prey_index <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/Prey_index.xlsx", sheet=1)
 tbl <- Prey_index %>% gt() %>% cols_width("Predator" ~ px(85), "Survey" ~ px(70), "Prey species" ~ px(300)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
 gtsave(data=tbl, "/users/sallydowd/Desktop/Ch1Data/Tables/Prey_index.png")
 ```
-
