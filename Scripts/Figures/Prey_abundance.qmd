@@ -16,19 +16,35 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
 ```{r}
-ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/reddrumP915forage.jpeg", width= 7, height= 5, dpi= 300)
-ggplot() + geom_histogram(aes(x= reddrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P120 total prey CPUE") + ylab("Count") + labs(tag= "A)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/reddrumP120forage.jpeg", width= 7, height= 5, dpi= 300)
+t1 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
+ggplot() + geom_histogram(aes(x= logreddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
 
-ggplot() + geom_histogram(aes(x= southernkingfishP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P915 total prey CPUE") + ylab("Count") + labs(tag= "B)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/skP915forage.jpeg", width= 7, height= 5, dpi= 300)
-ggplot() + geom_histogram(aes(x= southernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P120 total prey CPUE") + ylab("Count") + labs(tag= "B)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/skP120forage.jpeg", width= 7, height= 5, dpi= 300)
+t2 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P120 total prey CPUE") + ylab("Count")
+ggplot() + geom_histogram(aes(x= logreddrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P120 total prey CPUE") + ylab("Count")
 
-ggplot() + geom_histogram(aes(x= blackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/bdP120forage.jpeg", width= 7, height= 5, dpi= 300)
+t3 <- ggplot() + geom_histogram(aes(x= southernkingfishP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P915 total prey CPUE") + ylab("Count") + labs(tag= "B)")
+ggplot() + geom_histogram(aes(x= logsouthernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Southern kingfish P120 total prey CPUE") + ylab("Count")
 
-ggplot() + geom_histogram(aes(x= smallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/bc.jpeg", width= 7, height= 5, dpi= 300)
+t4 <- ggplot() + geom_histogram(aes(x= southernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P120 total prey CPUE") + ylab("Count")
+ggplot() + geom_histogram(aes(x= logsouthernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log southern kingfish P120 total prey CPUE") + ylab("Count")
+
+t5 <- ggplot() + geom_histogram(aes(x= blackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
+ggplot() + geom_histogram(aes(x= logblackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
+
+
+t6 <- ggplot() + geom_histogram(aes(x= smallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Blue crab P120 CPUE") + ylab("Count") + labs(tag= "D)")
+ggplot() + geom_histogram(aes(x= logsmallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log blue crab P120 CPUE") + ylab("Count") + labs(tag= "D)")
 ```
+
+```{r}
+library(ggpubr)
+library(grid)
+ya <- ggarrange(t1 + rremove("ylab"), t2 + rremove("ylab"), t3 + rremove("ylab"), t4 + rremove("ylab"), t5 + rremove("ylab"), t6 + rremove("ylab"), ncol= 2, nrow=3) + theme(plot.margin = margin(0.25,0.25,0.25,0.25, "cm"))
+annotate_figure(ya, left= textGrob("Count", rot= 90))
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/preyabundance.png", width= 13, height=12, dpi=300)
+```
+
+```{r}
+
+```
+
