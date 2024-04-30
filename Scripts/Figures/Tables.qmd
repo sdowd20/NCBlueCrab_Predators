@@ -23,8 +23,7 @@ gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Species_foodweb.png")
 ##### Table 2:
 
 ```{r}
-GAM_gJam_inf <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_gJam_inf.xlsx")
-
+GAM_gJam_inf <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_gJam_inf.xlsx")
 GAM_gJam_inf <- GAM_gJam_inf %>% mutate_if(is.numeric, as.character)
 GAM_gJam_inf[is.na(GAM_gJam_inf)] <- "X"
 colnames(GAM_gJam_inf) <- c("Model", "GAM ∆AIC 1", "gJam ∆DIC 1", "GAM ∆AIC 2", "gJam ∆DIC 2", "GAM ∆AIC 3", "gJam ∆DIC 3")
@@ -40,26 +39,9 @@ gtsave(data=tbl2, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_gJam_inf.png")
 ##### Table 1:
 
 ```{r}
-Methods_tbls <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/Methods_tbls.xlsx")
+Methods_tbls <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Tables/Methods_tbls.xlsx")
 tbl1 <- Methods_tbls %>% gt() %>% cols_width(everything() ~ px(120)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
 gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Methods_tbls.png")
-```
-
-##### Table 2:
-
-```{r}
-GAM_inference_rd <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference.xlsx", sheet=1)
-GAM_inference_sk <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference.xlsx", sheet=2)
-GAM_inference_bd <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference.xlsx", sheet=3)
-
-tbl_rd <- GAM_inference_rd %>% gt() %>% cols_width("Model" ~ px(67), "GAM" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5))
-gtsave(data=tbl_rd, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_rd.png")
-
-tbl_sk <- GAM_inference_sk %>% gt() %>% cols_width("Model" ~ px(67), "GAM" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5))
-gtsave(data=tbl_sk, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_sk.png")
-
-tbl_bd <- GAM_inference_bd %>% gt() %>% cols_width("Model" ~ px(67), "GAM" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5))
-gtsave(data=tbl_bd, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_bd.png")
 ```
 
 ##### Prey abundance
@@ -68,4 +50,25 @@ gtsave(data=tbl_bd, "/users/sallydowd/Desktop/Ch1Data/Tables/GAM_inference_bd.pn
 Prey_index <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/Prey_index.xlsx", sheet=1)
 tbl <- Prey_index %>% gt() %>% cols_width("Predator" ~ px(85), "Survey" ~ px(70), "Prey species" ~ px(300)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels())
 gtsave(data=tbl, "/users/sallydowd/Desktop/Ch1Data/Tables/Prey_index.png")
+```
+
+#### Appendix B: 
+##### Table 2:
+
+```{r}
+GAM_inference_rd <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Final_results/GAM_inference.xlsx", sheet=1)
+GAM_inference_sk <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Final_results/GAM_inference.xlsx", sheet=2)
+GAM_inference_bd <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Final_results/GAM_inference.xlsx", sheet=3)
+colnames(GAM_inference_rd) <- c("Model", "∆AIC", "Dev. explained", "f(x)", "s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(bluecrabP120)", "s(totalpreyP915)", "s(totalpreyP120)")
+colnames(GAM_inference_sk) <- c("Model", "∆AIC", "Dev. explained", "f(x)", "s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(bluecrabP120)", "s(totalpreyP915)", "s(totalpreyP120)")
+colnames(GAM_inference_bd) <- c("Model", "∆AIC", "Dev. explained", "f(x)", "s(avgdepth)", "s(avgssal)", "s(avgstemp)", "s(avgsdo)", "s(NoFishRest)", "s(bluecrabP120)", "s(totalpreyP915)", "s(totalpreyP120)")
+
+tbl_rd <- GAM_inference_rd %>% gt() %>% cols_width("Model" ~ px(67), "∆AIC" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5)) %>% labs(title= "example")
+gtsave(data=tbl_rd, "~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_inference_rd.png")
+
+tbl_sk <- GAM_inference_sk %>% gt() %>% cols_width("Model" ~ px(67), "∆AIC" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5))
+gtsave(data=tbl_sk, "~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_inference_sk.png")
+
+tbl_bd <- GAM_inference_bd %>% gt() %>% cols_width("Model" ~ px(67), "∆AIC" ~ px(50), "Dev. explained" ~ px(57), "f(x)" ~ px(50), "s(avgdepth)" ~ px(70), "s(avgssal)" ~ px(65), "s(avgstemp)" ~ px(72), "s(avgsdo)" ~ px(65), "s(NoFishRest)" ~ px(80), "s(bluecrabP120)" ~ px(95), "s(totalpreyP915)" ~ px(95), "s(totalpreyP120)" ~ px(95)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_options(table.font.size = px(10.5))
+gtsave(data=tbl_bd, "~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_inference_bd.png")
 ```

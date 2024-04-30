@@ -68,6 +68,7 @@ https://cran.r-project.org/web/packages/gratia/vignettes/custom-plotting.html
 Evaluate smooths at values of their covariates through smooth_estimates() and add partial residuals to the partial effects plots.
 
 We also want to add a rug plot with the observed values of the predictor variable, the credible interval around the esitmated smooth, the partial residuals as a point layer, and the estimated smooth as a line layer.
+
 ```{r}
 library(ggpubr)
 library(grid)
@@ -102,8 +103,8 @@ p5 <- plot(sm, "s(NoFishRest)", NoFishRest, pr, `s(NoFishRest)`, "s(NoFishRest)"
 p6 <- plot(sm, "s(logsmallbluecrabP120)", logsmallbluecrabP120, pr, `s(logsmallbluecrabP120)`, "s(logsmallbluecrabP120)", reddrumP915, "Small blue crab CPUE") 
 
 t1 <- ggarrange(p1, p2, p3, p4, p5, p6)
-annotate_figure(t1, left= textGrob("Partial effect", rot=90), fig.lab= "A)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/partial_rd.jpeg", width= 8, height= 6)
+annotate_figure(t1, left= textGrob("Partial effect", rot=90), fig.lab= "A)", top = "reddrumP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)\n+s(NoFishRest)+factor(Yearfactor)+s(logsmallbluecrabP120)")
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_rd.jpeg", width= 8, height= 6)
 ```
 
 ```{r}
@@ -131,8 +132,8 @@ p7 <- plot(sm2, "s(logsouthernkingfishP915forageP120)", logsouthernkingfishP915f
 
 ```{r}
 t2 <- ggarrange(p1, p2, p3, p4, p5, p6, p7)
-annotate_figure(t2, left= textGrob("Partial effect", rot=90), fig.lab= "B)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/partial_sk.jpeg", width= 8, height= 6)
+annotate_figure(t2, left= textGrob("Partial effect", rot=90), fig.lab= "B)", top= "southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logsouthernkingfishP915forageP915)+s(logsouthernkingfishP915forageP120)")
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_sk.jpeg", width= 8, height= 6)
 ```
 
 ```{r}
@@ -158,7 +159,6 @@ p6 <- plot(sm3, "s(logblackdrumP915forageP120)", logblackdrumP915forageP120, pr3
 
 ```{r}
 t3 <- ggarrange(p1, p2, p3, p4, p5, p6)
-annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)")
-ggsave("/users/sallydowd/Desktop/Ch1Data/Figures/partial_bd.jpeg", width= 8, height= 6)
+annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top= "blackdrumP915 ~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor)+s(logblackdrumP915forageP120)")
+ggsave("/users/sallydowd/Google Drive/My Drive/ResearchCh1Data/Figures/partial_bd.jpeg", width= 8, height= 6)
 ```
-
