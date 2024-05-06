@@ -18,10 +18,10 @@ setwd("~/Documents/GitHub/NCBlueCrab_Predators")
 p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
-#Filter datasets: leave it as year-around!
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2021),Month== c(5,6)) 
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2021), Month== c(5,6)) %>% dplyr::select(-Photoperiod)
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2021)) %>% dplyr::select(-Photoperiod)
+#Filter datasets: leave it as year-around! don't need to filter for month as the data processing will naturally do this 
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2019)) 
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2019)) %>% dplyr::select(-Photoperiod)
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2019)) %>% dplyr::select(-Photoperiod)
 
 ##All same column names! 
 colnames(p915_CPUEedt)
@@ -49,6 +49,8 @@ globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'pol
 globe_grid_60 <- st_make_grid(x= globe_bb, n = c(60,60), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.06° by 0.06° (5.5 km b/c half of 0.13 which was 10)
 
 globe_grid_15 <- st_make_grid(x= globe_bb, n = c(15,15), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) 
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
 ```
 
 #### 0.06 x 0.06 size
@@ -119,34 +121,7 @@ df_count$SpeciesSurvey <- paste(df_count$Speciescommonname, df_count$Survey, sep
 df_count_wide_both <- df_count %>% filter(Survey %in% "P915"|Survey %in% "P120") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "avgcount") %>% drop_na()
 ```
 
-#### Fig. 1: bar plot
-
-```{r}
-#0.12: 
-data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572, 181, 112, 68), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.12,.12,.12,.12,.12,.12))
-
-#0.06
-df_count_wide_both06 %>% filter(blackdrumP915 > 0)
-##397 observations total 
-##Positive observations: red drum: 164, black drum: 130, southern kingfish: 65
-##Zero observations: 233, 267, 332
-
-data2 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(397,397,397, 164, 130, 65), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.06,.06,.06,.06,.06,.06))
-data_t <- rbind(data, data2)
-
-#0.24
-df_count_wide_both24  %>% filter(southernkingfishP915 > 0)
-
-data3 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(432, 432, 432, 258, 220, 130), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.24,.24,.24,.24,.24,.24))
-data_t <- rbind(data, data2, data3)
-
-data_t$grid <- factor(data_t$grid, levels = c(0.06, 0.12, 0.24))
-
-ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standard_theme + labs(x= "Grid cell size", y= "Number of data records", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_bar(stat= "identity") + guides(alpha = guide_legend(title = "Type of observation")) + scale_alpha_manual(values = c("pos" = 0.6, "neg" = 1), labels= "Positive encounter") + scale_x_discrete(labels= c("0.06° x 0.06°", "0.12° x 0.12°", "0.24° x 0.24°"))
-ggsave("/Users/sallydowd/Desktop/Ch1Data/Figures/gridcell_just.jpeg", height= 5, width=7)
-```
-
-#### Fig. 2: grid pts
+#### Fig. 1: grid pts
 
 ```{r}
 #0.24
@@ -215,13 +190,51 @@ ya <- ggarrange(t4 + rremove("ylab") + rremove("xlab"), t3 + rremove("ylab") + r
 annotate_figure(ya, left= textGrob("Latitude", rot= 90), bottom= textGrob("Longitude"))
 ggsave("~/Desktop/gridded_map_compare.png", width= 12, height=4, dpi=300)
 
-
-annotate_figure(figure, left = textGrob("Common y-axis", rot = 90, vjust = 1, gp = gpar(cex = 1.3)),
-                    bottom = textGrob("Common x-axis", gp = gpar(cex = 1.3)))
-
-
 #Save legend separately 
 leg <- get_legend(t3)
 as_ggplot(leg)
 ggsave("~/Desktop/gridded_map_compare_legend.png", dpi=300, width=3, height=2)
 ```
+
+### Appendix A: 
+
+##### Fig. 1: bar plot
+
+```{r}
+#0.12: 
+data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572, 181, 112, 68), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.12,.12,.12,.12,.12,.12))
+
+#0.06
+df_count_wide_both06 %>% filter(reddrumP915 > 0)
+##397 observations total 
+##Positive observations: red drum: 164, black drum: 130, southern kingfish: 65
+##Zero observations: 233, 267, 332
+
+data2 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(397,397,397, 164, 130, 65), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.06,.06,.06,.06,.06,.06))
+data_t <- rbind(data, data2)
+
+#0.24
+df_count_wide_both24  %>% filter(southernkingfishP915 > 0)
+
+data3 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(432,432,432, 258, 220, 130), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.24,.24,.24,.24,.24,.24))
+data_t <- rbind(data, data2, data3)
+
+data_t$grid <- factor(data_t$grid, levels = c(0.06, 0.12, 0.24))
+
+ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standard_theme + labs(x= "Grid cell size", y= "Number of data records", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_bar(stat= "identity") + guides(alpha = guide_legend(title = "Type of observation")) + scale_alpha_manual(values = c("pos" = 0.6, "neg" = 1), labels= "Positive encounter") + scale_x_discrete(labels= c("0.06° x 0.06°", "0.12° x 0.12°", "0.24° x 0.24°"))
+ggsave("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/gridcell_just.jpeg", height= 5, width=7)
+```
+
+#### Fig. 2
+```{r}
+#All violin plots look about the same 
+df_count_wide_both_d <- df_count_wide_both %>% dplyr::select(Year, avgstemp) %>% mutate(GridSize= "0.12")
+df_count_wide_both06_d <- df_count_wide_both06 %>% dplyr::select(Year, avgstemp) %>% mutate(GridSize= 0.06)
+df_count_wide_both24_d <- df_count_wide_both24  %>% dplyr::select(Year, avgstemp) %>% mutate(GridSize= 0.24)
+grid_combo <- rbind(df_count_wide_both_d, df_count_wide_both06_d, df_count_wide_both24_d)
+
+
+grid_combo %>% ggplot(aes(x=GridSize, y=avgstemp)) + 
+  geom_violin() + standard_theme
+```
+

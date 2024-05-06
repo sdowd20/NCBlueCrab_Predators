@@ -33,7 +33,7 @@ gjamPlot(output = non_avg_full, plotPars = plot)
 ```
 
 ```{r}
-load("/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference2/Models/non_avg_full.RData")
+load("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Inference2/Models/non_avg_full.RData")
 ```
 
 ##### Extract parameters
@@ -97,7 +97,7 @@ comodel
 
 #ematrix, covariance 
 cor2_again <- cor2[,-9]
-emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower") + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower") + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit= c(-1,1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
 emat
 ```
 
@@ -153,4 +153,3 @@ d <- ggarrange(betaplot, emat, cooccur, comodel)
 annotate_figure(d, bottom= legend)
 ggsave(filename= "/users/sallydowd/Desktop/combo.pdf",width = 40, height=40, units=c("cm"), dpi=500)
 ```
-
