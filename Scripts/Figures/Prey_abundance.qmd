@@ -8,14 +8,14 @@ editor: visual
 packages <- c("ggplot2", "tidyverse", "lubridate", "sf", "sp", "dplyr", "rnaturalearth", "readr", "readxl", "spatialEco", "rstatix", "viridis", "BBmisc", "corrplot")
 invisible(lapply(packages, library, character.only= TRUE))
 
-standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
+standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12), axis.title=element_text(size=14))
 ```
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
-#### Appendix A: 
+#### Appendix A:
 
 ##### Figure 4:
 
@@ -37,6 +37,7 @@ ggsave("~/Desktop/t32_legend.png", dpi=300, width=6, height=4)
 ```
 
 ##### Figure 6:
+
 ```{r}
 t1 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
 ggplot() + geom_histogram(aes(x= logreddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
@@ -63,5 +64,5 @@ library(ggpubr)
 library(grid)
 ya <- ggarrange(t1 + rremove("ylab"), t2 + rremove("ylab"), t3 + rremove("ylab"), t4 + rremove("ylab"), t5 + rremove("ylab"), t6 + rremove("ylab"), ncol= 2, nrow=3) + theme(plot.margin = margin(0.25,0.25,0.25,0.25, "cm"))
 annotate_figure(ya, left= textGrob("Count", rot= 90))
-ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/preyabundance.png", width= 13, height=12, dpi=300)
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/preyabundance.png", width= 10, height=9, dpi=300)
 ```

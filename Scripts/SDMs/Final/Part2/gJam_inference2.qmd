@@ -87,19 +87,19 @@ ycor<- corReorder(ycor, order = "manual", vars=c(smallatlanticcroakerP915, small
 # ggsave("/users/sallydowd/Desktop/ss.jpeg", width= 7, height=5)
 
 #co-occurence in ydata
-cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
 cooccur
 #issue with coocur was b/c re-ran ycor 2x
 
 cor_again <- cor[,-9]
 #co-occurrence modeled, residual correlation 
-comodel <- ggcorrplot::ggcorrplot(cor_again, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+comodel <- ggcorrplot::ggcorrplot(cor_again, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
 comodel
 
 #ematrix, covariance 
 cor2_again <- cor2[,-9]
-emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower") + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit= c(-1,1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
-emat
+emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower", tl.cex= 14) + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit= c(-1,1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+emat 
 ```
 
 ```{r}
@@ -120,7 +120,7 @@ betas_tidy$Estimate <- ifelse(betas_tidy$Estimate < -2,-2, betas_tidy$Estimate)
 betaplot <- ggplot(data = betas_tidy, aes(x=variable, y=species, fill=Estimate)) +
   geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white",
                                      midpoint = 0, space = "Lab",
-                                     name="Betas") + theme(axis.text.x = element_text(angle = 90, size = 12, vjust = 1, hjust = 1), axis.text.y = element_text(size = 12))
+                                     name="Betas") + theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 1, hjust = 1), axis.text.y = element_text(size = 14))
 
 cooccur <- cooccur + theme(legend.position= "none") + 
   ggtitle("c) Co-occurence in Data")+
@@ -152,5 +152,5 @@ legend <- get_legend(cooccur + theme(legend.position="bottom") + theme(legend.ti
 library(ggpubr)
 d <- ggarrange(betaplot, emat, cooccur, comodel)
 annotate_figure(d, bottom= legend)
-ggsave(filename= "/users/sallydowd/Desktop/combo.pdf",width = 40, height=40, units=c("cm"), dpi=500)
+ggsave(filename= "/users/sallydowd/Desktop/combo.pdf",width = 35, height=30, units=c("cm"), dpi=500)
 ```
