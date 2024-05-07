@@ -133,7 +133,8 @@ annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(p
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/To_edit/CV_p2_metrics.pdf", width= 12, height= 4, dpi= 500)
 ```
 
-#### variation, didn't work really 
+#### variation, didn't work really
+
 ```{r}
 rd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + ggtitle(expression(paste("Red drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.20, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.25, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.20, label= "") + ylim(-0.30, 0.30) + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) + theme(axis.text.x=element_blank())
 ggsave("/users/sallydowd/Desktop/rd1.png", width= 7,height= 5, dpi= 300)
@@ -151,4 +152,3 @@ fig_final <- ggarrange(rd1 + rremove("ylab") + rremove("xlab"), sk1 + rremove("y
 annotate_figure(fig_final, left= textGrob(expression(paste("R"^"2")), rot= 90), bottom= textGrob("Model type"))
 ggsave("/users/sallydowd/Desktop/test.png", width= 9,height= 11, dpi= 300)
 ```
-

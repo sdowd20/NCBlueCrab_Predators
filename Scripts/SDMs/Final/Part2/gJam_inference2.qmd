@@ -89,6 +89,7 @@ ycor<- corReorder(ycor, order = "manual", vars=c(smallatlanticcroakerP915, small
 #co-occurence in ydata
 cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
 cooccur
+#issue with coocur was b/c re-ran ycor 2x
 
 cor_again <- cor[,-9]
 #co-occurrence modeled, residual correlation 

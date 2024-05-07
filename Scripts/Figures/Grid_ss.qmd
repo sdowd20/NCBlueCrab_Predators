@@ -19,9 +19,9 @@ p120_CPUE <- read_csv("Data/P120/Finalized/p120_CPUE.csv")
 p195_CPUE <- read_csv("Data/P195/Finalized/p195_CPUE.csv")
 
 #Filter datasets: leave it as year-around! don't need to filter for month as the data processing will naturally do this 
-p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2019)) 
-p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2019)) %>% dplyr::select(-Photoperiod)
-p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2019)) %>% dplyr::select(-Photoperiod)
+p915_CPUEedt <- p915_CPUE %>% dplyr::select(-...1, -Obs, -Weather, -Weather, -Sedsize, -Btmcomp, -doy, -Wbdytype, -Wbd, -Sample, -Ph, -Quad, -Secchi) %>% dplyr::rename("Location" = "Area", "Strata/station"= "Strata") %>% filter(between(Year, 2001, 2019)) 
+p120_CPUEedt <- p120_CPUE %>% filter(Core== 1|Core==2) %>% dplyr::select(-...1, -Program, -Nbrrec3, -Time, -Duration, -doy, -Core, -Sedsize, -Btmcomp, -Secchi) %>% dplyr::rename("Strata/station"= "Station") %>% filter(between(Year, 2001, 2019)) %>% dplyr::select(-Photoperiod)
+p195_CPUEedt <- p195_CPUE %>% dplyr::select(-...1, -Timestart, -Duration, -Depthend, -Wbdytype, -Wbd, -Speciesscientificname, -Depthzone, -Secchi_depthcm) %>% dplyr::rename("Ssal" = "Salinitysurface", "Bsal"= "Salinitybottom", "Stemp"= "Tempsurface", "Btemp"= "Tempbottom", "Latitude"= "Latitudestart", "Longitude"= "Longitudestart", "Colnum"= "Numbertotal", "Control1"= "Eventname", "Strata/station"= "Stationcode", "Depth"= "Depthstart") %>% filter(between(Year, 2001, 2019)) %>% dplyr::select(-Photoperiod)
 
 ##All same column names! 
 colnames(p915_CPUEedt)
@@ -136,9 +136,9 @@ p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep
 p120_CPUEedt_fig24 <- p120_CPUEedt %>% left_join(gridded24, by= "lat_lon") %>% filter(gridID %in% gridID_both24)
 
 #filter gridID dataset for only gridIDs with data
-globe_grid_15_edt <- globe_grid_15 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both24)
+globe_grid_15_edt <- globe_grid_15 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both24)
 
-t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt_fig24, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig24, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("D) 0.24° x 0.24°") 
+t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("D) 0.24° x 0.24°") 
 ```
 
 ```{r}
@@ -154,9 +154,9 @@ p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep
 p120_CPUEedt_fig12 <- p120_CPUEedt %>% left_join(gridded12, by= "lat_lon") %>% filter(gridID %in% gridID_both)
 
 #filter gridID dataset for only gridIDs with data
-globe_grid_30_edt <- globe_grid_30 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both)
+globe_grid_30_edt <- globe_grid_30 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both)
 
-t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt_fig12, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig12, aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("C) 0.12° x 0.12°") 
+t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("C) 0.12° x 0.12°") 
 
 ```
 
@@ -173,13 +173,13 @@ p120_CPUEedt$lat_lon <- paste(p120_CPUEedt$Latitude, p120_CPUEedt$Longitude, sep
 p120_CPUEedt_fig06 <- p120_CPUEedt %>% left_join(gridded06, by= "lat_lon") %>% filter(gridID %in% gridID_both06)
 
 #filter gridID dataset for only gridIDs with data
-globe_grid_60_edt <- globe_grid_60 %>% rename("gridID"= "ID") %>% filter(gridID %in% gridID_both06)
+globe_grid_60_edt <- globe_grid_60 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both06)
 
-t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = p915_CPUEedt_fig06, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt_fig06, aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("B) 0.06° x 0.06°")
+t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("B) 0.06° x 0.06°")
 ```
 
 ```{r}
-t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = p120_CPUEedt, aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + ggtitle("A) Sampling points")
+t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + ggtitle("A) Sampling points")
 ```
 
 ```{r}
@@ -190,13 +190,13 @@ ya <- ggarrange(t4 + rremove("ylab") + rremove("xlab"), t3 + rremove("ylab") + r
 annotate_figure(ya, left= textGrob("Latitude", rot= 90), bottom= textGrob("Longitude"))
 ggsave("~/Desktop/gridded_map_compare.png", width= 12, height=4, dpi=300)
 
-#Save legend separately 
-leg <- get_legend(t3)
-as_ggplot(leg)
-ggsave("~/Desktop/gridded_map_compare_legend.png", dpi=300, width=3, height=2)
+# #Save legend separately 
+# leg <- get_legend(t3)
+# as_ggplot(leg)
+# ggsave("~/Desktop/gridded_map_compare_legend.png", dpi=300, width=3, height=2)
 ```
 
-### Appendix A: 
+### Appendix A:
 
 ##### Fig. 1: bar plot
 
@@ -226,6 +226,7 @@ ggsave("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/gridcell
 ```
 
 #### Fig. 2
+
 ```{r}
 #All violin plots look about the same 
 df_count_wide_both_d <- df_count_wide_both %>% dplyr::select(Year, avgstemp) %>% mutate(GridSize= "0.12")
@@ -237,4 +238,3 @@ grid_combo <- rbind(df_count_wide_both_d, df_count_wide_both06_d, df_count_wide_
 grid_combo %>% ggplot(aes(x=GridSize, y=avgstemp)) + 
   geom_violin() + standard_theme
 ```
-

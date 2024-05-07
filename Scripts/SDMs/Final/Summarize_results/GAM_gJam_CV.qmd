@@ -17,19 +17,19 @@ library(dplyr)
 
 ```{r}
 #Env_bc 
-reddrum_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_cv_unsumm.csv")
+reddrum_gam_env_bc <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_cv_unsumm.csv")
 reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-reddrum_gJam_env_bc <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc.csv")
+reddrum_gJam_env_bc <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc.csv")
 
 #Env_forage
-reddrum_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_forage_cv_unsumm.csv")
+reddrum_gam_env_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_forage_cv_unsumm.csv")
 reddrum_gam_env_forage <- reddrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-reddrum_gJam_env_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage.csv")
+reddrum_gJam_env_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage.csv")
 
 #Env_bc_forage
-reddrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_forage_cv_unsumm.csv")
+reddrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_forage_cv_unsumm.csv")
 reddrum_gam_env_bc_forage <- reddrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-reddrum_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
+reddrum_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
 ```
 
 ###### Pairwise test
@@ -66,19 +66,19 @@ wilcox.test(reddrum_gJam_env_bc_forage$rmse_uncon, reddrum_gJam_env_bc_forage$rm
 
 ```{r}
 #Env_bc 
-southernkingfish_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_cv_unsumm.csv")
+southernkingfish_gam_env_bc <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_cv_unsumm.csv")
 southernkingfish_gam_env_bc <- southernkingfish_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-southernkingfish_gJam_env_bc <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc.csv")
+southernkingfish_gJam_env_bc <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc.csv")
 
 #Env_forage
-southernkingfish_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_forage_cv_unsumm.csv")
+southernkingfish_gam_env_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_forage_cv_unsumm.csv")
 southernkingfish_gam_env_forage <- southernkingfish_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-southernkingfish_gJam_env_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_forage.csv")
+southernkingfish_gJam_env_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_forage.csv")
 
 #Env_bc_forage
-southernkingfish_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_forage_cv_unsumm.csv")
+southernkingfish_gam_env_bc_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_forage_cv_unsumm.csv")
 southernkingfish_gam_env_bc_forage <- southernkingfish_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-southernkingfish_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
+southernkingfish_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
 ```
 
 ###### Pairwise test
@@ -115,19 +115,19 @@ wilcox.test(southernkingfish_gJam_env_bc_forage$rmse_uncon, southernkingfish_gJa
 
 ```{r}
 #Env_bc 
-blackdrum_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv_unsumm.csv")
+blackdrum_gam_env_bc <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv_unsumm.csv")
 blackdrum_gam_env_bc <- blackdrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-blackdrum_gJam_env_bc <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc.csv")
+blackdrum_gJam_env_bc <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc.csv")
 
 #Env_forage
-blackdrum_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv_unsumm.csv")
+blackdrum_gam_env_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv_unsumm.csv")
 blackdrum_gam_env_forage <- blackdrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-blackdrum_gJam_env_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_forage.csv")
+blackdrum_gJam_env_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_forage.csv")
 
 #Env_bc_forage
-blackdrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv_unsumm.csv")
+blackdrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv_unsumm.csv")
 blackdrum_gam_env_bc_forage <- blackdrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
-blackdrum_gJam_env_bc_forage <- read.csv("~/Desktop/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
+blackdrum_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
 ```
 
 ###### Pairwise test
@@ -165,9 +165,9 @@ wilcox.test(blackdrum_gJam_env_bc_forage$rmse_uncon, blackdrum_gJam_env_bc_forag
 ###### Load in data
 
 ```{r}
-reddrum_model1 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model1.csv")
-reddrum_model2 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model2.csv")
-reddrum_model3 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model3.csv")
+reddrum_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/reddrum_model1.csv")
+reddrum_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/reddrum_model2.csv")
+reddrum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/reddrum_model3.csv")
 ```
 
 ###### Pairwise
@@ -213,9 +213,9 @@ sd(reddrum_model3$r2_con)
 ###### Load in data
 
 ```{r}
-southern_kingfish_model1 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
-southern_kingfish_model2 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
-southern_kingfish_model3 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+southern_kingfish_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
+southern_kingfish_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
+southern_kingfish_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
 ```
 
 ###### Pairwise
@@ -261,9 +261,9 @@ sd(southern_kingfish_model3$r2_con)
 ###### Load in data
 
 ```{r}
-black_drum_model1 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
-black_drum_model2 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
-black_drum_model3 <- read.csv("/Users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+black_drum_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
+black_drum_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
+black_drum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
 ```
 
 ###### Pairwise
