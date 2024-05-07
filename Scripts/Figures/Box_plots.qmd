@@ -111,12 +111,12 @@ ggsave("/users/sallydowd/desktop/Ch1Data/Figures/To_edit/bd_metrics.pdf", width=
 #### Part 2
 
 ```{r}
-prediction_boxplot2 <- read_excel("/users/sallydowd/Desktop/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
+prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
 df <- prediction_boxplot2
 df$Prediction < - factor(df$Prediction, levels=c("Traditional", "Conditional"))
 ```
 
-##### All species
+##### R2
 
 ```{r}
 rd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + 
@@ -133,22 +133,18 @@ annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(p
 ggsave("/users/sallydowd/desktop/Ch1Data/Figures/To_edit/CV_p2_metrics.pdf", width= 12, height= 4, dpi= 500)
 ```
 
-#### variation, didn't work really
+##### RMSE
 
 ```{r}
-rd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + ggtitle(expression(paste("Red drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.20, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.25, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.20, label= "") + ylim(-0.30, 0.30) + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) + theme(axis.text.x=element_blank())
-ggsave("/users/sallydowd/Desktop/rd1.png", width= 7,height= 5, dpi= 300)
+rd_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0135, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0145, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0135, label= "") + ggtitle("Red drum")
 
-sk1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + ggtitle(expression(paste("Southern kingfish, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)") + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.26, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.26, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.28, label= "") + ylim(-0.02, 0.285) + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) +theme(axis.text.x=element_blank())
-ggsave("/users/sallydowd/Desktop/sk1.png", width= 7,height= 5, dpi= 300)
+sk_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.00155)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00145, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.00152, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.00145, label= "") + ggtitle("Southern kingfish")
 
-bd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + ggtitle(expression(paste("Black drum, R"^"2"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "C)") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(-1.2, 0.8) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.6, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.6, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.75, label= "") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))
-ggsave("/users/sallydowd/Desktop/bd1.png", width= 7,height= 5, dpi= 300)
-```
+bd_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.0115)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0098, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.011, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0098, label= "") + ggtitle("Black drum")
 
-```{r}
+fig <- ggarrange(rd_p3 + rremove("xlab") + rremove("ylab"), sk_p3 + rremove("xlab") + rremove("ylab"), bd_p3 + rremove("xlab") + rremove("ylab"), ncol= 3)
 library(grid)
-fig_final <- ggarrange(rd1 + rremove("ylab") + rremove("xlab"), sk1 + rremove("ylab") + rremove("xlab"), bd1 + rremove("ylab") + rremove("xlab"), nrow= 3)
-annotate_figure(fig_final, left= textGrob(expression(paste("R"^"2")), rot= 90), bottom= textGrob("Model type"))
-ggsave("/users/sallydowd/Desktop/test.png", width= 9,height= 11, dpi= 300)
+annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("RMSE")), rot= 90))
+ggsave("/users/sallydowd/Desktop/CV_p3_metrics.pdf", width= 12, height= 4, dpi= 500)
 ```
+

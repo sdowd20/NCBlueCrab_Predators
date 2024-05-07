@@ -177,11 +177,17 @@ reddrum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1D
 wilcox.test(reddrum_model1$r2_con, reddrum_model2$r2_con, paired = TRUE)
 wilcox.test(reddrum_model1$r2_con, reddrum_model3$r2_con, paired = TRUE)
 wilcox.test(reddrum_model2$r2_con, reddrum_model3$r2_con, paired = TRUE)
+wilcox.test(reddrum_model1$rmse_con, reddrum_model2$rmse_con, paired = TRUE)
+wilcox.test(reddrum_model1$rmse_con, reddrum_model3$rmse_con, paired = TRUE)
+wilcox.test(reddrum_model2$rmse_con, reddrum_model3$rmse_con, paired = TRUE)
 
 #Model to model: unconditional
 wilcox.test(reddrum_model1$r2_uncon, reddrum_model2$r2_uncon, paired = TRUE)
 wilcox.test(reddrum_model1$r2_uncon, reddrum_model3$r2_uncon, paired = TRUE)
 wilcox.test(reddrum_model2$r2_uncon, reddrum_model3$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model1$rmse_uncon, reddrum_model2$rmse_uncon, paired = TRUE)
+wilcox.test(reddrum_model1$rmse_uncon, reddrum_model3$rmse_uncon, paired = TRUE)
+wilcox.test(reddrum_model2$rmse_uncon, reddrum_model3$rmse_uncon, paired = TRUE)
 
 #Within model
 wilcox.test(reddrum_model1$r2_con, reddrum_model1$r2_uncon, paired = TRUE)
@@ -194,18 +200,30 @@ wilcox.test(reddrum_model3$r2_con, reddrum_model3$r2_uncon, paired = TRUE)
 ```{r}
 mean(reddrum_model1$r2_uncon)
 sd(reddrum_model1$r2_uncon)
+mean(reddrum_model1$rmse_uncon)
+sd(reddrum_model1$rmse_uncon)
 mean(reddrum_model1$r2_con)
 sd(reddrum_model1$r2_con)
+mean(reddrum_model1$rmse_con)
+sd(reddrum_model1$rmse_con)
 
 mean(reddrum_model2$r2_uncon)
 sd(reddrum_model2$r2_uncon)
+mean(reddrum_model2$rmse_uncon)
+sd(reddrum_model2$rmse_uncon)
 mean(reddrum_model2$r2_con)
 sd(reddrum_model2$r2_con)
+mean(reddrum_model2$rmse_con)
+sd(reddrum_model2$rmse_con)
 
 mean(reddrum_model3$r2_uncon)
 sd(reddrum_model3$r2_uncon)
+mean(reddrum_model3$rmse_uncon)
+sd(reddrum_model3$rmse_uncon)
 mean(reddrum_model3$r2_con)
 sd(reddrum_model3$r2_con)
+mean(reddrum_model3$rmse_con)
+sd(reddrum_model3$rmse_con)
 ```
 
 ##### Southern kingfish
@@ -225,11 +243,17 @@ southern_kingfish_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Res
 wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model2$r2_con, paired = TRUE)
 wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model3$r2_con, paired = TRUE)
 wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model3$r2_con, paired = TRUE)
+wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model2$rmse_con, paired = TRUE)
+wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model3$rmse_con, paired = TRUE)
+wilcox.test(southern_kingfish_model2$rmse_con, southern_kingfish_model3$rmse_con, paired = TRUE)
 
 #Model to model: unconditional
 wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model2$r2_uncon, paired = TRUE)
 wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model3$r2_uncon, paired = TRUE)
 wilcox.test(southern_kingfish_model2$r2_uncon, southern_kingfish_model3$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model2$rmse_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model2$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = TRUE)
 
 #Within model
 wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model1$r2_uncon, paired = TRUE)
@@ -242,18 +266,30 @@ wilcox.test(southern_kingfish_model3$r2_con, southern_kingfish_model3$r2_uncon, 
 ```{r}
 mean(southern_kingfish_model1$r2_uncon)
 sd(southern_kingfish_model1$r2_uncon)
+mean(southern_kingfish_model1$rmse_uncon)
+sd(southern_kingfish_model1$rmse_uncon)
 mean(southern_kingfish_model1$r2_con)
 sd(southern_kingfish_model1$r2_con)
+mean(southern_kingfish_model1$rmse_con)
+sd(southern_kingfish_model1$rmse_con)
 
 mean(southern_kingfish_model2$r2_uncon)
 sd(southern_kingfish_model2$r2_uncon)
+mean(southern_kingfish_model2$rmse_uncon)
+sd(southern_kingfish_model2$rmse_uncon)
 mean(southern_kingfish_model2$r2_con)
 sd(southern_kingfish_model2$r2_con)
+mean(southern_kingfish_model2$rmse_con)
+sd(southern_kingfish_model2$rmse_con)
 
 mean(southern_kingfish_model3$r2_uncon)
 sd(southern_kingfish_model3$r2_uncon)
+mean(southern_kingfish_model3$rmse_uncon)
+sd(southern_kingfish_model3$rmse_uncon)
 mean(southern_kingfish_model3$r2_con)
 sd(southern_kingfish_model3$r2_con)
+mean(southern_kingfish_model3$rmse_con)
+sd(southern_kingfish_model3$rmse_con)
 ```
 
 ##### Black drum
@@ -261,9 +297,9 @@ sd(southern_kingfish_model3$r2_con)
 ###### Load in data
 
 ```{r}
-black_drum_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
-black_drum_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
-black_drum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+black_drum_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model1.csv")
+black_drum_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model2.csv")
+black_drum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model3.csv")
 ```
 
 ###### Pairwise
@@ -273,11 +309,17 @@ black_drum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/C
 wilcox.test(black_drum_model1$r2_con, black_drum_model2$r2_con, paired = TRUE)
 wilcox.test(black_drum_model1$r2_con, black_drum_model3$r2_con, paired = TRUE)
 wilcox.test(black_drum_model2$r2_con, black_drum_model3$r2_con, paired = TRUE)
+wilcox.test(black_drum_model1$rmse_con, black_drum_model2$rmse_con, paired = TRUE)
+wilcox.test(black_drum_model1$rmse_con, black_drum_model3$rmse_con, paired = TRUE)
+wilcox.test(black_drum_model2$rmse_con, black_drum_model3$rmse_con, paired = TRUE)
 
 #Model to model: unconditional
 wilcox.test(black_drum_model1$r2_uncon, black_drum_model2$r2_uncon, paired = TRUE)
 wilcox.test(black_drum_model1$r2_uncon, black_drum_model3$r2_uncon, paired = TRUE)
 wilcox.test(black_drum_model2$r2_uncon, black_drum_model3$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model1$rmse_uncon, black_drum_model2$rmse_uncon, paired = TRUE)
+wilcox.test(black_drum_model1$rmse_uncon, black_drum_model3$rmse_uncon, paired = TRUE)
+wilcox.test(black_drum_model2$rmse_uncon, black_drum_model3$rmse_uncon, paired = TRUE)
 
 #Within model
 wilcox.test(black_drum_model1$r2_con, black_drum_model1$r2_uncon, paired = TRUE)
@@ -290,16 +332,28 @@ wilcox.test(black_drum_model3$r2_con, black_drum_model3$r2_uncon, paired = TRUE)
 ```{r}
 mean(black_drum_model1$r2_uncon)
 sd(black_drum_model1$r2_uncon)
+mean(black_drum_model1$rmse_uncon)
+sd(black_drum_model1$rmse_uncon)
 mean(black_drum_model1$r2_con)
 sd(black_drum_model1$r2_con)
+mean(black_drum_model1$rmse_con)
+sd(black_drum_model1$rmse_con)
 
 mean(black_drum_model2$r2_uncon)
 sd(black_drum_model2$r2_uncon)
+mean(black_drum_model2$rmse_uncon)
+sd(black_drum_model2$rmse_uncon)
 mean(black_drum_model2$r2_con)
 sd(black_drum_model2$r2_con)
+mean(black_drum_model2$rmse_con)
+sd(black_drum_model2$rmse_con)
 
 mean(black_drum_model3$r2_uncon)
 sd(black_drum_model3$r2_uncon)
+mean(black_drum_model3$rmse_uncon)
+sd(black_drum_model3$rmse_uncon)
 mean(black_drum_model3$r2_con)
 sd(black_drum_model3$r2_con)
+mean(black_drum_model3$rmse_con)
+sd(black_drum_model3$rmse_con)
 ```
