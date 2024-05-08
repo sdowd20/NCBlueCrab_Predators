@@ -60,6 +60,51 @@ wilcox.test(reddrum_gam_env_bc_forage$mean_rmse, reddrum_gJam_env_bc_forage$rmse
 wilcox.test(reddrum_gJam_env_bc_forage$rmse_uncon, reddrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
 ```
 
+###### Summary metrics
+```{r}
+#Env + BC
+mean(reddrum_gam_env_bc$mean_rsq)
+sd(reddrum_gam_env_bc$mean_rsq)
+mean(reddrum_gJam_env_bc$r2_uncon)
+sd(reddrum_gJam_env_bc$r2_uncon)
+mean(reddrum_gJam_env_bc$r2_con)
+sd(reddrum_gJam_env_bc$r2_con)
+mean(reddrum_gam_env_bc$mean_rmse)
+sd(reddrum_gam_env_bc$mean_rmse)
+mean(reddrum_gJam_env_bc$rmse_uncon)
+sd(reddrum_gJam_env_bc$rmse_uncon)
+mean(reddrum_gJam_env_bc$rmse_con)
+sd(reddrum_gJam_env_bc$rmse_con)
+
+#Env + forage
+mean(reddrum_gam_env_forage$mean_rsq)
+sd(reddrum_gam_env_forage$mean_rsq)
+mean(reddrum_gJam_env_forage$r2_uncon)
+sd(reddrum_gJam_env_forage$r2_uncon)
+mean(reddrum_gJam_env_forage$r2_con)
+sd(reddrum_gJam_env_forage$r2_con)
+mean(reddrum_gam_env_forage$mean_rmse)
+sd(reddrum_gam_env_forage$mean_rmse)
+mean(reddrum_gJam_env_forage$rmse_uncon)
+sd(reddrum_gJam_env_forage$rmse_uncon)
+mean(reddrum_gJam_env_forage$rmse_con)
+sd(reddrum_gJam_env_forage$rmse_con)
+
+#Env + BC + forage
+mean(reddrum_gam_env_bc_forage$mean_rsq)
+sd(reddrum_gam_env_bc_forage$mean_rsq)
+mean(reddrum_gJam_env_bc_forage$r2_uncon)
+sd(reddrum_gJam_env_bc_forage$r2_uncon)
+mean(reddrum_gJam_env_bc_forage$r2_con)
+sd(reddrum_gJam_env_bc_forage$r2_con)
+mean(reddrum_gam_env_bc_forage$mean_rmse)
+sd(reddrum_gam_env_bc_forage$mean_rmse)
+mean(reddrum_gJam_env_bc_forage$rmse_uncon)
+sd(reddrum_gJam_env_bc_forage$rmse_uncon)
+mean(reddrum_gJam_env_bc_forage$rmse_con)
+sd(reddrum_gJam_env_bc_forage$rmse_con)
+```
+
 ##### Southern kingfish
 
 ###### Load in data
@@ -107,6 +152,51 @@ wilcox.test(southernkingfish_gJam_env_bc_forage$r2_uncon, southernkingfish_gJam_
 wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_env_bc_forage$rmse_uncon, paired = FALSE)
 wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_env_bc_forage$rmse_con, paired = FALSE) 
 wilcox.test(southernkingfish_gJam_env_bc_forage$rmse_uncon, southernkingfish_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
+
+###### Summary metrics
+```{r}
+#Env + BC
+mean(southernkingfish_gam_env_bc$mean_rsq)
+sd(southernkingfish_gam_env_bc$mean_rsq)
+mean(southernkingfish_gJam_env_bc$r2_uncon)
+sd(southernkingfish_gJam_env_bc$r2_uncon)
+mean(southernkingfish_gJam_env_bc$r2_con)
+sd(southernkingfish_gJam_env_bc$r2_con)
+mean(southernkingfish_gam_env_bc$mean_rmse)
+sd(southernkingfish_gam_env_bc$mean_rmse)
+mean(southernkingfish_gJam_env_bc$rmse_uncon)
+sd(southernkingfish_gJam_env_bc$rmse_uncon)
+mean(southernkingfish_gJam_env_bc$rmse_con)
+sd(southernkingfish_gJam_env_bc$rmse_con)
+
+#Env + forage
+mean(southernkingfish_gam_env_forage$mean_rsq)
+sd(southernkingfish_gam_env_forage$mean_rsq)
+mean(southernkingfish_gJam_env_forage$r2_uncon)
+sd(southernkingfish_gJam_env_forage$r2_uncon)
+mean(southernkingfish_gJam_env_forage$r2_con)
+sd(southernkingfish_gJam_env_forage$r2_con)
+mean(southernkingfish_gam_env_forage$mean_rmse)
+sd(southernkingfish_gam_env_forage$mean_rmse)
+mean(southernkingfish_gJam_env_forage$rmse_uncon)
+sd(southernkingfish_gJam_env_forage$rmse_uncon)
+mean(southernkingfish_gJam_env_forage$rmse_con)
+sd(southernkingfish_gJam_env_forage$rmse_con)
+
+#Env + BC + forage 
+mean(southernkingfish_gam_env_bc_forage$mean_rsq)
+sd(southernkingfish_gam_env_bc_forage$mean_rsq)
+mean(southernkingfish_gJam_env_bc_forage$r2_uncon)
+sd(southernkingfish_gJam_env_bc_forage$r2_uncon)
+mean(southernkingfish_gJam_env_bc_forage$r2_con)
+sd(southernkingfish_gJam_env_bc_forage$r2_con)
+mean(southernkingfish_gam_env_bc_forage$mean_rmse)
+sd(southernkingfish_gam_env_bc_forage$mean_rmse)
+mean(southernkingfish_gJam_env_bc_forage$rmse_uncon)
+sd(southernkingfish_gJam_env_bc_forage$rmse_uncon)
+mean(southernkingfish_gJam_env_bc_forage$rmse_con)
+sd(southernkingfish_gJam_env_bc_forage$rmse_con)
 ```
 
 ##### Black drum
@@ -158,6 +248,48 @@ wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$
 wilcox.test(blackdrum_gJam_env_bc_forage$rmse_uncon, blackdrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
 ```
 
+###### Summary metrics
+```{r}
+mean(blackdrum_gam_env_bc$mean_rsq)
+sd(blackdrum_gam_env_bc$mean_rsq)
+mean(blackdrum_gJam_env_bc$r2_uncon)
+sd(blackdrum_gJam_env_bc$r2_uncon)
+mean(blackdrum_gJam_env_bc$r2_con)
+sd(blackdrum_gJam_env_bc$r2_con)
+mean(blackdrum_gam_env_bc$mean_rmse)
+sd(blackdrum_gam_env_bc$mean_rmse)
+mean(blackdrum_gJam_env_bc$rmse_uncon)
+sd(blackdrum_gJam_env_bc$rmse_uncon)
+mean(blackdrum_gJam_env_bc$rmse_con)
+sd(blackdrum_gJam_env_bc$rmse_con)
+
+mean(blackdrum_gam_env_forage$mean_rsq)
+sd(blackdrum_gam_env_forage$mean_rsq)
+mean(blackdrum_gJam_env_forage$r2_uncon)
+sd(blackdrum_gJam_env_forage$r2_uncon)
+mean(blackdrum_gJam_env_forage$r2_con)
+sd(blackdrum_gJam_env_forage$r2_con)
+mean(blackdrum_gam_env_forage$mean_rmse)
+sd(blackdrum_gam_env_forage$mean_rmse)
+mean(blackdrum_gJam_env_forage$rmse_uncon)
+sd(blackdrum_gJam_env_forage$rmse_uncon)
+mean(blackdrum_gJam_env_forage$rmse_con)
+sd(blackdrum_gJam_env_forage$rmse_con)
+
+mean(blackdrum_gam_env_bc_forage$mean_rsq)
+sd(blackdrum_gam_env_bc_forage$mean_rsq)
+mean(blackdrum_gJam_env_bc_forage$r2_uncon)
+sd(blackdrum_gJam_env_bc_forage$r2_uncon)
+mean(blackdrum_gJam_env_bc_forage$r2_con)
+sd(blackdrum_gJam_env_bc_forage$r2_con)
+mean(blackdrum_gam_env_bc_forage$mean_rmse)
+sd(blackdrum_gam_env_bc_forage$mean_rmse)
+mean(blackdrum_gJam_env_bc_forage$rmse_uncon)
+sd(blackdrum_gJam_env_bc_forage$rmse_uncon)
+mean(blackdrum_gJam_env_bc_forage$rmse_con)
+sd(blackdrum_gJam_env_bc_forage$rmse_con)
+```
+
 #### Part 2
 
 ##### Red drum
@@ -174,20 +306,20 @@ reddrum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1D
 
 ```{r}
 #Model to model: conditional
-wilcox.test(reddrum_model1$r2_con, reddrum_model2$r2_con, paired = TRUE)
-wilcox.test(reddrum_model1$r2_con, reddrum_model3$r2_con, paired = TRUE)
-wilcox.test(reddrum_model2$r2_con, reddrum_model3$r2_con, paired = TRUE)
-wilcox.test(reddrum_model1$rmse_con, reddrum_model2$rmse_con, paired = TRUE)
-wilcox.test(reddrum_model1$rmse_con, reddrum_model3$rmse_con, paired = TRUE)
-wilcox.test(reddrum_model2$rmse_con, reddrum_model3$rmse_con, paired = TRUE)
+wilcox.test(reddrum_model1$r2_con, reddrum_model2$r2_con, paired = FALSE)
+wilcox.test(reddrum_model1$r2_con, reddrum_model3$r2_con, paired = FALSE)
+wilcox.test(reddrum_model2$r2_con, reddrum_model3$r2_con, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_con, reddrum_model2$rmse_con, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_con, reddrum_model3$rmse_con, paired = FALSE)
+wilcox.test(reddrum_model2$rmse_con, reddrum_model3$rmse_con, paired = FALSE)
 
 #Model to model: unconditional
-wilcox.test(reddrum_model1$r2_uncon, reddrum_model2$r2_uncon, paired = TRUE)
-wilcox.test(reddrum_model1$r2_uncon, reddrum_model3$r2_uncon, paired = TRUE)
-wilcox.test(reddrum_model2$r2_uncon, reddrum_model3$r2_uncon, paired = TRUE)
-wilcox.test(reddrum_model1$rmse_uncon, reddrum_model2$rmse_uncon, paired = TRUE)
-wilcox.test(reddrum_model1$rmse_uncon, reddrum_model3$rmse_uncon, paired = TRUE)
-wilcox.test(reddrum_model2$rmse_uncon, reddrum_model3$rmse_uncon, paired = TRUE)
+wilcox.test(reddrum_model1$r2_uncon, reddrum_model2$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_model1$r2_uncon, reddrum_model3$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_model2$r2_uncon, reddrum_model3$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_uncon, reddrum_model2$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_uncon, reddrum_model3$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_model2$rmse_uncon, reddrum_model3$rmse_uncon, paired = FALSE)
 
 #Within model
 wilcox.test(reddrum_model1$r2_con, reddrum_model1$r2_uncon, paired = TRUE)
@@ -240,20 +372,20 @@ southern_kingfish_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Res
 
 ```{r}
 #Model to model: conditional
-wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model2$r2_con, paired = TRUE)
-wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model3$r2_con, paired = TRUE)
-wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model3$r2_con, paired = TRUE)
-wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model2$rmse_con, paired = TRUE)
-wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model3$rmse_con, paired = TRUE)
-wilcox.test(southern_kingfish_model2$rmse_con, southern_kingfish_model3$rmse_con, paired = TRUE)
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model2$r2_con, paired = FALSE)
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model3$r2_con, paired = FALSE)
+wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model3$r2_con, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model2$rmse_con, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model3$rmse_con, paired = FALSE)
+wilcox.test(southern_kingfish_model2$rmse_con, southern_kingfish_model3$rmse_con, paired = FALSE)
 
 #Model to model: unconditional
-wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model2$r2_uncon, paired = TRUE)
-wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model3$r2_uncon, paired = TRUE)
-wilcox.test(southern_kingfish_model2$r2_uncon, southern_kingfish_model3$r2_uncon, paired = TRUE)
-wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model2$rmse_uncon, paired = TRUE)
-wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = TRUE)
-wilcox.test(southern_kingfish_model2$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model2$r2_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model3$r2_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model2$r2_uncon, southern_kingfish_model3$r2_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model2$rmse_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model2$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = FALSE)
 
 #Within model
 wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model1$r2_uncon, paired = TRUE)
@@ -306,20 +438,20 @@ black_drum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/C
 
 ```{r}
 #Model to model: conditional
-wilcox.test(black_drum_model1$r2_con, black_drum_model2$r2_con, paired = TRUE)
-wilcox.test(black_drum_model1$r2_con, black_drum_model3$r2_con, paired = TRUE)
-wilcox.test(black_drum_model2$r2_con, black_drum_model3$r2_con, paired = TRUE)
-wilcox.test(black_drum_model1$rmse_con, black_drum_model2$rmse_con, paired = TRUE)
-wilcox.test(black_drum_model1$rmse_con, black_drum_model3$rmse_con, paired = TRUE)
-wilcox.test(black_drum_model2$rmse_con, black_drum_model3$rmse_con, paired = TRUE)
+wilcox.test(black_drum_model1$r2_con, black_drum_model2$r2_con, paired = FALSE)
+wilcox.test(black_drum_model1$r2_con, black_drum_model3$r2_con, paired = FALSE)
+wilcox.test(black_drum_model2$r2_con, black_drum_model3$r2_con, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_con, black_drum_model2$rmse_con, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_con, black_drum_model3$rmse_con, paired = FALSE)
+wilcox.test(black_drum_model2$rmse_con, black_drum_model3$rmse_con, paired = FALSE)
 
 #Model to model: unconditional
-wilcox.test(black_drum_model1$r2_uncon, black_drum_model2$r2_uncon, paired = TRUE)
-wilcox.test(black_drum_model1$r2_uncon, black_drum_model3$r2_uncon, paired = TRUE)
-wilcox.test(black_drum_model2$r2_uncon, black_drum_model3$r2_uncon, paired = TRUE)
-wilcox.test(black_drum_model1$rmse_uncon, black_drum_model2$rmse_uncon, paired = TRUE)
-wilcox.test(black_drum_model1$rmse_uncon, black_drum_model3$rmse_uncon, paired = TRUE)
-wilcox.test(black_drum_model2$rmse_uncon, black_drum_model3$rmse_uncon, paired = TRUE)
+wilcox.test(black_drum_model1$r2_uncon, black_drum_model2$r2_uncon, paired = FALSE)
+wilcox.test(black_drum_model1$r2_uncon, black_drum_model3$r2_uncon, paired = FALSE)
+wilcox.test(black_drum_model2$r2_uncon, black_drum_model3$r2_uncon, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_uncon, black_drum_model2$rmse_uncon, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_uncon, black_drum_model3$rmse_uncon, paired = FALSE)
+wilcox.test(black_drum_model2$rmse_uncon, black_drum_model3$rmse_uncon, paired = FALSE)
 
 #Within model
 wilcox.test(black_drum_model1$r2_con, black_drum_model1$r2_uncon, paired = TRUE)
