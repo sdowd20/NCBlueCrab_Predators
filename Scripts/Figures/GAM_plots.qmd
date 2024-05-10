@@ -104,7 +104,7 @@ p6 <- plot(sm, "s(logsmallbluecrabP120)", logsmallbluecrabP120, pr, `s(logsmallb
 
 t1 <- ggarrange(p1, p2, p3, p4, p5, p6)
 annotate_figure(t1, left= textGrob("Partial effect", rot=90), fig.lab= "A)", top = "reddrumP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)\n+s(NoFishRest)+factor(Yearfactor)+s(logsmallbluecrabP120)")
-ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_rd.jpeg", width= 8, height= 6)
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_rd.jpeg", width= 9, height= 6)
 ```
 
 ```{r}
@@ -133,7 +133,7 @@ p7 <- plot(sm2, "s(logsouthernkingfishP915forageP120)", logsouthernkingfishP915f
 ```{r}
 t2 <- ggarrange(p1, p2, p3, p4, p5, p6, p7)
 annotate_figure(t2, left= textGrob("Partial effect", rot=90), fig.lab= "B)", top= "southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logsouthernkingfishP915forageP915)+s(logsouthernkingfishP915forageP120)")
-ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_sk.jpeg", width= 8, height= 6)
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_sk.jpeg", width= 9, height= 6)
 ```
 
 ```{r}
@@ -159,6 +159,6 @@ p6 <- plot(sm3, "s(logblackdrumP915forageP120)", logblackdrumP915forageP120, pr3
 
 ```{r}
 t3 <- ggarrange(p1, p2, p3, p4, p5, p6)
-annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top= "blackdrumP915 ~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor)+s(logblackdrumP915forageP120)")
-ggsave("/users/sallydowd/Google Drive/My Drive/ResearchCh1Data/Figures/partial_bd.jpeg", width= 8, height= 6)
+annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top= "blackdrumP915 ~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logblackdrumP915forageP120)")
+ggsave("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Figures/partial_bd.jpeg", width= 9, height= 6)
 ```
