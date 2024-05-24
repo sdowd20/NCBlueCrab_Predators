@@ -9,9 +9,10 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
 ### Generalized additive models
+
 #### Red drum
 
-##### Models
+##### All models
 
 ```{r}
 reddrum_env <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
@@ -30,6 +31,7 @@ AIC(reddrum_env, reddrum_bc, reddrum_forage, reddrum_env_bc, reddrum_env_forage,
 ```
 
 ##### Diagnostics
+
 ```{r}
 summary(reddrum_env)
 summary(reddrum_bc)
@@ -73,7 +75,7 @@ plot(reddrum_env_bc_forage, shade= "true")
 
 #### Southern kingfish
 
-##### Models
+##### All models
 
 ```{r}
 southernkingfish_env <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
@@ -91,4 +93,239 @@ southernkingfish_env_bc_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal
 AIC(southernkingfish_env, southernkingfish_bc, southernkingfish_forage, southernkingfish_env_bc, southernkingfish_env_forage, southernkingfish_env_bc_forage) %>% arrange(AIC)
 ```
 
+##### Diagnostics
 
+```{r}
+summary(southernkingfish_env)
+summary(southernkingfish_bc)
+summary(southernkingfish_forage)
+summary(southernkingfish_env_bc)
+summary(southernkingfish_env_forage)
+summary(southernkingfish_env_bc_forage)
+
+#check p-value for anova across years 
+anova(southernkingfish_env)
+anova(southernkingfish_bc)
+anova(southernkingfish_forage)
+anova(southernkingfish_env_bc)
+anova(southernkingfish_env_forage)
+anova(southernkingfish_env_bc_forage)
+
+gam.check(southernkingfish_env)
+gam.check(southernkingfish_bc)
+gam.check(southernkingfish_forage)
+gam.check(southernkingfish_env_bc)
+gam.check(southernkingfish_env_forage)
+gam.check(southernkingfish_env_bc_forage)
+
+vif(southernkingfish_env)
+vif(southernkingfish_bc)
+vif(southernkingfish_forage)
+vif(southernkingfish_env_bc)
+vif(southernkingfish_env_forage)
+vif(southernkingfish_env_bc_forage)
+
+cor(df_CPUE_length_wide_both %>% dplyr::select(avgdepth,avgssal, avgstemp, avgsdo, NoFishRest, southernkingfishP915forageP915, southernkingfishP915forageP120, smallbluecrabP120))
+
+#Partial effect plots
+plot(southernkingfish_env, shade= "true") 
+plot(southernkingfish_bc, shade= "true") 
+plot(southernkingfish_forage, shade= "true") 
+plot(southernkingfish_env_bc, shade= "true") 
+plot(southernkingfish_env_forage, shade= "true") 
+plot(southernkingfish_env_bc_forage, shade= "true") 
+```
+
+#### Black drum
+
+##### All models
+
+```{r}
+blackdrum_env <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+
+blackdrum_bc <- gam(blackdrumP915~ s(log(smallbluecrabP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+
+blackdrum_forage <- gam(blackdrumP915~ s(log(blackdrumP915forageP120+1)) + factor(Yearfactor), family= tw(), data=df_CPUE_length_wide_both)
+
+blackdrum_env_bc <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(smallbluecrabP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+
+blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(blackdrumP915forageP120+1)), family= tw(), data=df_CPUE_length_wide_both)
+
+blackdrum_env_bc_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp) + s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(log(blackdrumP915forageP120+1)) + s(log(smallbluecrabP120+1)), family= tw(),  data=df_CPUE_length_wide_both)
+
+AIC(blackdrum_env, blackdrum_bc, blackdrum_forage, blackdrum_env_bc, blackdrum_env_forage, blackdrum_env_bc_forage) %>% arrange(AIC)
+```
+
+##### Diagnostics 
+```{r}
+summary(blackdrum_env)
+summary(blackdrum_bc)
+summary(blackdrum_forage)
+summary(blackdrum_env_bc)
+summary(blackdrum_env_forage)
+summary(blackdrum_env_bc_forage)
+
+#check p-value for anova across years 
+anova(blackdrum_env) 
+anova(blackdrum_bc)
+anova(blackdrum_forage)
+anova(blackdrum_env_bc)
+anova(blackdrum_env_forage)
+anova(blackdrum_env_bc_forage)
+
+gam.check(blackdrum_env)
+gam.check(blackdrum_bc)
+gam.check(blackdrum_forage)
+gam.check(blackdrum_env_bc)
+gam.check(blackdrum_env_forage)
+gam.check(blackdrum_env_bc_forage)
+
+vif(blackdrum_env)
+vif(blackdrum_bc)
+vif(blackdrum_forage)
+vif(blackdrum_env_bc)
+vif(blackdrum_env_forage)
+vif(blackdrum_env_bc_forage)
+
+cor(df_CPUE_length_wide_both %>% dplyr::select(avgdepth,avgssal, avgstemp, avgsdo, NoFishRest, blackdrumP915forageP120, smallbluecrabP120))
+
+#Partial effect plots
+plot(blackdrum_env, shade= "true") 
+plot(blackdrum_bc, shade= "true") 
+plot(blackdrum_forage, shade= "true") 
+plot(blackdrum_env_bc, shade= "true") 
+plot(blackdrum_env_forage, shade= "true") 
+plot(blackdrum_env_bc_forage, shade= "true") 
+```
+
+### gJam
+```{r}
+df <- df_CPUE_length_wide_both
+
+df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP915forageP915= log(reddrumP915forageP915+1), logreddrumP915forageP120= log(reddrumP915forageP120+1), logblackdrumP915forageP120= log(blackdrumP915forageP120+1), logsouthernkingfishP915forageP915= log(southernkingfishP915forageP915+1), logsouthernkingfishP915forageP120= log(southernkingfishP915forageP120+1))
+```
+
+#### Red drum
+
+##### Environment + BC
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(reddrumP915, logsmallbluecrabP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+rd_modo_env <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+rd_modo_env$fit$DIC
+```
+
+##### Environment + forage
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+rd_modo_env_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+rd_modo_env_forage$fit$DIC
+```
+
+##### Environment + forage + BC
+
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(reddrumP915, logreddrumP915forageP915, logreddrumP915forageP120, logsmallbluecrabP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+rd_modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+rd_modo_env_bc_forage$fit$DIC
+```
+
+#### Southern kingfish
+
+##### Environment + BC
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(southernkingfishP915, logsmallbluecrabP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+sk_modo_env <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+sk_modo_env$fit$DIC
+```
+
+##### Environment + forage
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(southernkingfishP915, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+sk_modo_env_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+sk_modo_env_forage$fit$DIC
+```
+
+##### Environment + forage + BC
+
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(southernkingfishP915, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120, logsmallbluecrabP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+sk_modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+sk_modo_env_bc_forage$fit$DIC
+```
+
+#### Black drum
+
+##### Environment + BC
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(blackdrumP915, logsmallbluecrabP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+bd_modo_env <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+bd_modo_env$fit$DIC
+```
+
+##### Environment + forage
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(blackdrumP915, logblackdrumP915forageP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+bd_modo_env_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+bd_modo_env_forage$fit$DIC
+```
+
+##### Environment + forage + BC
+```{r}
+xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
+
+ydata <- df %>% dplyr::select(blackdrumP915, logblackdrumP915forageP120, logsmallbluecrabP120) 
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
+
+bd_modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
+bd_modo_env_bc_forage$fit$DIC
+```
