@@ -4,6 +4,15 @@ format: html
 editor: visual
 ---
 
+This script is used to calculate AIC and DIC for various generalized additive models (GAMs) and gJam models for all predators. 
+
+The workflow is as follows: 
+1) Load in script with datasets and necessary functions
+2) Run GAMs separately for each predator for model types 1-6) in part 1 of the study (see Fig. 2 in manuscript)
+3) Check GAM model performance and calculate AIC values
+4) Run gJam models seperately for each predator for model type 3-6) in part 1 of the study (Fig. 2) based on burn-in time found in P1P2_burnin.qmd
+5) Calculate DIC values for the various gJam models. 
+
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
@@ -156,7 +165,8 @@ blackdrum_env_bc_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp) 
 AIC(blackdrum_env, blackdrum_bc, blackdrum_forage, blackdrum_env_bc, blackdrum_env_forage, blackdrum_env_bc_forage) %>% arrange(AIC)
 ```
 
-##### Diagnostics 
+##### Diagnostics
+
 ```{r}
 summary(blackdrum_env)
 summary(blackdrum_bc)
@@ -199,6 +209,7 @@ plot(blackdrum_env_bc_forage, shade= "true")
 ```
 
 ### gJam
+
 ```{r}
 df <- df_CPUE_length_wide_both
 
@@ -208,6 +219,7 @@ df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logreddrumP9
 #### Red drum
 
 ##### Environment + BC
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -221,6 +233,7 @@ rd_modo_env$fit$DIC
 ```
 
 ##### Environment + forage
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -250,6 +263,7 @@ rd_modo_env_bc_forage$fit$DIC
 #### Southern kingfish
 
 ##### Environment + BC
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -263,6 +277,7 @@ sk_modo_env$fit$DIC
 ```
 
 ##### Environment + forage
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -292,6 +307,7 @@ sk_modo_env_bc_forage$fit$DIC
 #### Black drum
 
 ##### Environment + BC
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -305,6 +321,7 @@ bd_modo_env$fit$DIC
 ```
 
 ##### Environment + forage
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 
@@ -318,6 +335,7 @@ bd_modo_env_forage$fit$DIC
 ```
 
 ##### Environment + forage + BC
+
 ```{r}
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
 

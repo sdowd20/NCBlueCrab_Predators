@@ -26,11 +26,11 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 
 r2_general <-function(preds,actual){ 
   return(1- sum((preds - actual) ^ 2)/sum((actual - mean(actual))^2))
-}
+} #function to calculate R2 in cross-validation
 
 RMSE_func <- function(preds, actual){
   return(sqrt(mean((actual - preds)^2)))
-}
+} #function to calculate RMSE in cross-validation
 
 pred_gam <- function(model, colnames){
   df <- as.data.frame(predict(model), df_CPUE_length_wide_both, type= "response")
@@ -47,8 +47,17 @@ graphs <- function(df, df2){
   print(plot1)
 }
 
-#Load in datasets
-##CPUE
+#Load in species response and predictor variable datasets. 
+#These data are from the Pamlico Sound Independent Gill Net Survey (P915) 
+#and the Estuarine Trawl Survey (P120) from the North Carolina Department of Marine Fisheries. 
+#Sally Dowd processed these data with this workflow:
+#1) Clean data and detect human recording errors 
+#2) Form a 0.12° x 0.12° grid cell over the study area 
+#3) Calculate the average catch-per-unit effort (CPUE) value 
+#for an estuarine species and average of environmental variables at a grid cell for a month (May or June) in a year 
+#4) Use QGIS to calculate the NoFishRest predictor variable, or the % of a grid cell unrestricted to fishing activities.  
+
+##CPUE: P915 and P120 averaged data 
 
 df_CPUE_length <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.03.04.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
@@ -56,15 +65,12 @@ df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
 colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
-##03/27/24: P915 non-averaged
+##P915 non-averaged data (Model 3 in Part 2 of study)
 df_CPUE_ind_length <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.27.24.csv")
 df_CPUE_ind_length <- df_CPUE_ind_length[,-1]
 df_CPUE_ind_length <- df_CPUE_ind_length %>% mutate_at("Survey", as.factor)
 df_CPUE_ind_length$Speciescommonname <- gsub(" ", "", df_CPUE_ind_length$Speciescommonname)
 colnames(df_CPUE_ind_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_ind_length))
-
-length(unique(df_CPUE_ind_length$Control1)) #8542
-length(unique(df_CPUE_ind_length$Speciescommonname)) #41, total rows is 350130 instead of 350222
 
 #Form datasets! 
 ##Pivot-wider dataset: P915 and P120 

@@ -1,0 +1,587 @@
+---
+title: "P2Prediction"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+#### Model 1
+
+```{r}
+ydata <- df_CPUE_length_wide_both %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120, atlanticmenhadenP120)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames()
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+```
+
+##### Red drum
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
+
+reddrum_model1_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_model1_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_model1_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_model1_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_model1_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_model1_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
+}
+
+write.csv(reddrum_model1_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model1.csv")
+
+mean(reddrum_model1_gjam$r2_uncon)
+mean(reddrum_model1_gjam$r2_con)
+sd(reddrum_model1_gjam$r2_uncon)
+sd(reddrum_model1_gjam$r2_con)
+
+mean(reddrum_model1_gjam$rmse_uncon)
+mean(reddrum_model1_gjam$rmse_con)
+sd(reddrum_model1_gjam$rmse_uncon)
+sd(reddrum_model1_gjam$rmse_con)
+
+beep(sound= 8)
+```
+
+##### Southern kingfish
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
+
+southernkingfish_model1_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_model1_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_model1_gjam[i,1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_model1_gjam[i,2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_model1_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_model1_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+print(i)
+}
+
+write.csv(southernkingfish_model1_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
+
+mean(southernkingfish_model1_gjam$r2_uncon)
+mean(southernkingfish_model1_gjam$r2_con)
+sd(southernkingfish_model1_gjam$r2_uncon)
+sd(southernkingfish_model1_gjam$r2_con)
+
+mean(southernkingfish_model1_gjam$rmse_uncon)
+mean(southernkingfish_model1_gjam$rmse_con)
+sd(southernkingfish_model1_gjam$rmse_uncon)
+sd(southernkingfish_model1_gjam$rmse_con)
+
+beep(sound= 8)
+```
+
+##### Black drum
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
+
+blackdrum_model1_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(blackdrum_model1_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_both)), size = smp_size)
+train <- df_CPUE_length_wide_both[train_ind, ]
+test <- df_CPUE_length_wide_both[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_blackdrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"] #observed blackdrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_blackdrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "blackdrumP915"]
+
+dat <- cbind(pred_blackdrum_con, obs_blackdrum, pred_blackdrum_un)
+dat <- as.data.frame(dat)
+
+blackdrum_model1_gjam[i,1] <- r2_general(dat$pred_blackdrum_con, dat$blackdrumP915)
+blackdrum_model1_gjam[i,2] <- r2_general(dat$pred_blackdrum_un, dat$blackdrumP915)
+blackdrum_model1_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_con)
+blackdrum_model1_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
+print(i)
+}
+
+write.csv(blackdrum_model1_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model1.csv")
+
+mean(blackdrum_model1_gjam$r2_uncon)
+mean(blackdrum_model1_gjam$r2_con)
+sd(blackdrum_model1_gjam$r2_uncon)
+sd(blackdrum_model1_gjam$r2_con)
+
+mean(blackdrum_model1_gjam$rmse_uncon)
+mean(blackdrum_model1_gjam$rmse_con)
+sd(blackdrum_model1_gjam$rmse_uncon)
+sd(blackdrum_model1_gjam$rmse_con)
+
+beep(sound= 8)
+```
+
+#### Model 2
+
+```{r}
+#May and June, 2001-2019
+ydata <- df_CPUE_length_wide_P915 %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames()
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+```
+
+##### Red drum
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_P915))
+
+reddrum_model2_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_model2_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_P915)), size = smp_size)
+train <- df_CPUE_length_wide_P915[train_ind, ]
+test <- df_CPUE_length_wide_P915[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_model2_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_model2_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_model2_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_model2_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
+}
+
+write.csv(reddrum_model2_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model2.csv")
+
+mean(reddrum_model2_gjam$r2_uncon)
+mean(reddrum_model2_gjam$r2_con)
+sd(reddrum_model2_gjam$r2_uncon)
+sd(reddrum_model2_gjam$r2_con)
+
+mean(reddrum_model2_gjam$rmse_uncon)
+mean(reddrum_model2_gjam$rmse_con)
+sd(reddrum_model2_gjam$rmse_uncon)
+sd(reddrum_model2_gjam$rmse_con)
+
+beep(sound= 8)
+```
+
+##### Southern kingfish
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_P915))
+
+southernkingfish_model2_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_model2_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_P915)), size = smp_size)
+train <- df_CPUE_length_wide_P915[train_ind, ]
+test <- df_CPUE_length_wide_P915[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_model2_gjam[i,1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_model2_gjam[i,2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_model2_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_model2_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+print(i)
+}
+
+write.csv(southernkingfish_model2_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
+
+mean(southernkingfish_model2_gjam$r2_uncon)
+mean(southernkingfish_model2_gjam$r2_con)
+sd(southernkingfish_model2_gjam$r2_uncon)
+sd(southernkingfish_model2_gjam$r2_con)
+
+mean(southernkingfish_model2_gjam$rmse_uncon)
+mean(southernkingfish_model2_gjam$rmse_con)
+sd(southernkingfish_model2_gjam$rmse_uncon)
+sd(southernkingfish_model2_gjam$rmse_con)
+
+beep(sound= 8)
+```
+
+##### Black drum
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_P915))
+
+blackdrum_model2_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(blackdrum_model2_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_P915)), size = smp_size)
+train <- df_CPUE_length_wide_P915[train_ind, ]
+test <- df_CPUE_length_wide_P915[-train_ind, ]
+
+xnames <- c("avgdepth", "avgstemp", "avgssal", "avgsdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
+
+mod2 <- gjam(~ avgdepth + avgstemp + avgssal + avgsdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_blackdrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"] #observed blackdrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_blackdrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "blackdrumP915"]
+
+dat <- cbind(pred_blackdrum_con, obs_blackdrum, pred_blackdrum_un)
+dat <- as.data.frame(dat)
+
+blackdrum_model2_gjam[i,1] <- r2_general(dat$pred_blackdrum_con, dat$blackdrumP915)
+blackdrum_model2_gjam[i,2] <- r2_general(dat$pred_blackdrum_un, dat$blackdrumP915)
+blackdrum_model2_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_con)
+blackdrum_model2_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
+print(i)
+}
+
+write.csv(blackdrum_model2_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model2.csv")
+
+mean(blackdrum_model2_gjam$r2_uncon)
+mean(blackdrum_model2_gjam$r2_con)
+sd(blackdrum_model2_gjam$r2_uncon)
+sd(blackdrum_model2_gjam$r2_con)
+
+mean(blackdrum_model2_gjam$rmse_uncon)
+mean(blackdrum_model2_gjam$rmse_con)
+sd(blackdrum_model2_gjam$rmse_uncon)
+sd(blackdrum_model2_gjam$rmse_con)
+
+beep(sound= 8)
+```
+
+#### Model 3
+
+```{r}
+#May and June, 2001-2019
+ydata <-df_CPUE_length_wide_indP915 %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+```
+
+##### Red drum
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_indP915))
+
+reddrum_model3_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(reddrum_model3_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_indP915)), size = smp_size)
+train <- df_CPUE_length_wide_indP915[train_ind, ]
+test <- df_CPUE_length_wide_indP915[-train_ind, ]
+
+xnames <- c("Depth", "Stemp", "Ssal", "Sdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
+
+mod2 <- gjam(~ Depth + Stemp + Ssal + Sdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "reddrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_reddrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "reddrumP915"]
+obs_reddrum <- ydata_test[,colnames(ydata_test) %in% "reddrumP915"] #observed reddrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_reddrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "reddrumP915"]
+pred_reddrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "reddrumP915"]
+
+dat <- cbind(pred_reddrum_con, obs_reddrum, pred_reddrum_un)
+dat <- as.data.frame(dat)
+
+reddrum_model3_gjam[i,1] <- r2_general(dat$pred_reddrum_con, dat$reddrumP915)
+reddrum_model3_gjam[i,2] <- r2_general(dat$pred_reddrum_un, dat$reddrumP915)
+reddrum_model3_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_con)
+reddrum_model3_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
+print(i)
+}
+
+write.csv(reddrum_model3_gjam, "C:/Users/sdowd/Desktop/reddrum_model3.csv")
+  
+mean(reddrum_model3_gjam$r2_uncon)
+mean(reddrum_model3_gjam$r2_con)
+sd(reddrum_model3_gjam$r2_uncon)
+sd(reddrum_model3_gjam$r2_con)
+
+mean(reddrum_model3_gjam$rmse_uncon)
+mean(reddrum_model3_gjam$rmse_con)
+sd(reddrum_model3_gjam$rmse_uncon)
+sd(reddrum_model3_gjam$rmse_con)
+```
+
+##### Southern kingfish
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_indP915))
+
+southernkingfish_model3_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(southernkingfish_model3_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_indP915)), size = smp_size)
+train <- df_CPUE_length_wide_indP915[train_ind, ]
+test <- df_CPUE_length_wide_indP915[-train_ind, ]
+
+xnames <- c("Depth", "Stemp", "Ssal", "Sdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
+
+mod2 <- gjam(~ Depth + Stemp + Ssal + Sdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "southernkingfishP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_southernkingfish_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "southernkingfishP915"]
+obs_southernkingfish <- ydata_test[,colnames(ydata_test) %in% "southernkingfishP915"] #observed southernkingfish
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_southernkingfish_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "southernkingfishP915"]
+pred_southernkingfish_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "southernkingfishP915"]
+
+dat <- cbind(pred_southernkingfish_con, obs_southernkingfish, pred_southernkingfish_un)
+dat <- as.data.frame(dat)
+
+southernkingfish_model3_gjam[i,1] <- r2_general(dat$pred_southernkingfish_con, dat$southernkingfishP915)
+southernkingfish_model3_gjam[i,2] <- r2_general(dat$pred_southernkingfish_un, dat$southernkingfishP915)
+southernkingfish_model3_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_con)
+southernkingfish_model3_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
+print(i)
+}
+
+write.csv(southernkingfish_model3_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+  
+mean(southernkingfish_model3_gjam$r2_uncon)
+mean(southernkingfish_model3_gjam$r2_con)
+sd(southernkingfish_model3_gjam$r2_uncon)
+sd(southernkingfish_model3_gjam$r2_con)
+
+mean(southernkingfish_model3_gjam$rmse_uncon)
+mean(southernkingfish_model3_gjam$rmse_con)
+sd(southernkingfish_model3_gjam$rmse_uncon)
+sd(southernkingfish_model3_gjam$rmse_con)
+```
+
+#### Black drum
+
+```{r}
+Bootstrap_times <- 100
+smp_size <- floor(0.80* nrow(df_CPUE_length_wide_indP915))
+
+blackdrum_model3_gjam <- data.frame(matrix(ncol=4, nrow=1))
+colnames(blackdrum_model3_gjam) <- c("r2_con", "r2_uncon", "rmse_con", "rmse_uncon")
+
+for(i in 1:Bootstrap_times){
+train_ind <- sample(seq_len(nrow(df_CPUE_length_wide_indP915)), size = smp_size)
+train <- df_CPUE_length_wide_indP915[train_ind, ]
+test <- df_CPUE_length_wide_indP915[-train_ind, ]
+
+xnames <- c("Depth", "Stemp", "Ssal", "Sdo", "NoFishRest")
+ynames <- species
+xdata_train <- train[,colnames(train) %in% xnames]
+ydata_train <- train[,colnames(train) %in% ynames]
+xdata_test <- test  
+ydata_test <- test[,colnames(test) %in% ynames]
+
+ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
+
+mod2 <- gjam(~ Depth + Stemp + Ssal + Sdo + NoFishRest, xdata = xdata_train, ydata = ydata_train, modelList = ml) #4/5 of data 
+
+ycond <- ydata_test[,!colnames(ydata_test) %in% "blackdrumP915"]
+newdata1 <- list(xdata = xdata_test, ydataCond = ycond, nsim = 1000) 
+p6 <- gjamPredict(mod2, newdata= newdata1) #1/5 of data 
+pred_blackdrum_con <- p6$sdList$yMu[,colnames(p6$sdList$yMu) %in% "blackdrumP915"]
+obs_blackdrum <- ydata_test[,colnames(ydata_test) %in% "blackdrumP915"] #observed blackdrum
+
+#unconditional prediction out of sample
+newdata <- list(xdata = xdata_test, nsim = 1000)
+p7 <- gjamPredict(mod2, newdata = newdata)
+pred_blackdrum_un <- p7$sdList$yMu[,colnames(p7$sdList$yMu) %in% "blackdrumP915"]
+pred_blackdrum_un2 <- mod2$prediction$ypredMu[,colnames(mod2$prediction$ypredMu) %in% "blackdrumP915"]
+
+dat <- cbind(pred_blackdrum_con, obs_blackdrum, pred_blackdrum_un)
+dat <- as.data.frame(dat)
+
+blackdrum_model3_gjam[i,1] <- r2_general(dat$pred_blackdrum_con, dat$blackdrumP915)
+blackdrum_model3_gjam[i,2] <- r2_general(dat$pred_blackdrum_un, dat$blackdrumP915)
+blackdrum_model3_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_con)
+blackdrum_model3_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
+print(i)
+}
+
+write.csv(blackdrum_model3_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model3.csv")
+  
+mean(blackdrum_model3_gjam$r2_uncon)
+mean(blackdrum_model3_gjam$r2_con)
+sd(blackdrum_model3_gjam$r2_uncon)
+sd(blackdrum_model3_gjam$r2_con)
+
+mean(blackdrum_model3_gjam$rmse_uncon)
+mean(blackdrum_model3_gjam$rmse_con)
+sd(blackdrum_model3_gjam$rmse_uncon)
+sd(blackdrum_model3_gjam$rmse_con)
+```

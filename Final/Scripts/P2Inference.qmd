@@ -1,0 +1,157 @@
+---
+title: "P2Inference"
+format: html
+editor: visual
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+#May and June, 2001-2019
+df <- df_CPUE_length_wide_indP915
+                                          
+xdata <- df %>% dplyr::select(Depth, Stemp, Ssal, Sdo, NoFishRest, Yearfactor)
+ydata <- df %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
+species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames() #minimum # of non-zero observations: 50
+ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
+```
+
+
+```{r}
+#10,000, 400
+ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
+
+non_avg_full <- gjam(~Depth + Stemp + Ssal + Sdo + NoFishRest + Yearfactor, xdata = xdata, ydata = ydata, modelList = ml)
+
+save(non_avg_full, file= "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference2/Models/non_avg_full.RData")
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = "/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Inference2/Plots")
+gjamPlot(output = non_avg_full, plotPars = plot)
+```
+
+```{r}
+load("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Inference2/Models/non_avg_full.RData")
+```
+
+##### Extract parameters
+
+```{r}
+#posterior summaries 
+out <- non_avg_full
+
+betas <- out$parameters$betaStandXTable #SM by stats posterior summary
+sens <- out[["parameters"]][["sensTable"]] #sensitivity to predictor variables
+rmsetot <- out[["fit"]][["rmspeAll"]] #root mean squared prediction error all
+DIC <- out[["fit"]][["DIC"]]
+rmse_byspec <- out[["fit"]][["rmspeBySpec"]]
+cor <- out[["parameters"]][["corMu"]] #residual, correlation 
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+s_mat <- out[["parameters"]][["sigMu"]] #WsWs', Species x Species, covariance matrix
+#add cor from ydata for panel A
+ycor <- out[["inputs"]][["y"]] #response matrix 
+cor2 <- out[["parameters"]][["ematrix"]]
+```
+
+```{r}
+library(lessR)
+#residual covariance
+colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
+cor <- corReorder(cor, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
+cor <-  as.data.frame(cor)
+rownames(cor) <- colnames(cor)
+cor$specs <- rownames(cor)
+
+#ematrix
+cor2 <- out[["parameters"]][["ematrix"]] #responses in matrix E 
+cor2<- corReorder(cor2, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
+cor2 <-  as.data.frame(cor2)
+rownames(cor2) <- colnames(cor2)
+cor2$specs <- rownames(cor2)
+
+#S x S 
+s_mat <- corReorder(s_mat, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
+s_mat <-  as.data.frame(s_mat)
+rownames(s_mat) <- colnames(s_mat)
+
+#co-occurence
+ycor <- cor(ycor, method = "spearman")
+ycor<- corReorder(ycor, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
+```
+
+```{r}
+# #S by S covariance matrix omega 
+# ggcorrplot::ggcorrplot(s_mat, type = "lower")+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-10, 10)) + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))+ scale_x_discrete(breaks = NULL)
+# ggsave("/users/sallydowd/Desktop/ss.jpeg", width= 7, height=5)
+
+#co-occurence in ydata
+cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+cooccur
+#issue with coocur was b/c re-ran ycor 2x
+
+cor_again <- cor[,-9]
+#co-occurrence modeled, residual correlation 
+comodel <- ggcorrplot::ggcorrplot(cor_again, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+comodel
+
+#ematrix, covariance 
+cor2_again <- cor2[,-9]
+emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower", tl.cex= 14) + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit= c(-1,1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
+emat 
+```
+
+```{r}
+betas_tidy <- betas
+betas_tidy$variable <- rownames(betas_tidy)
+betas_tidy <- betas_tidy %>% separate(variable, c("species","variable"), sep = "([_])")
+
+betas_tidy <- betas_tidy %>% filter(variable != "intercept")
+
+# betas_tidy$variable <- factor(betas_tidy$variable, levels=c("SST","SSAL"))
+
+min(betas_tidy$Estimate)
+max(betas_tidy$Estimate)
+#
+betas_tidy$Estimate <- ifelse(betas_tidy$Estimate > 2, 2, betas_tidy$Estimate)
+betas_tidy$Estimate <- ifelse(betas_tidy$Estimate < -2,-2, betas_tidy$Estimate)
+
+betaplot <- ggplot(data = betas_tidy, aes(x=variable, y=species, fill=Estimate)) +
+  geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                                     midpoint = 0, space = "Lab",
+                                     name="Betas") + theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 1, hjust = 1), axis.text.y = element_text(size = 14))
+
+cooccur <- cooccur + theme(legend.position= "none") + 
+  ggtitle("c) Co-occurence in Data")+
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+comodel <- comodel + theme(legend.position= "none") + 
+  ggtitle("d) Residual Correlation") +
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+emat <- emat + theme(legend.position= "none") + 
+  theme(legend.position="none")+
+  ggtitle("b) Covariance or E-matrix") +
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+betaplot <- betaplot + theme(legend.position= "none") + 
+  theme(axis.title.x = element_blank()) +
+  theme(axis.title.y = element_blank())+
+  ggtitle("a) Environmental Response") +
+  theme( plot.title = element_text(hjust = 0.5)) +
+  theme( plot.title = element_text(size = 20, face = "bold"))
+
+library(cowplot)
+# extract the legend from one of the plots
+# (clearly the whole thing only makes sense if all plots
+# have the same legend, so we can arbitrarily pick one.)
+legend <- get_legend(cooccur + theme(legend.position="bottom") + theme(legend.title = element_blank(), legend.text = element_blank()) +
+                         theme(legend.key.height= unit(2, 'cm'),
+                               legend.key.width= unit(4, 'cm')))
+library(ggpubr)
+d <- ggarrange(betaplot, emat, cooccur, comodel)
+annotate_figure(d, bottom= legend)
+ggsave(filename= "/users/sallydowd/Desktop/combo.pdf",width = 35, height=30, units=c("cm"), dpi=500)
+```
