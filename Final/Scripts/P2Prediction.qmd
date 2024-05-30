@@ -4,12 +4,15 @@ format: html
 editor: visual
 ---
 
+This script is used to run cross-validation for gJam for Model 3a in part 2 of the study (individual prey item models).
+
+The workflow is as follows: 1) Load in script with datasets and necessary functions 2) Run gJam separately for each predator for Model 1a, Model 2a, and Model 3a in part 2 of the study (see Fig. 2 in manuscript) with 5-fold cross-validation repeated 100 times. Even though these models includes multiple species CPUE in the response, a separate model is run for each predator. This enables us to test the model's predictive capability for predators separately. 4) Load in these data. 5) Compute pairwise comparisons 6) Collect summary metrics.
+
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
-#### Model 1
-
+#### Model 1a 
 ```{r}
 ydata <- df_CPUE_length_wide_both %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915, smallatlanticcroakerP120, smallbluecrabP120, brownshrimpP120, whiteshrimpP120, pinkshrimpP120, pinfishP120, southernflounderP120, smallspotP120, atlanticmenhadenP120)
 species <- gjamTrimY(ydata, 50, OTHER = FALSE)$y %>% colnames()
@@ -17,7 +20,6 @@ ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
 ```
 
 ##### Red drum
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -64,22 +66,9 @@ print(i)
 }
 
 write.csv(reddrum_model1_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model1.csv")
-
-mean(reddrum_model1_gjam$r2_uncon)
-mean(reddrum_model1_gjam$r2_con)
-sd(reddrum_model1_gjam$r2_uncon)
-sd(reddrum_model1_gjam$r2_con)
-
-mean(reddrum_model1_gjam$rmse_uncon)
-mean(reddrum_model1_gjam$rmse_con)
-sd(reddrum_model1_gjam$rmse_uncon)
-sd(reddrum_model1_gjam$rmse_con)
-
-beep(sound= 8)
 ```
 
 ##### Southern kingfish
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -126,22 +115,9 @@ print(i)
 }
 
 write.csv(southernkingfish_model1_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
-
-mean(southernkingfish_model1_gjam$r2_uncon)
-mean(southernkingfish_model1_gjam$r2_con)
-sd(southernkingfish_model1_gjam$r2_uncon)
-sd(southernkingfish_model1_gjam$r2_con)
-
-mean(southernkingfish_model1_gjam$rmse_uncon)
-mean(southernkingfish_model1_gjam$rmse_con)
-sd(southernkingfish_model1_gjam$rmse_uncon)
-sd(southernkingfish_model1_gjam$rmse_con)
-
-beep(sound= 8)
 ```
 
 ##### Black drum
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -188,18 +164,6 @@ print(i)
 }
 
 write.csv(blackdrum_model1_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model1.csv")
-
-mean(blackdrum_model1_gjam$r2_uncon)
-mean(blackdrum_model1_gjam$r2_con)
-sd(blackdrum_model1_gjam$r2_uncon)
-sd(blackdrum_model1_gjam$r2_con)
-
-mean(blackdrum_model1_gjam$rmse_uncon)
-mean(blackdrum_model1_gjam$rmse_con)
-sd(blackdrum_model1_gjam$rmse_uncon)
-sd(blackdrum_model1_gjam$rmse_con)
-
-beep(sound= 8)
 ```
 
 #### Model 2
@@ -259,22 +223,9 @@ print(i)
 }
 
 write.csv(reddrum_model2_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/reddrum_model2.csv")
-
-mean(reddrum_model2_gjam$r2_uncon)
-mean(reddrum_model2_gjam$r2_con)
-sd(reddrum_model2_gjam$r2_uncon)
-sd(reddrum_model2_gjam$r2_con)
-
-mean(reddrum_model2_gjam$rmse_uncon)
-mean(reddrum_model2_gjam$rmse_con)
-sd(reddrum_model2_gjam$rmse_uncon)
-sd(reddrum_model2_gjam$rmse_con)
-
-beep(sound= 8)
 ```
 
 ##### Southern kingfish
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_P915))
@@ -331,12 +282,9 @@ mean(southernkingfish_model2_gjam$rmse_uncon)
 mean(southernkingfish_model2_gjam$rmse_con)
 sd(southernkingfish_model2_gjam$rmse_uncon)
 sd(southernkingfish_model2_gjam$rmse_con)
-
-beep(sound= 8)
 ```
 
 ##### Black drum
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_P915))
@@ -398,7 +346,6 @@ beep(sound= 8)
 ```
 
 #### Model 3
-
 ```{r}
 #May and June, 2001-2019
 ydata <-df_CPUE_length_wide_indP915 %>% dplyr::select(smallatlanticcroakerP915, smallatlanticmenhadenP915, blackdrumP915, pinfishP915, reddrumP915, smallsouthernflounderP915, southernkingfishP915, smallspotP915)
@@ -407,7 +354,6 @@ ydata <- ydata[, species] %>% as.data.frame() #filter out rare species
 ```
 
 ##### Red drum
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_indP915))
@@ -454,20 +400,9 @@ print(i)
 }
 
 write.csv(reddrum_model3_gjam, "C:/Users/sdowd/Desktop/reddrum_model3.csv")
-  
-mean(reddrum_model3_gjam$r2_uncon)
-mean(reddrum_model3_gjam$r2_con)
-sd(reddrum_model3_gjam$r2_uncon)
-sd(reddrum_model3_gjam$r2_con)
-
-mean(reddrum_model3_gjam$rmse_uncon)
-mean(reddrum_model3_gjam$rmse_con)
-sd(reddrum_model3_gjam$rmse_uncon)
-sd(reddrum_model3_gjam$rmse_con)
 ```
 
 ##### Southern kingfish
-
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_indP915))
@@ -514,20 +449,9 @@ print(i)
 }
 
 write.csv(southernkingfish_model3_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
-  
-mean(southernkingfish_model3_gjam$r2_uncon)
-mean(southernkingfish_model3_gjam$r2_con)
-sd(southernkingfish_model3_gjam$r2_uncon)
-sd(southernkingfish_model3_gjam$r2_con)
-
-mean(southernkingfish_model3_gjam$rmse_uncon)
-mean(southernkingfish_model3_gjam$rmse_con)
-sd(southernkingfish_model3_gjam$rmse_uncon)
-sd(southernkingfish_model3_gjam$rmse_con)
 ```
 
-#### Black drum
-
+##### Black drum
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_indP915))
@@ -574,14 +498,160 @@ print(i)
 }
 
 write.csv(blackdrum_model3_gjam, "~/Desktop/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model3.csv")
-  
-mean(blackdrum_model3_gjam$r2_uncon)
-mean(blackdrum_model3_gjam$r2_con)
-sd(blackdrum_model3_gjam$r2_uncon)
-sd(blackdrum_model3_gjam$r2_con)
+```
 
-mean(blackdrum_model3_gjam$rmse_uncon)
-mean(blackdrum_model3_gjam$rmse_con)
-sd(blackdrum_model3_gjam$rmse_uncon)
-sd(blackdrum_model3_gjam$rmse_con)
+#### Load in data
+```{r}
+#Red drum 
+reddrum_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/reddrum_model1.csv")
+reddrum_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/reddrum_model2.csv")
+reddrum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/reddrum_model3.csv")
+```
+
+```{r}
+#Southern kingfish
+southern_kingfish_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model1.csv")
+southern_kingfish_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model2.csv")
+southern_kingfish_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/southernkingfish_model3.csv")
+```
+
+```{r}
+#Black drum
+black_drum_model1 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model1.csv")
+black_drum_model2 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model2.csv")
+black_drum_model3 <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction2/blackdrum_model3.csv")
+```
+
+#### Pairwise comparisons
+```{r}
+### Red drum ###
+#Model to model: conditional
+wilcox.test(reddrum_model1$r2_con, reddrum_model2$r2_con, paired = FALSE)
+wilcox.test(reddrum_model1$r2_con, reddrum_model3$r2_con, paired = FALSE)
+wilcox.test(reddrum_model2$r2_con, reddrum_model3$r2_con, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_con, reddrum_model2$rmse_con, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_con, reddrum_model3$rmse_con, paired = FALSE)
+wilcox.test(reddrum_model2$rmse_con, reddrum_model3$rmse_con, paired = FALSE)
+
+#Model to model: unconditional
+wilcox.test(reddrum_model1$r2_uncon, reddrum_model2$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_model1$r2_uncon, reddrum_model3$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_model2$r2_uncon, reddrum_model3$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_uncon, reddrum_model2$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_model1$rmse_uncon, reddrum_model3$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_model2$rmse_uncon, reddrum_model3$rmse_uncon, paired = FALSE)
+
+#Within model
+wilcox.test(reddrum_model1$r2_con, reddrum_model1$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model2$r2_con, reddrum_model2$r2_uncon, paired = TRUE)
+wilcox.test(reddrum_model3$r2_con, reddrum_model3$r2_uncon, paired = TRUE)
+```
+
+```{r}
+### Southern kingfish ###
+#Model to model: conditional
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model2$r2_con, paired = FALSE)
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model3$r2_con, paired = FALSE)
+wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model3$r2_con, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model2$rmse_con, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_con, southern_kingfish_model3$rmse_con, paired = FALSE)
+wilcox.test(southern_kingfish_model2$rmse_con, southern_kingfish_model3$rmse_con, paired = FALSE)
+
+#Model to model: unconditional
+wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model2$r2_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model1$r2_uncon, southern_kingfish_model3$r2_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model2$r2_uncon, southern_kingfish_model3$r2_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model2$rmse_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model1$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = FALSE)
+wilcox.test(southern_kingfish_model2$rmse_uncon, southern_kingfish_model3$rmse_uncon, paired = FALSE)
+
+#Within model
+wilcox.test(southern_kingfish_model1$r2_con, southern_kingfish_model1$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model2$r2_con, southern_kingfish_model2$r2_uncon, paired = TRUE)
+wilcox.test(southern_kingfish_model3$r2_con, southern_kingfish_model3$r2_uncon, paired = TRUE)
+```
+
+```{r}
+### Black drum ###
+#Model to model: conditional
+wilcox.test(black_drum_model1$r2_con, black_drum_model2$r2_con, paired = FALSE)
+wilcox.test(black_drum_model1$r2_con, black_drum_model3$r2_con, paired = FALSE)
+wilcox.test(black_drum_model2$r2_con, black_drum_model3$r2_con, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_con, black_drum_model2$rmse_con, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_con, black_drum_model3$rmse_con, paired = FALSE)
+wilcox.test(black_drum_model2$rmse_con, black_drum_model3$rmse_con, paired = FALSE)
+
+#Model to model: unconditional
+wilcox.test(black_drum_model1$r2_uncon, black_drum_model2$r2_uncon, paired = FALSE)
+wilcox.test(black_drum_model1$r2_uncon, black_drum_model3$r2_uncon, paired = FALSE)
+wilcox.test(black_drum_model2$r2_uncon, black_drum_model3$r2_uncon, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_uncon, black_drum_model2$rmse_uncon, paired = FALSE)
+wilcox.test(black_drum_model1$rmse_uncon, black_drum_model3$rmse_uncon, paired = FALSE)
+wilcox.test(black_drum_model2$rmse_uncon, black_drum_model3$rmse_uncon, paired = FALSE)
+
+#Within model
+wilcox.test(black_drum_model1$r2_con, black_drum_model1$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model2$r2_con, black_drum_model2$r2_uncon, paired = TRUE)
+wilcox.test(black_drum_model3$r2_con, black_drum_model3$r2_uncon, paired = TRUE)
+```
+
+#### Summary metrics
+```{r}
+### Red drum ###
+mean(reddrum_model1$r2_uncon)
+sd(reddrum_model1$r2_uncon)
+mean(reddrum_model1$rmse_uncon)
+sd(reddrum_model1$rmse_uncon)
+mean(reddrum_model1$r2_con)
+sd(reddrum_model1$r2_con)
+mean(reddrum_model1$rmse_con)
+sd(reddrum_model1$rmse_con)
+
+mean(reddrum_model2$r2_uncon)
+sd(reddrum_model2$r2_uncon)
+mean(reddrum_model2$rmse_uncon)
+sd(reddrum_model2$rmse_uncon)
+mean(reddrum_model2$r2_con)
+sd(reddrum_model2$r2_con)
+mean(reddrum_model2$rmse_con)
+sd(reddrum_model2$rmse_con)
+
+mean(reddrum_model3$r2_uncon)
+sd(reddrum_model3$r2_uncon)
+mean(reddrum_model3$rmse_uncon)
+sd(reddrum_model3$rmse_uncon)
+mean(reddrum_model3$r2_con)
+sd(reddrum_model3$r2_con)
+mean(reddrum_model3$rmse_con)
+sd(reddrum_model3$rmse_con)
+```
+
+```{r}
+### Southern kingfish ###
+mean(black_drum_model1$r2_uncon)
+sd(black_drum_model1$r2_uncon)
+mean(black_drum_model1$rmse_uncon)
+sd(black_drum_model1$rmse_uncon)
+mean(black_drum_model1$r2_con)
+sd(black_drum_model1$r2_con)
+mean(black_drum_model1$rmse_con)
+sd(black_drum_model1$rmse_con)
+
+mean(black_drum_model2$r2_uncon)
+sd(black_drum_model2$r2_uncon)
+mean(black_drum_model2$rmse_uncon)
+sd(black_drum_model2$rmse_uncon)
+mean(black_drum_model2$r2_con)
+sd(black_drum_model2$r2_con)
+mean(black_drum_model2$rmse_con)
+sd(black_drum_model2$rmse_con)
+
+mean(black_drum_model3$r2_uncon)
+sd(black_drum_model3$r2_uncon)
+mean(black_drum_model3$rmse_uncon)
+sd(black_drum_model3$rmse_uncon)
+mean(black_drum_model3$r2_con)
+sd(black_drum_model3$r2_con)
+mean(black_drum_model3$rmse_con)
+sd(black_drum_model3$rmse_con)
 ```

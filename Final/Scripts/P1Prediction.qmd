@@ -4,11 +4,15 @@ format: html
 editor: visual
 ---
 
+This script is used to run cross-validation for both GAMs and gJam for part 1 of the study (grouped prey item models).
+
+The workflow is as follows: 1) Load in script with datasets and necessary functions 2) Run GAMs separately for each predator for model types 1-6) in part 1 of the study (see Fig. 2 in manuscript) with 5-fold cross-validation repeating 100 times. 3) Run gJam separately for each predator for model type 3-6) in part 1 of the study (Fig. 2) based on burn-in time found through P1P2_burnin.qmd. 4) Load in data from both GAM and gJam CV. 5) Compute pairwise comparisons. 6) Collect summary metrics. 
+
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
 
-#### Generalized additive models, cross validation 
+#### GAM CV
 
 ```{r}
 #Define model in parsnip 
@@ -71,6 +75,7 @@ reddrum_env_bc_forage_cv_unsumm <- collect_metrics(reddrum_env_bc_forage_cv, sum
 ```
 
 ##### Southern kingfish
+
 ```{r}
 folds <- vfold_cv(df_CPUE_length_wide_both, v= 5, strata= southernkingfishP915, repeats= 100)
 ```
@@ -109,7 +114,6 @@ southernkingfish_env_bc_cv_unsumm <- collect_metrics(southernkingfish_env_bc_cv,
 southernkingfish_env_forage_wf <- workflow() %>% add_variables(outcomes= southernkingfishP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120)) %>% add_model(gam_mod, formula= southernkingfishP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logsouthernkingfishP915forageP915) + s(logsouthernkingfishP915forageP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 southernkingfish_env_forage_cv <- southernkingfish_env_forage_wf %>% fit_resamples(folds)
-beep(sound=8)
 southernkingfish_env_forage_cv2 <- collect_metrics(southernkingfish_env_forage_cv)
 combined_df <- do.call(rbind, southernkingfish_env_forage_cv)
 southernkingfish_env_forage_cv_unsumm <- collect_metrics(southernkingfish_env_forage_cv, summarize= FALSE)
@@ -118,13 +122,13 @@ southernkingfish_env_forage_cv_unsumm <- collect_metrics(southernkingfish_env_fo
 southernkingfish_env_bc_forage_wf <- workflow() %>% add_variables(outcomes= southernkingfishP915, predictors= c(avgdepth, avgssal, avgstemp, avgsdo, NoFishRest, logsouthernkingfishP915forageP915, logsouthernkingfishP915forageP120, logsmallbluecrabP120)) %>% add_model(gam_mod, formula= southernkingfishP915 ~ s(avgdepth) + s(avgssal) + s(avgstemp) + s(avgsdo) + s(NoFishRest) + s(logsouthernkingfishP915forageP915) + s(logsouthernkingfishP915forageP120) + s(logsmallbluecrabP120)) %>% fit(data= df_CPUE_length_wide_both) 
 
 southernkingfish_env_bc_forage_cv <- southernkingfish_env_bc_forage_wf %>% fit_resamples(folds)
-beep(sound=8)
 southernkingfish_env_bc_forage_cv2 <- collect_metrics(southernkingfish_env_bc_forage_cv)
 combined_df <- do.call(rbind, southernkingfish_env_bc_forage_cv)
 southernkingfish_env_bc_forage_cv_unsumm <- collect_metrics(southernkingfish_env_bc_forage_cv, summarize= FALSE)
 ```
 
 ##### Black drum
+
 ```{r}
 folds <- vfold_cv(df_CPUE_length_wide_both, v= 5, strata= blackdrumP915, repeats= 100)
 ```
@@ -176,7 +180,7 @@ combined_df <- do.call(rbind, blackdrum_env_bc_forage_cv)
 blackdrum_env_bc_forage_cv_unsumm <- collect_metrics(blackdrum_env_bc_forage_cv, summarize= FALSE)
 ```
 
-#### gJam, cross validation 
+#### gJam CV
 
 ##### Red drum
 
@@ -225,16 +229,6 @@ reddrum_env_bc_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_
 reddrum_env_bc_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
 print(i)
 }
-
-mean(reddrum_env_bc_gjam$r2_uncon)
-mean(reddrum_env_bc_gjam$r2_con)
-sd(reddrum_env_bc_gjam$r2_uncon)
-sd(reddrum_env_bc_gjam$r2_con)
-
-mean(reddrum_env_bc_gjam$rmse_uncon)
-mean(reddrum_env_bc_gjam$rmse_con)
-sd(reddrum_env_bc_gjam$rmse_uncon)
-sd(reddrum_env_bc_gjam$rmse_con)
 ```
 
 ###### Environment + forage
@@ -281,16 +275,6 @@ reddrum_env_forage_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = dat$p
 reddrum_env_forage_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
 print(i)
 }
-
-mean(reddrum_env_forage_gjam$r2_uncon)
-mean(reddrum_env_forage_gjam$r2_con)
-sd(reddrum_env_forage_gjam$r2_uncon)
-sd(reddrum_env_forage_gjam$r2_con)
-
-mean(reddrum_env_forage_gjam$rmse_uncon)
-mean(reddrum_env_forage_gjam$rmse_con)
-sd(reddrum_env_forage_gjam$rmse_uncon)
-sd(reddrum_env_forage_gjam$rmse_con)
 ```
 
 ###### Environment + blue crab + total forage
@@ -337,21 +321,12 @@ reddrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$reddrumP915, pred = da
 reddrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$reddrumP915, pred = dat$pred_reddrum_un) 
 print(i)
 }
-
-mean(reddrum_env_bc_forage_gjam$r2_uncon)
-mean(reddrum_env_bc_forage_gjam$r2_con)
-sd(reddrum_env_bc_forage_gjam$r2_uncon)
-sd(reddrum_env_bc_forage_gjam$r2_con)
-
-mean(reddrum_env_bc_forage_gjam$rmse_uncon)
-mean(reddrum_env_bc_forage_gjam$rmse_con)
-sd(reddrum_env_bc_forage_gjam$rmse_uncon)
-sd(reddrum_env_bc_forage_gjam$rmse_con)
 ```
 
 ##### Southern kingfish
 
 ###### Environment + blue crab
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -395,19 +370,10 @@ southernkingfish_env_bc_gjam[i,3] <- RMSE_func(actual = dat$southernkingfishP915
 southernkingfish_env_bc_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
 print(i)
 }
-
-mean(southernkingfish_env_bc_gjam$r2_uncon)
-mean(southernkingfish_env_bc_gjam$r2_con)
-sd(southernkingfish_env_bc_gjam$r2_uncon)
-sd(southernkingfish_env_bc_gjam$r2_con)
-
-mean(southernkingfish_env_bc_gjam$rmse_uncon)
-mean(southernkingfish_env_bc_gjam$rmse_con)
-sd(southernkingfish_env_bc_gjam$rmse_uncon)
-sd(southernkingfish_env_bc_gjam$rmse_con)
 ```
 
 ###### Environment + total forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -451,16 +417,6 @@ southernkingfish_env_forage_gjam[i,3] <- RMSE_func(actual = dat$southernkingfish
 southernkingfish_env_forage_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
 print(i)
 }
-
-mean(southernkingfish_env_forage_gjam$r2_uncon)
-mean(southernkingfish_env_forage_gjam$r2_con)
-sd(southernkingfish_env_forage_gjam$r2_uncon)
-sd(southernkingfish_env_forage_gjam$r2_con)
-
-mean(southernkingfish_env_forage_gjam$rmse_uncon)
-mean(southernkingfish_env_forage_gjam$rmse_con)
-sd(southernkingfish_env_forage_gjam$rmse_uncon)
-sd(southernkingfish_env_forage_gjam$rmse_con)
 ```
 
 ##### Environment + blue crab + total forage
@@ -507,21 +463,12 @@ southernkingfish_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$southernkingf
 southernkingfish_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$southernkingfishP915, pred = dat$pred_southernkingfish_un) 
 print(i)
 }
-
-mean(southernkingfish_env_bc_forage_gjam$r2_uncon)
-mean(southernkingfish_env_bc_forage_gjam$r2_con)
-sd(southernkingfish_env_bc_forage_gjam$r2_uncon)
-sd(southernkingfish_env_bc_forage_gjam$r2_con)
-
-mean(southernkingfish_env_bc_forage_gjam$rmse_uncon)
-mean(southernkingfish_env_bc_forage_gjam$rmse_con)
-sd(southernkingfish_env_bc_forage_gjam$rmse_uncon)
-sd(southernkingfish_env_bc_forage_gjam$rmse_con)
 ```
 
 ##### Black drum
 
 ###### Environment + BC
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -565,16 +512,6 @@ blackdrum_env_bc_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$p
 blackdrum_env_bc_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
 print(i)
 }
-
-mean(blackdrum_env_bc_gjam$r2_uncon)
-mean(blackdrum_env_bc_gjam$r2_con)
-sd(blackdrum_env_bc_gjam$r2_uncon)
-sd(blackdrum_env_bc_gjam$r2_con)
-
-mean(blackdrum_env_bc_gjam$rmse_uncon)
-mean(blackdrum_env_bc_gjam$rmse_con)
-sd(blackdrum_env_bc_gjam$rmse_uncon)
-sd(blackdrum_env_bc_gjam$rmse_con)
 ```
 
 ###### Environment + total forage
@@ -621,16 +558,6 @@ blackdrum_env_forage_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred = d
 blackdrum_env_forage_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
 print(i)
 }
-
-mean(blackdrum_env_forage_gjam$r2_uncon)
-mean(blackdrum_env_forage_gjam$r2_con)
-sd(blackdrum_env_forage_gjam$r2_uncon)
-sd(blackdrum_env_forage_gjam$r2_con)
-
-mean(blackdrum_env_forage_gjam$rmse_uncon)
-mean(blackdrum_env_forage_gjam$rmse_con)
-sd(blackdrum_env_forage_gjam$rmse_uncon)
-sd(blackdrum_env_forage_gjam$rmse_con)
 ```
 
 ###### Environment + blue crab + total forage
@@ -677,14 +604,274 @@ blackdrum_env_bc_forage_gjam[i,3] <- RMSE_func(actual = dat$blackdrumP915, pred 
 blackdrum_env_bc_forage_gjam[i,4] <- RMSE_func(actual = dat$blackdrumP915, pred = dat$pred_blackdrum_un) 
 print(i)
 }
+```
 
-mean(blackdrum_env_bc_forage_gjam$r2_uncon)
-mean(blackdrum_env_bc_forage_gjam$r2_con)
-sd(blackdrum_env_bc_forage_gjam$r2_uncon)
-sd(blackdrum_env_bc_forage_gjam$r2_con)
+#### Load-in data 
+```{r}
+### Red Drum ###
+#Env_bc 
+reddrum_gam_env_bc <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_cv_unsumm.csv")
+reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_bc <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc.csv")
 
-mean(blackdrum_env_bc_forage_gjam$rmse_uncon)
-mean(blackdrum_env_bc_forage_gjam$rmse_con)
-sd(blackdrum_env_bc_forage_gjam$rmse_uncon)
-sd(blackdrum_env_bc_forage_gjam$rmse_con)
+#Env_forage
+reddrum_gam_env_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_forage_cv_unsumm.csv")
+reddrum_gam_env_forage <- reddrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/reddrum_env_forage.csv")
+
+#Env_bc_forage
+reddrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/reddrum_env_bc_forage_cv_unsumm.csv")
+reddrum_gam_env_bc_forage <- reddrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/reddrum_env_bc_forage.csv")
+```
+
+```{r}
+### Southern kingfish ###
+#Env_bc 
+southernkingfish_gam_env_bc <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_cv_unsumm.csv")
+southernkingfish_gam_env_bc <- southernkingfish_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_bc <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc.csv")
+
+#Env_forage
+southernkingfish_gam_env_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_forage_cv_unsumm.csv")
+southernkingfish_gam_env_forage <- southernkingfish_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_forage.csv")
+
+#Env_bc_forage
+southernkingfish_gam_env_bc_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/southernkingfish_env_bc_forage_cv_unsumm.csv")
+southernkingfish_gam_env_bc_forage <- southernkingfish_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/southernkingfish_env_bc_forage.csv")
+```
+
+```{r}
+### Black drum ###
+#Env_bc 
+blackdrum_gam_env_bc <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_cv_unsumm.csv")
+blackdrum_gam_env_bc <- blackdrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_bc <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc.csv")
+
+#Env_forage
+blackdrum_gam_env_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_forage_cv_unsumm.csv")
+blackdrum_gam_env_forage <- blackdrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_forage.csv")
+
+#Env_bc_forage
+blackdrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/GAMs/CV/Summary/blackdrum_env_bc_forage_cv_unsumm.csv")
+blackdrum_gam_env_bc_forage <- blackdrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Prediction/blackdrum_env_bc_forage.csv")
+```
+
+#### Pairwise test
+```{r}
+### Red drum ###
+#Env_bc 
+wilcox.test(reddrum_gam_env_bc$mean_rsq, reddrum_gJam_env_bc$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_gam_env_bc$mean_rsq, reddrum_gJam_env_bc$r2_con, paired = FALSE) 
+wilcox.test(reddrum_gJam_env_bc$r2_uncon, reddrum_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gam_env_bc$mean_rmse, reddrum_gJam_env_bc$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_gam_env_bc$mean_rmse, reddrum_gJam_env_bc$rmse_con, paired = FALSE) 
+wilcox.test(reddrum_gJam_env_bc$rmse_uncon, reddrum_gJam_env_bc$rmse_con, paired = TRUE) 
+
+#Env_forage
+wilcox.test(reddrum_gam_env_forage$mean_rsq, reddrum_gJam_env_forage$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_gam_env_forage$mean_rsq, reddrum_gJam_env_forage$r2_con, paired = FALSE) 
+wilcox.test(reddrum_gJam_env_forage$r2_uncon, reddrum_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gam_env_forage$mean_rmse, reddrum_gJam_env_forage$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_gam_env_forage$mean_rmse, reddrum_gJam_env_forage$rmse_con, paired = FALSE) 
+wilcox.test(reddrum_gJam_env_forage$rmse_uncon, reddrum_gJam_env_forage$rmse_con, paired = TRUE) 
+
+#Env_bc_forage
+wilcox.test(reddrum_gam_env_bc_forage$mean_rsq, reddrum_gJam_env_bc_forage$r2_uncon, paired = FALSE)
+wilcox.test(reddrum_gam_env_bc_forage$mean_rsq, reddrum_gJam_env_bc_forage$r2_con, paired = FALSE) 
+wilcox.test(reddrum_gJam_env_bc_forage$r2_uncon, reddrum_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(reddrum_gam_env_bc_forage$mean_rmse, reddrum_gJam_env_bc_forage$rmse_uncon, paired = FALSE)
+wilcox.test(reddrum_gam_env_bc_forage$mean_rmse, reddrum_gJam_env_bc_forage$rmse_con, paired = FALSE) 
+wilcox.test(reddrum_gJam_env_bc_forage$rmse_uncon, reddrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
+
+```{r}
+### Southern kingfish ###
+#Env_bc 
+wilcox.test(southernkingfish_gam_env_bc$mean_rsq, southernkingfish_gJam_env_bc$r2_uncon, paired = FALSE)
+wilcox.test(southernkingfish_gam_env_bc$mean_rsq, southernkingfish_gJam_env_bc$r2_con, paired = FALSE) 
+wilcox.test(southernkingfish_gJam_env_bc$r2_uncon, southernkingfish_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gam_env_bc$mean_rmse, southernkingfish_gJam_env_bc$rmse_uncon, paired = FALSE)
+wilcox.test(southernkingfish_gam_env_bc$mean_rmse, southernkingfish_gJam_env_bc$rmse_con, paired = FALSE) 
+wilcox.test(southernkingfish_gJam_env_bc$rmse_uncon, southernkingfish_gJam_env_bc$rmse_con, paired = TRUE) 
+
+#Env_forage
+wilcox.test(southernkingfish_gam_env_forage$mean_rsq, southernkingfish_gJam_env_forage$r2_uncon, paired = FALSE)
+wilcox.test(southernkingfish_gam_env_forage$mean_rsq, southernkingfish_gJam_env_forage$r2_con, paired = FALSE)
+wilcox.test(southernkingfish_gJam_env_forage$r2_uncon, southernkingfish_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gam_env_forage$mean_rmse, southernkingfish_gJam_env_forage$rmse_uncon, paired = FALSE)
+wilcox.test(southernkingfish_gam_env_forage$mean_rmse, southernkingfish_gJam_env_forage$rmse_con, paired = FALSE) 
+wilcox.test(southernkingfish_gJam_env_forage$rmse_uncon, southernkingfish_gJam_env_forage$rmse_con, paired = TRUE) 
+
+#Env_bc_forage
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rsq, southernkingfish_gJam_env_bc_forage$r2_uncon, paired = FALSE)
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rsq, southernkingfish_gJam_env_bc_forage$r2_con, paired = FALSE) 
+wilcox.test(southernkingfish_gJam_env_bc_forage$r2_uncon, southernkingfish_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_env_bc_forage$rmse_uncon, paired = FALSE)
+wilcox.test(southernkingfish_gam_env_bc_forage$mean_rmse, southernkingfish_gJam_env_bc_forage$rmse_con, paired = FALSE) 
+wilcox.test(southernkingfish_gJam_env_bc_forage$rmse_uncon, southernkingfish_gJam_env_bc_forage$rmse_con, paired = TRUE)
+```
+
+```{r}
+### Black drum ###
+#Env_bc 
+wilcox.test(blackdrum_gam_env_bc$mean_rsq, blackdrum_gJam_env_bc$r2_uncon, paired = FALSE)
+wilcox.test(blackdrum_gam_env_bc$mean_rsq, blackdrum_gJam_env_bc$r2_con, paired = FALSE) 
+wilcox.test(blackdrum_gJam_env_bc$r2_uncon, blackdrum_gJam_env_bc$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gam_env_bc$mean_rmse, blackdrum_gJam_env_bc$rmse_uncon, paired = FALSE)
+wilcox.test(blackdrum_gam_env_bc$mean_rmse, blackdrum_gJam_env_bc$rmse_con, paired = FALSE) 
+wilcox.test(blackdrum_gJam_env_bc$rmse_uncon, blackdrum_gJam_env_bc$rmse_con, paired = TRUE) 
+
+#Env_forage
+wilcox.test(blackdrum_gam_env_forage$mean_rsq, blackdrum_gJam_env_forage$r2_uncon, paired = FALSE)
+wilcox.test(blackdrum_gam_env_forage$mean_rsq, blackdrum_gJam_env_forage$r2_con, paired = FALSE) 
+wilcox.test(blackdrum_gJam_env_forage$r2_uncon, blackdrum_gJam_env_forage$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gam_env_forage$mean_rmse, blackdrum_gJam_env_forage$rmse_uncon, paired = FALSE)
+wilcox.test(blackdrum_gam_env_forage$mean_rmse, blackdrum_gJam_env_forage$rmse_con, paired = FALSE) 
+wilcox.test(blackdrum_gJam_env_forage$rmse_uncon, blackdrum_gJam_env_forage$rmse_con, paired = TRUE) 
+
+#Env_bc_forage
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rsq, blackdrum_gJam_env_bc_forage$r2_uncon, paired = FALSE)
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rsq, blackdrum_gJam_env_bc_forage$r2_con, paired = FALSE) 
+wilcox.test(blackdrum_gJam_env_bc_forage$r2_uncon, blackdrum_gJam_env_bc_forage$r2_con, paired = TRUE) 
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$rmse_uncon, paired = FALSE)
+wilcox.test(blackdrum_gam_env_bc_forage$mean_rmse, blackdrum_gJam_env_bc_forage$rmse_con, paired = FALSE) 
+wilcox.test(blackdrum_gJam_env_bc_forage$rmse_uncon, blackdrum_gJam_env_bc_forage$rmse_con, paired = TRUE) 
+```
+
+#### Summary metrics
+```{r}
+### Red drum ###
+#Env + BC
+mean(reddrum_gam_env_bc$mean_rsq)
+sd(reddrum_gam_env_bc$mean_rsq)
+mean(reddrum_gJam_env_bc$r2_uncon)
+sd(reddrum_gJam_env_bc$r2_uncon)
+mean(reddrum_gJam_env_bc$r2_con)
+sd(reddrum_gJam_env_bc$r2_con)
+mean(reddrum_gam_env_bc$mean_rmse)
+sd(reddrum_gam_env_bc$mean_rmse)
+mean(reddrum_gJam_env_bc$rmse_uncon)
+sd(reddrum_gJam_env_bc$rmse_uncon)
+mean(reddrum_gJam_env_bc$rmse_con)
+sd(reddrum_gJam_env_bc$rmse_con)
+
+#Env + forage
+mean(reddrum_gam_env_forage$mean_rsq)
+sd(reddrum_gam_env_forage$mean_rsq)
+mean(reddrum_gJam_env_forage$r2_uncon)
+sd(reddrum_gJam_env_forage$r2_uncon)
+mean(reddrum_gJam_env_forage$r2_con)
+sd(reddrum_gJam_env_forage$r2_con)
+mean(reddrum_gam_env_forage$mean_rmse)
+sd(reddrum_gam_env_forage$mean_rmse)
+mean(reddrum_gJam_env_forage$rmse_uncon)
+sd(reddrum_gJam_env_forage$rmse_uncon)
+mean(reddrum_gJam_env_forage$rmse_con)
+sd(reddrum_gJam_env_forage$rmse_con)
+
+#Env + BC + forage
+mean(reddrum_gam_env_bc_forage$mean_rsq)
+sd(reddrum_gam_env_bc_forage$mean_rsq)
+mean(reddrum_gJam_env_bc_forage$r2_uncon)
+sd(reddrum_gJam_env_bc_forage$r2_uncon)
+mean(reddrum_gJam_env_bc_forage$r2_con)
+sd(reddrum_gJam_env_bc_forage$r2_con)
+mean(reddrum_gam_env_bc_forage$mean_rmse)
+sd(reddrum_gam_env_bc_forage$mean_rmse)
+mean(reddrum_gJam_env_bc_forage$rmse_uncon)
+sd(reddrum_gJam_env_bc_forage$rmse_uncon)
+mean(reddrum_gJam_env_bc_forage$rmse_con)
+sd(reddrum_gJam_env_bc_forage$rmse_con)
+```
+
+```{r}
+### Southern kingfish ###
+#Env + BC
+mean(southernkingfish_gam_env_bc$mean_rsq)
+sd(southernkingfish_gam_env_bc$mean_rsq)
+mean(southernkingfish_gJam_env_bc$r2_uncon)
+sd(southernkingfish_gJam_env_bc$r2_uncon)
+mean(southernkingfish_gJam_env_bc$r2_con)
+sd(southernkingfish_gJam_env_bc$r2_con)
+mean(southernkingfish_gam_env_bc$mean_rmse)
+sd(southernkingfish_gam_env_bc$mean_rmse)
+mean(southernkingfish_gJam_env_bc$rmse_uncon)
+sd(southernkingfish_gJam_env_bc$rmse_uncon)
+mean(southernkingfish_gJam_env_bc$rmse_con)
+sd(southernkingfish_gJam_env_bc$rmse_con)
+
+#Env + forage
+mean(southernkingfish_gam_env_forage$mean_rsq)
+sd(southernkingfish_gam_env_forage$mean_rsq)
+mean(southernkingfish_gJam_env_forage$r2_uncon)
+sd(southernkingfish_gJam_env_forage$r2_uncon)
+mean(southernkingfish_gJam_env_forage$r2_con)
+sd(southernkingfish_gJam_env_forage$r2_con)
+mean(southernkingfish_gam_env_forage$mean_rmse)
+sd(southernkingfish_gam_env_forage$mean_rmse)
+mean(southernkingfish_gJam_env_forage$rmse_uncon)
+sd(southernkingfish_gJam_env_forage$rmse_uncon)
+mean(southernkingfish_gJam_env_forage$rmse_con)
+sd(southernkingfish_gJam_env_forage$rmse_con)
+
+#Env + BC + forage 
+mean(southernkingfish_gam_env_bc_forage$mean_rsq)
+sd(southernkingfish_gam_env_bc_forage$mean_rsq)
+mean(southernkingfish_gJam_env_bc_forage$r2_uncon)
+sd(southernkingfish_gJam_env_bc_forage$r2_uncon)
+mean(southernkingfish_gJam_env_bc_forage$r2_con)
+sd(southernkingfish_gJam_env_bc_forage$r2_con)
+mean(southernkingfish_gam_env_bc_forage$mean_rmse)
+sd(southernkingfish_gam_env_bc_forage$mean_rmse)
+mean(southernkingfish_gJam_env_bc_forage$rmse_uncon)
+sd(southernkingfish_gJam_env_bc_forage$rmse_uncon)
+mean(southernkingfish_gJam_env_bc_forage$rmse_con)
+sd(southernkingfish_gJam_env_bc_forage$rmse_con)
+```
+
+```{r}
+### Black drum ###
+mean(blackdrum_gam_env_bc$mean_rsq)
+sd(blackdrum_gam_env_bc$mean_rsq)
+mean(blackdrum_gJam_env_bc$r2_uncon)
+sd(blackdrum_gJam_env_bc$r2_uncon)
+mean(blackdrum_gJam_env_bc$r2_con)
+sd(blackdrum_gJam_env_bc$r2_con)
+mean(blackdrum_gam_env_bc$mean_rmse)
+sd(blackdrum_gam_env_bc$mean_rmse)
+mean(blackdrum_gJam_env_bc$rmse_uncon)
+sd(blackdrum_gJam_env_bc$rmse_uncon)
+mean(blackdrum_gJam_env_bc$rmse_con)
+sd(blackdrum_gJam_env_bc$rmse_con)
+
+mean(blackdrum_gam_env_forage$mean_rsq)
+sd(blackdrum_gam_env_forage$mean_rsq)
+mean(blackdrum_gJam_env_forage$r2_uncon)
+sd(blackdrum_gJam_env_forage$r2_uncon)
+mean(blackdrum_gJam_env_forage$r2_con)
+sd(blackdrum_gJam_env_forage$r2_con)
+mean(blackdrum_gam_env_forage$mean_rmse)
+sd(blackdrum_gam_env_forage$mean_rmse)
+mean(blackdrum_gJam_env_forage$rmse_uncon)
+sd(blackdrum_gJam_env_forage$rmse_uncon)
+mean(blackdrum_gJam_env_forage$rmse_con)
+sd(blackdrum_gJam_env_forage$rmse_con)
+
+mean(blackdrum_gam_env_bc_forage$mean_rsq)
+sd(blackdrum_gam_env_bc_forage$mean_rsq)
+mean(blackdrum_gJam_env_bc_forage$r2_uncon)
+sd(blackdrum_gJam_env_bc_forage$r2_uncon)
+mean(blackdrum_gJam_env_bc_forage$r2_con)
+sd(blackdrum_gJam_env_bc_forage$r2_con)
+mean(blackdrum_gam_env_bc_forage$mean_rmse)
+sd(blackdrum_gam_env_bc_forage$mean_rmse)
+mean(blackdrum_gJam_env_bc_forage$rmse_uncon)
+sd(blackdrum_gJam_env_bc_forage$rmse_uncon)
+mean(blackdrum_gJam_env_bc_forage$rmse_con)
+sd(blackdrum_gJam_env_bc_forage$rmse_con)
 ```

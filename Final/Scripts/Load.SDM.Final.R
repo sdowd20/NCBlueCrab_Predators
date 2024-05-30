@@ -54,7 +54,7 @@ graphs <- function(df, df2){
 #1) Clean data and detect human recording errors 
 #2) Form a 0.12° x 0.12° grid cell over the study area 
 #3) Calculate the average catch-per-unit effort (CPUE) value 
-#for an estuarine species and average of environmental variables at a grid cell for a month (May or June) in a year 
+#for an estuarine species and the average of environmental variables at a grid cell for a month (May or June) in a year 
 #4) Use QGIS to calculate the NoFishRest predictor variable, or the % of a grid cell unrestricted to fishing activities.  
 
 ##CPUE: P915 and P120 averaged data 

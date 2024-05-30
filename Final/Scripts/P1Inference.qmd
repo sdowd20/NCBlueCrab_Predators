@@ -4,14 +4,9 @@ format: html
 editor: visual
 ---
 
-This script is used to calculate AIC and DIC for various generalized additive models (GAMs) and gJam models for all predators. 
+This script is used to calculate AIC and DIC for various generalized additive models (GAMs) and gJam models for all predators for part 1 of the study (grouped prey item models).
 
-The workflow is as follows: 
-1) Load in script with datasets and necessary functions
-2) Run GAMs separately for each predator for model types 1-6) in part 1 of the study (see Fig. 2 in manuscript)
-3) Check GAM model performance and calculate AIC values
-4) Run gJam models seperately for each predator for model type 3-6) in part 1 of the study (Fig. 2) based on burn-in time found in P1P2_burnin.qmd
-5) Calculate DIC values for the various gJam models. 
+The workflow is as follows: 1) Load in script with datasets and necessary functions 2) Run GAMs separately for each predator for model types 1-6) in part 1 of the study (see Fig. 2 in manuscript) 3) Check GAM model performance and calculate AIC values 4) Run gJam models seperately for each predator for model type 3-6) in part 1 of the study (Fig. 2) based on burn-in time found in P1P2_burnin.qmd 5) Calculate DIC values for the various gJam models.
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
