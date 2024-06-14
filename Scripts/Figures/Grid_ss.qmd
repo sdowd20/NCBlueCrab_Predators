@@ -138,7 +138,7 @@ p120_CPUEedt_fig24 <- p120_CPUEedt %>% left_join(gridded24, by= "lat_lon") %>% f
 #filter gridID dataset for only gridIDs with data
 globe_grid_15_edt <- globe_grid_15 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both24)
 
-t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("D) 0.24° x 0.24°") 
+t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("D) 0.24° x 0.24°")   + theme(plot.margin = margin(1, 1, 1, 1))
 ```
 
 ```{r}
@@ -156,7 +156,7 @@ p120_CPUEedt_fig12 <- p120_CPUEedt %>% left_join(gridded12, by= "lat_lon") %>% f
 #filter gridID dataset for only gridIDs with data
 globe_grid_30_edt <- globe_grid_30 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both)
 
-t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("C) 0.12° x 0.12°") 
+t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("C) 0.12° x 0.12°")   + theme(plot.margin = margin(1, 1, 1, 1))
 
 ```
 
@@ -175,25 +175,36 @@ p120_CPUEedt_fig06 <- p120_CPUEedt %>% left_join(gridded06, by= "lat_lon") %>% f
 #filter gridID dataset for only gridIDs with data
 globe_grid_60_edt <- globe_grid_60 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both06)
 
-t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("B) 0.06° x 0.06°")
+t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("B) 0.06° x 0.06°")  + theme(plot.margin = margin(1, 1, 1, 1))
 ```
 
 ```{r}
-t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + ggtitle("A) Sampling points")
+t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)  + scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + ggtitle("A) Sampling points") + theme(plot.margin = margin(1, 1, 1, 1))
 ```
 
 ```{r}
 library(ggpubr)
 library(grid)
 
-ya <- ggarrange(t4 + rremove("ylab") + rremove("xlab"), t3 + rremove("ylab") + rremove("xlab"), t2 + rremove("ylab") + rremove("xlab"), t1 + rremove("ylab") + rremove("xlab"), ncol= 4, nrow=1, common.legend=T) + theme(plot.margin = margin(0.25,0.25,0.25,0.25, "cm"))
+#Old: 1 x 4
+ya <- ggarrange(t4 + rremove("ylab") + rremove("xlab"), t3 + rremove("ylab") + rremove("xlab"), t2 + rremove("ylab") + rremove("xlab"), t1 + rremove("ylab") + rremove("xlab"), ncol= 2, nrow=2, common.legend=T) + theme(plot.margin = margin(0.25,0.25,0.25,0.25, "cm"))
 annotate_figure(ya, left= textGrob("Latitude", rot= 90), bottom= textGrob("Longitude"))
 ggsave("~/Desktop/gridded_map_compare.png", width= 12, height=4, dpi=300)
 
-# #Save legend separately 
-# leg <- get_legend(t3)
-# as_ggplot(leg)
-# ggsave("~/Desktop/gridded_map_compare_legend.png", dpi=300, width=3, height=2)
+#New: 2 x 2 
+fine1 <- t4 + rremove("ylab") + rremove("xlab") + theme(legend.position= "none") + theme(axis.text.x= element_blank())
+ggsave("/users/sallydowd/Desktop/fine1.png", dpi= 500, width= 3, height= 3)
+fine2 <- t3 + rremove("ylab") + rremove("xlab") + theme(legend.position= "none") + theme(axis.text.x= element_blank()) + theme(axis.text.y= element_blank())
+ggsave("/users/sallydowd/Desktop/fine2.png", dpi= 500, width= 3, height= 3)
+fine3 <- t2 + rremove("ylab") + rremove("xlab") + theme(legend.position= "none") + theme(axis.text.x= element_blank())
+ggsave("/users/sallydowd/Desktop/fine3.png", dpi= 500, width= 3, height= 3)
+fine4 <- t1 + rremove("ylab") + rremove("xlab") + theme(legend.position= "none") + theme(axis.text.y= element_blank())
+ggsave("/users/sallydowd/Desktop/fine4.png", dpi= 500, width= 3, height= 3)
+
+#Save legend separately 
+leg <- get_legend(t3)
+as_ggplot(leg)
+ggsave("~/Desktop/gridded_map_compare_legend.png", dpi=300, width=3, height=2)
 ```
 
 ### Appendix A:
