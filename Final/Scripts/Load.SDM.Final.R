@@ -59,14 +59,14 @@ graphs <- function(df, df2){
 
 ##CPUE: P915 and P120 averaged data 
 
-df_CPUE_length <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/CPUE/CPUE_grid_avg_lengthedt.03.04.24.csv")
+df_CPUE_length <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Data/CPUE_grid_avg_lengthedt.03.04.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
 df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
 df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
 colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
 
 ##P915 non-averaged data (Model 3 in Part 2 of study)
-df_CPUE_ind_length <- read.csv("~/Google Drive/My Drive/Research/Ch1Data/CPUE/CPUE_grid_avg_lengthedtP915.03.27.24.csv")
+df_CPUE_ind_length <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Data/CPUE_grid_avg_lengthedtP915.03.27.24.csv")
 df_CPUE_ind_length <- df_CPUE_ind_length[,-1]
 df_CPUE_ind_length <- df_CPUE_ind_length %>% mutate_at("Survey", as.factor)
 df_CPUE_ind_length$Speciescommonname <- gsub(" ", "", df_CPUE_ind_length$Speciescommonname)

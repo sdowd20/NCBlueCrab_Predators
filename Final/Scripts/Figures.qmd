@@ -4,14 +4,16 @@ format: html
 editor: visual
 ---
 
-Code to generate figures created in R for the manuscript titled "Predicting Predator Abundance from Prey in Estuaries: Insights from Single and Joint Species Distribution Modeling". The data/functions needed are loaded in from the Load.Figures.R script. 
+Code to generate figures created in R for the manuscript titled "Predicting Predator Abundance from Prey in Estuaries: Insights from Single and Joint Species Distribution Modeling". The data/functions needed are loaded in from the Load.Figures.R script.
+
 ```{r}
 source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.FiguresR")
 ```
 
-## Main text 
+## Main text
 
-### Figure 1: 
+### Figure 1:
+
 ```{r}
 t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("D) 0.24° x 0.24°") + standard2
 
@@ -22,7 +24,8 @@ t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill 
 t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("A) Sampling points") + standard2
 ```
 
-### Figure 3: 
+### Figure 3:
+
 ```{r}
 prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
 df <- prediction_boxplot2
@@ -43,14 +46,16 @@ library(grid)
 annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
 ```
 
-### Figure 4: 
+### Figure 4:
 
-The code for this figure is adapted from Dr. Sarah Roberts (sarah.roberts@duke.edu)
+The code for this figure is adapted from Dr. Sarah Roberts (sarah.roberts\@duke.edu)
+
 ```{r}
 load("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Inference2/Models/non_avg_full.RData")
 ```
 
 ##### Extract parameters
+
 ```{r}
 #posterior summaries 
 out <- non_avg_full
@@ -68,7 +73,8 @@ ycor <- out[["inputs"]][["y"]] #response matrix
 cor2 <- out[["parameters"]][["ematrix"]]
 ```
 
-#### Organize parameters 
+#### Organize parameters
+
 ```{r}
 library(lessR)
 #residual covariance
@@ -96,6 +102,7 @@ ycor<- corReorder(ycor, order = "manual", vars=c(smallatlanticcroakerP915, small
 ```
 
 #### Plots
+
 ```{r}
 #co-occurence in ydata
 cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
@@ -153,6 +160,7 @@ betaplot <- betaplot + theme(legend.position= "none") +
 ```
 
 #### Organize plots
+
 ```{r}
 library(cowplot)
 # extract the legend from one of the plots
@@ -166,8 +174,120 @@ annotate_figure(d, bottom= legend)
 
 ## Appendix A: Introduction & Methods
 
+### Fig A.1:
+```{r}
+#0.06: find number of presence/abscence
+df_count_wide_both06 %>% filter(reddrumP915 > 0) 
+##397 observations total 
+##Positive observations: red drum: 164, black drum: 130, southern kingfish: 65
+##Zero observations: 233, 267, 332
 
-### Fig A.1: 
+data2 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(397,397,397, 164, 130, 65), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.06,.06,.06,.06,.06,.06))
+
+#0.12
+data <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(572,572,572, 181, 112, 68), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.12,.12,.12,.12,.12,.12))
+
+data_t <- rbind(data, data2)
+
+#0.24
+df_count_wide_both24  %>% filter(southernkingfishP915 > 0)
+
+data3 <- data.frame(species = c("Red drum", "Black drum", "Southern kingfish", "Red drum", "Black drum", "Southern kingfish"), count = c(432,432,432, 258, 220, 130), pattern= c("0", "0", "0", "pos", "pos", "pos"), grid = c(.24,.24,.24,.24,.24,.24))
+data_t <- rbind(data, data2, data3)
+
+data_t$grid <- factor(data_t$grid, levels = c(0.06, 0.12, 0.24))
+
+ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standard_theme + labs(x= "Grid cell size", y= "Number of data records", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_bar(stat= "identity") + guides(alpha = guide_legend(title = "Type of observation")) + scale_alpha_manual(values = c("pos" = 0.6, "neg" = 1), labels= "Positive encounter") + scale_x_discrete(labels= c("0.06° x 0.06°", "0.12° x 0.12°", "0.24° x 0.24°"))
+```
+
+### Fig A.3
+```{r}
+df_CPUE_length <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Data/CPUE_grid_avg_lengthedt.03.04.24.csv")
+df_CPUE_length <- df_CPUE_length[,-1]
+df_CPUE_length <- df_CPUE_length %>% mutate_at("Survey", as.factor)
+df_CPUE_length$Speciescommonname <- gsub(" ", "", df_CPUE_length$Speciescommonname)
+colnames(df_CPUE_length) <- gsub(pattern = "_", replacement = "", colnames(df_CPUE_length))
+
+df_CPUE_length$SpeciesSurvey <- paste(df_CPUE_length$Speciescommonname, df_CPUE_length$Survey, sep= "")
+df_CPUE_length$meanCPUE <- as.numeric(df_CPUE_length$meanCPUE)
+df_CPUE_length_wide_both <- df_CPUE_length %>% filter(Survey %in% "P120"|Survey %in% "P915") %>% dplyr::select(-Speciescommonname, -Survey) %>% ungroup() %>% pivot_wider(names_from = "SpeciesSurvey", values_from = "meanCPUE") %>% drop_na()
+
+cor <- cor(df_CPUE_length_wide_both[, c(2, 4:5, 7:11)])
+corrplot(cor, mar= c(3,3,3,3))
+```
+
+### Fig A.4
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+```
+
+```{r}
+newdf <- df_CPUE_length_wide_both %>% group_by(Month, Year) %>% summarize(reddrumP915forage = sum(logreddrumP915forageP915), reddrumP120forage = sum(logreddrumP915forageP120), southernkingfishP915forage = sum(logsouthernkingfishP915forageP915), southernkingfishP120forage = sum(logsouthernkingfishP915forageP120), blackdrumP120forage = sum(logblackdrumP915forageP120)) %>% pivot_longer(cols= c(reddrumP915forage, reddrumP120forage, southernkingfishP915forage, southernkingfishP120forage, blackdrumP120forage), names_to= "Speciesforage", values_to= "Value") %>% mutate(Month=ifelse(Month == 5, "May", "June"))
+
+newdf <- newdf %>% mutate(Speciesforage= fct_relevel(Speciesforage, "reddrumP120forage", "southernkingfishP120forage", "blackdrumP120forage", "southernkingfishP915forage", "reddrumP915forage")) 
+
+cbPalette <- c("#999999", "#56B4E9", "#009E73", "#D55E00", "#CC79A7")
+
+t3<- newdf %>% ungroup() %>% ggplot(aes(fill= Speciesforage, y= Value, x= Year)) + geom_bar(position="stack", stat="identity") + facet_wrap(~factor(Month, levels= c("May", "June")), scales= "free") + theme(panel.spacing= unit(1,"lines")) + standard_theme + scale_fill_manual(values=cbPalette) + scale_y_continuous(expand = c(0, 0)) + labs(fill= "Total prey index")
+t3 + theme(legend.position = "none")
+ggsave("/users/sallydowd/Desktop/test.jpeg", width= 8, height= 5, dpi= 300)
+library(cowplot)
+library(ggpubr)
+leg <- get_legend(t3 + labs(fill= "Prey items consumed"))
+as_ggplot(leg)
+ggsave("~/Desktop/t32_legend.png", dpi=300, width=6, height=4)
+```
+
+### Fig A.5
+```{r}
+#Combine length datasets for plotting 
+p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
+p120_gg <- P120_os_prop_edt %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
+p120_gg %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
+combo <- rbind(p915_gg, p120_gg)
+```
+
+```{r}
+combo %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey") + xlim(0,750)
+```
+
+### Fig A.6
+```{r}
+t1 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
+ggplot() + geom_histogram(aes(x= logreddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
+
+t2 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P120 total prey CPUE") + ylab("Count")
+ggplot() + geom_histogram(aes(x= logreddrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P120 total prey CPUE") + ylab("Count")
+
+t3 <- ggplot() + geom_histogram(aes(x= southernkingfishP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P915 total prey CPUE") + ylab("Count") + labs(tag= "B)")
+ggplot() + geom_histogram(aes(x= logsouthernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Southern kingfish P120 total prey CPUE") + ylab("Count")
+
+t4 <- ggplot() + geom_histogram(aes(x= southernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Southern kingfish P120 total prey CPUE") + ylab("Count")
+ggplot() + geom_histogram(aes(x= logsouthernkingfishP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log southern kingfish P120 total prey CPUE") + ylab("Count")
+
+t5 <- ggplot() + geom_histogram(aes(x= blackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
+ggplot() + geom_histogram(aes(x= logblackdrumP915forageP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log black drum P120 total prey CPUE") + ylab("Count") + labs(tag= "C)")
+
+t6 <- ggplot() + geom_histogram(aes(x= smallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Blue crab P120 CPUE") + ylab("Count") + labs(tag= "D)")
+ggplot() + geom_histogram(aes(x= logsmallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log blue crab P120 CPUE") + ylab("Count") + labs(tag= "D)")
+```
+
+### Fig A.7 - Fig A.12 
+This figures were generated in PIPIIburnin.qmd from gJam objects with a variation of this line of code: 
+
+plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
+                        SAVEPLOTS = T, PLOTALLY = T, 
+                        outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Red_drum/Env_bc_forage/modo3')
+
+## Appendix B: Results 
+
+### Fig B.1 
 
 
-### Fig A.3 
+### Fig B.2 
+
+
+### Fig B.3
+
+### Fig B.4 
+

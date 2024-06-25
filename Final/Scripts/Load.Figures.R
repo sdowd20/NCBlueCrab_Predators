@@ -137,4 +137,31 @@ p120_CPUEedt_fig12 <- p120_CPUEedt %>% left_join(gridded12, by= "lat_lon") %>% f
 #filter gridID dataset for only gridIDs with data
 globe_grid_30_edt <- globe_grid_30 %>% dplyr::rename("gridID"= "ID") %>% filter(gridID %in% gridID_both)
 
-######### FIGURE 3 #########
+
+######### FIGURE A.5 #########
+#Length datasets
+p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
+p915_len_f <- p915_len_f %>% dplyr::select(-X) %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
+P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
+P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2) %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
+
+#P915
+species <- p915_len_f %>% filter(Speciescommonname %in% c("atlantic croaker", "atlantic menhaden", "spot", "southern flounder", "pinfish", "red drum", "black drum", "southern kingfish")) %>% dplyr::select(Sample, Speciescommonname, Colnum, Length, Control2, Linenum)
+
+##Count # of individuals of a length for a mesh size, sum_count as # of individuals total 
+species_edt <- species %>% group_by(Sample, Colnum, Length, Control2, Speciescommonname) %>% summarize(count= n()) %>% ungroup() %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(sum_count= sum(count)) 
+
+##Counted # of observations at each length for a sample, computed a frequency, multiplied frequency by total Colnum
+species2_freq <- species_edt %>% group_by(Sample, Colnum, Control2, Speciescommonname) %>% mutate(Freq= count/sum_count) %>% ungroup() %>% mutate(Number= Freq*Colnum) #each row as length so don't group by length
+p915_length_toplot <- species2_freq %>% group_by(Sample, Length, Speciescommonname) %>% summarize(Num_sum = sum(Number)) %>% rename("Colnum"= "Num_sum")
+p915_length_toplot$Survey <- "P915"
+
+#P120 
+species_p120 <- P120_bioledt %>% filter(Speciescommonname %in% c("atlantic croaker", "atlantic menhaden", "spot", "southern flounder", "pinfish", "white shrimp", "pink shrimp", "brown shrimp", "blue crab")) %>% dplyr::select(Control1, Date, Location, Colnum, Samnum, Subnum, Linenum, Frequenc, Length, Speciescommonname) %>% drop_na(Colnum, Length)
+
+P120_other_species_edt <- species_p120 %>% group_by(Control1, Colnum, Length, Speciescommonname) %>% uncount(weights=Frequenc, .remove= FALSE) %>% mutate(Frequenc_new = 1) #duplicates rows according to Frequency
+
+P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Length, Colnum, Speciescommonname) %>% mutate(Count= n()) %>% distinct(Count, .keep_all= TRUE) %>% ungroup() %>% group_by(Control1, Colnum, Speciescommonname) %>% mutate(Total_sampled= sum(Count)) %>% ungroup() %>% mutate(Proportion= Count/Total_sampled) %>% dplyr::select(Control1, Date, Speciescommonname, Colnum, Length, Count, Total_sampled, Proportion)
+
+P120_os_prop_edt <- P120_os_prop %>% mutate(Number= Colnum*Proportion) %>% group_by(Control1, Length, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) %>% rename("Colnum"= "Number_new")
+P120_os_prop_edt$Survey <- "P120"

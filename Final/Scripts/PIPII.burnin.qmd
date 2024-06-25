@@ -4,11 +4,11 @@ format: html
 editor: visual
 ---
 
-This script is used to determine the number of iterations and burn-in time for all gJam models. The values for these parameters were selected based on previous research. 
+This script is used to determine the number of iterations and burn-in time for all gJam models. The values for these parameters were selected based on previous research.
 
-Modo1 corresponds to 5,000 iterations with a burn-in time of 800, Modo 2 to 10,000 iterations and 400 burn-in, Modo 3 to 20,000 and 8,000 burn-in, and Modo 4 to 60,000 iterations and a burn-in of 10,000. 
+Modo1 corresponds to 5,000 iterations with a burn-in time of 800, Modo 2 to 10,000 iterations and 400 burn-in, Modo 3 to 20,000 and 8,000 burn-in, and Modo 4 to 60,000 iterations and a burn-in of 10,000.
 
-For part 1 of the study (grouped prey item models), an individual model was run for each predator for the various combinations of iterations and burn-in time. For part 2 of the study (individual prey item models), separate combinations of iterations and burn-in time were run for Model 1a, Model 2a, and Model 3a. For all models, the beta coefficient chains were analyzed outside of R to check for convergence. 
+For part 1 of the study (grouped prey item models), an individual model was run for each predator for the various combinations of iterations and burn-in time. For part 2 of the study (individual prey item models), separate combinations of iterations and burn-in time were run for Model 1a, Model 2a, and Model 3a. For all models, the beta coefficient chains were analyzed outside of R to check for convergence.
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
@@ -16,11 +16,12 @@ source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 df <- df_CPUE_length_wide_both
 ```
 
-### Grouped prey items 
+### Grouped prey items
 
 #### Red drum
 
-##### Modo 1 
+##### Modo 1
+
 ```{r}
 #5000, 800
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -36,6 +37,7 @@ gjamPlot(output = modo1, plotPars = plot)
 ```
 
 ##### Modo2
+
 ```{r}
 #10,000, 400
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -51,6 +53,7 @@ gjamPlot(output = modo2, plotPars = plot)
 ```
 
 ##### Modo3
+
 ```{r}
 #20,000, 8,000
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -66,6 +69,7 @@ gjamPlot(output = modo3, plotPars = plot)
 ```
 
 ##### Modo4
+
 ```{r}
 #60,000, 10,000
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -81,6 +85,7 @@ gjamPlot(output = modo4, plotPars = plot)
 ```
 
 #### Black drum
+
 ```{r}
 df <- df_CPUE_length_wide_both
 
@@ -88,6 +93,7 @@ df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logblackdrum
 ```
 
 ##### Modo2
+
 ```{r}
 #10,000, 400
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -103,6 +109,7 @@ gjamPlot(output = modo2, plotPars = plot)
 ```
 
 ##### Modo3
+
 ```{r}
 #20,000, 8000
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -118,6 +125,7 @@ gjamPlot(output = modo3, plotPars = plot)
 ```
 
 ##### Modo4
+
 ```{r}
 #60,000, 10,000
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -133,6 +141,7 @@ gjamPlot(output = modo4, plotPars = plot)
 ```
 
 #### Southern kingfish
+
 ```{r}
 df <- df_CPUE_length_wide_both
 
@@ -140,6 +149,7 @@ df <- df %>% mutate(logsmallbluecrabP120= log(smallbluecrabP120+1), logsouthernk
 ```
 
 ##### Modo3
+
 ```{r}
 #20,000, 8,000
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -158,7 +168,8 @@ beep(sound=8)
 
 ### Individual prey items
 
-#### Model 1a 
+#### Model 1a
+
 ```{r}
 df <- df_CPUE_length_wide_both 
 xdata <- df %>% dplyr::select(avgdepth, avgstemp, avgssal, avgsdo, NoFishRest, Yearfactor)
@@ -178,6 +189,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ##### Modo2
+
 ```{r}
 #10,000, 400
 ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
@@ -193,6 +205,7 @@ gjamPlot(output = both_ind_burn2, plotPars = plot)
 ```
 
 ##### Modo3
+
 ```{r}
 #20,000, 8,000
 ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
@@ -208,6 +221,7 @@ gjamPlot(output = both_ind_burn3, plotPars = plot)
 ```
 
 #### Model 2a
+
 ```{r}
 #May and June, 2001-2019
 df <- df_CPUE_length_wide_P915
@@ -232,6 +246,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ##### Modo 2
+
 ```{r}
 #10,000, 400
 ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
@@ -247,6 +262,7 @@ gjamPlot(output = one_ind_burn2, plotPars = plot)
 ```
 
 ##### Modo 3
+
 ```{r}
 #20,000, 8,000
 ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
@@ -263,6 +279,7 @@ beep(sound=8)
 ```
 
 #### Model 3a
+
 ```{r}
 #May and June, 2001-2019
 df <- df_CPUE_length_wide_indP915
@@ -287,6 +304,7 @@ ydata_test <- test[,colnames(ydata)]
 ```
 
 ##### Modo 1
+
 ```{r}
 #5,000 800
 ml <- list(ng = 5000, burnin = 800, typeNames = 'CA')
@@ -303,6 +321,7 @@ beep(sound=8)
 ```
 
 ##### Modo 2
+
 ```{r}
 #10,000, 400
 ml <- list(ng = 10000, burnin = 400, typeNames = 'CA')
@@ -318,6 +337,7 @@ gjamPlot(output = non_avg2, plotPars = plot)
 ```
 
 ##### Modo 3
+
 ```{r}
 #20,000, 8,000
 ml <- list(ng = 20000, burnin = 8000, typeNames = 'CA')
