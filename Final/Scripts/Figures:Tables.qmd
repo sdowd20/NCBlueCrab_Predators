@@ -1,0 +1,56 @@
+---
+title: "Figures"
+format: html
+editor: visual
+---
+
+Code to generate figures created in R for the manuscript titled "Predicting Predator Abundance from Prey in Estuaries: Insights from Single and Joint Species Distribution Modeling". The data/functions needed are loaded in from the Load.Figures.R script. 
+```{r}
+source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.FiguresR")
+```
+
+## Main text 
+
+### Figure 1: 
+```{r}
+t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("D) 0.24° x 0.24°") + standard2
+
+t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) ggtitle("C) 0.12° x 0.12°")   + standard2
+
+t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + ggtitle("B) 0.06° x 0.06°")  + standard2
+
+t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("A) Sampling points") + standard2
+```
+
+### Figure 3: 
+```{r}
+prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
+df <- prediction_boxplot2
+df$Prediction < - factor(df$Prediction, levels=c("Traditional", "Conditional"))
+```
+
+```{r}
+rd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + 
+geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.80, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.95, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.80, label= "") + ylim(-1.2, 1.0) + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Red drum")
+
+sk_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + expand_limits(y= c(0.0015, 0.23)) + 
+geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.20, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.22, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.20, label= "") + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Southern kingfish")
+
+bd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "C)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + expand_limits(y= c(-1, 2.5)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 2, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 2.4, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 2, label= "")  + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Black drum")
+
+fig <- ggarrange(rd_p2 + rremove("xlab") + rremove("ylab"), sk_p2 + rremove("xlab") + rremove("ylab"), bd_p2 + rremove("xlab") + rremove("ylab"), ncol= 3)
+library(grid)
+annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
+```
+
+
+### Figure 4: 
+
+
+## Appendix A: Introduction & Methods
+
+
+### Fig A.1: 
+
+
+### Fig A.3 
