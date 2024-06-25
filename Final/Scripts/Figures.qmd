@@ -7,7 +7,8 @@ editor: visual
 Code to generate figures created in R for the manuscript titled "Predicting Predator Abundance from Prey in Estuaries: Insights from Single and Joint Species Distribution Modeling". The data/functions needed are loaded in from the Load.Figures.R script.
 
 ```{r}
-source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.FiguresR")
+source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.Figures.R")
+source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.SDM.Final.R")
 ```
 
 ## Main text
@@ -175,6 +176,7 @@ annotate_figure(d, bottom= legend)
 ## Appendix A: Introduction & Methods
 
 ### Fig A.1:
+
 ```{r}
 #0.06: find number of presence/abscence
 df_count_wide_both06 %>% filter(reddrumP915 > 0) 
@@ -201,6 +203,7 @@ ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standa
 ```
 
 ### Fig A.3
+
 ```{r}
 df_CPUE_length <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Data/CPUE_grid_avg_lengthedt.03.04.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
@@ -217,6 +220,7 @@ corrplot(cor, mar= c(3,3,3,3))
 ```
 
 ### Fig A.4
+
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
@@ -239,6 +243,7 @@ ggsave("~/Desktop/t32_legend.png", dpi=300, width=6, height=4)
 ```
 
 ### Fig A.5
+
 ```{r}
 #Combine length datasets for plotting 
 p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
@@ -252,6 +257,7 @@ combo %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_hi
 ```
 
 ### Fig A.6
+
 ```{r}
 t1 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
 ggplot() + geom_histogram(aes(x= logreddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
@@ -272,22 +278,141 @@ t6 <- ggplot() + geom_histogram(aes(x= smallbluecrabP120), data= df_CPUE_length_
 ggplot() + geom_histogram(aes(x= logsmallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log blue crab P120 CPUE") + ylab("Count") + labs(tag= "D)")
 ```
 
-### Fig A.7 - Fig A.12 
-This figures were generated in PIPIIburnin.qmd from gJam objects with a variation of this line of code: 
+### Fig A.7 - Fig A.12
 
-plot <- list(SMALLPLOTS = T, GRIDPLOTS=T, 
-                        SAVEPLOTS = T, PLOTALLY = T, 
-                        outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Red_drum/Env_bc_forage/modo3')
+This figures were generated in PIPIIburnin.qmd from gJam objects with a variation of this line of code:
 
-## Appendix B: Results 
+plot \<- list(SMALLPLOTS = T, GRIDPLOTS=T, SAVEPLOTS = T, PLOTALLY = T, outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Red_drum/Env_bc_forage/modo3')
 
-### Fig B.1 
+## Appendix B: Results
 
+### Fig B.1
+```{r}
+#Best GAMs
+reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logsmallbluecrabP120), family= tw(), data=df_CPUE_length_wide_both)
 
-### Fig B.2 
+southernkingfish_env_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logsouthernkingfishP915forageP915) + s(logsouthernkingfishP915forageP120), family= tw(), data=df_CPUE_length_wide_both)
 
+blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logblackdrumP915forageP120), family= tw(), data=df_CPUE_length_wide_both)
+```
+
+#### A) 
+```{r}
+sm <- smooth_estimates(reddrum_env_bc) %>% transform_fun(exp) %>%
+add_confint() 
+
+pr <- df %>% add_partial_residuals(reddrum_env_bc) %>%  
+transform_fun(fun = exp, column = "s(avgssal)") %>%  
+transform_fun(fun = exp, column = "s(avgstemp)") %>%  
+transform_fun(fun = exp, column = "s(avgdepth)") %>%  
+transform_fun(fun = exp, column = "s(avgsdo)") %>%  
+transform_fun(fun = exp, column = "s(NoFishRest)") %>%  
+transform_fun(fun = exp, column = "s(logsmallbluecrabP120)")
+
+p1 <- plot(sm, "s(avgssal)", avgssal, pr, `s(avgssal)`, "s(avgssal)", reddrumP915, "Average surface salinity")
+p2 <- plot(sm, "s(avgstemp)", avgstemp, pr, `s(avgstemp)`, "s(avgstemp)", reddrumP915, "Average surface temperature")
+p3 <- plot(sm, "s(avgdepth)", avgdepth, pr, `s(avgdepth)`, "s(avgdepth)", reddrumP915, "Average depth")
+p4 <- plot(sm, "s(avgsdo)", avgsdo, pr, `s(avgsdo)`, "s(avgsdo)", reddrumP915, "Average surface dissolved oxygen")
+p5 <- plot(sm, "s(NoFishRest)", NoFishRest, pr, `s(NoFishRest)`, "s(NoFishRest)", reddrumP915, "NoFishRest")
+p6 <- plot(sm, "s(logsmallbluecrabP120)", logsmallbluecrabP120, pr, `s(logsmallbluecrabP120)`, "s(logsmallbluecrabP120)", reddrumP915, "Small blue crab CPUE") 
+
+t1 <- ggarrange(p1, p2, p3, p4, p5, p6)
+annotate_figure(t1, left= textGrob("Partial effect", rot=90), fig.lab= "A)", top = "reddrumP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)\n+s(NoFishRest)+factor(Yearfactor)+s(logsmallbluecrabP120)")
+```
+
+#### B)
+```{r}
+sm2 <- smooth_estimates(southernkingfish_env_forage) %>% transform_fun(exp) %>%
+add_confint() 
+
+pr2 <- df %>% add_partial_residuals(southernkingfish_env_forage) %>%  transform_fun(fun = exp, column = "s(avgssal)") %>%  
+transform_fun(fun = exp, column = "s(avgstemp)") %>%  
+transform_fun(fun = exp, column = "s(avgdepth)") %>%  
+transform_fun(fun = exp, column = "s(avgsdo)") %>%  
+transform_fun(fun = exp, column = "s(NoFishRest)") %>%  
+transform_fun(fun = exp, column = "s(logsouthernkingfishP915forageP915)") %>%  
+transform_fun(fun = exp, column = "s(logsouthernkingfishP915forageP120)")
+
+p1 <- plot(sm2, "s(avgssal)", avgssal, pr2, `s(avgssal)`, "s(avgssal)", southernkingfishP915, "Average surface salinity")
+p2 <- plot(sm2, "s(avgstemp)", avgstemp, pr2, `s(avgstemp)`, "s(avgstemp)", southernkingfishP915, "Average surface temperature")
+p3 <- plot(sm2, "s(avgdepth)", avgdepth, pr2, `s(avgdepth)`, "s(avgdepth)", southernkingfishP915, "Average depth")
+p4 <- plot(sm2, "s(avgsdo)", avgsdo, pr2, `s(avgsdo)`, "s(avgsdo)", southernkingfishP915, "Average surface dissolved oxygen")
+p5 <- plot(sm2, "s(NoFishRest)", NoFishRest, pr2, `s(NoFishRest)`, "s(NoFishRest)", southernkingfishP915, "NoFishRest")
+p6 <- plot(sm2, "s(logsouthernkingfishP915forageP915)", logsouthernkingfishP915forageP915, pr2, `s(logsouthernkingfishP915forageP915)`, "s(logsouthernkingfishP915forageP915)", southernkingfishP915, "P915 Prey CPUE") 
+p7 <- plot(sm2, "s(logsouthernkingfishP915forageP120)", logsouthernkingfishP915forageP120, pr2, `s(logsouthernkingfishP915forageP120)`, "s(logsouthernkingfishP915forageP120)", southernkingfishP915, "P120 Prey CPUE") 
+
+t2 <- ggarrange(p1, p2, p3, p4, p5, p6, p7)
+annotate_figure(t2, left= textGrob("Partial effect", rot=90), fig.lab= "B)", top= "southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logsouthernkingfishP915forageP915)+s(logsouthernkingfishP915forageP120)")
+```
+
+#### C) 
+```{r}
+sm3 <- smooth_estimates(blackdrum_env_forage) %>% transform_fun(exp) %>%
+add_confint() 
+
+pr3 <- df %>% add_partial_residuals(blackdrum_env_forage) %>%  transform_fun(fun = exp, column = "s(avgssal)") %>%  
+transform_fun(fun = exp, column = "s(avgstemp)") %>%  
+transform_fun(fun = exp, column = "s(avgdepth)") %>%  
+transform_fun(fun = exp, column = "s(avgsdo)") %>%  
+transform_fun(fun = exp, column = "s(NoFishRest)") %>%  
+transform_fun(fun = exp, column = "s(logblackdrumP915forageP120)")
+
+p1 <- plot(sm3, "s(avgssal)", avgssal, pr3, `s(avgssal)`, "s(avgssal)", blackdrumP915, "Average surface salinity")
+p2 <- plot(sm3, "s(avgstemp)", avgstemp, pr3, `s(avgstemp)`, "s(avgstemp)", blackdrumP915, "Average surface temperature")
+p3 <- plot(sm3, "s(avgdepth)", avgdepth, pr3, `s(avgdepth)`, "s(avgdepth)", blackdrumP915, "Average depth")
+p4 <- plot(sm3, "s(avgsdo)", avgsdo, pr3, `s(avgsdo)`, "s(avgsdo)", blackdrumP915, "Average surface dissolved oxygen")
+p5 <- plot(sm3, "s(NoFishRest)", NoFishRest, pr3, `s(NoFishRest)`, "s(NoFishRest)", blackdrumP915, "NoFishRest")
+p6 <- plot(sm3, "s(logblackdrumP915forageP120)", logblackdrumP915forageP120, pr3, `s(logblackdrumP915forageP120)`, "s(logblackdrumP915forageP120)", blackdrumP915, "P120 Prey CPUE") 
+
+t3 <- ggarrange(p1, p2, p3, p4, p5, p6)
+annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top= "blackdrumP915 ~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logblackdrumP915forageP120)")
+```
+
+### Fig B.2
+```{r}
+prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
+df <- prediction_boxplot %>% filter(!Model %in% c("Environment", "Blue crab", "Prey"))
+df$Model < - factor(df$Model, levels=c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+```
+
+```{r}
+rd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + ggtitle(expression(paste("Red drum"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))+ geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.16, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.16, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.21, label= "") + ylim(-0.30, 0.23)
+
+sk1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + ggtitle(expression(paste("Southern kingfish"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.18, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.18, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.20, label= "") + ylim(-0.02, 0.22) + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))
+
+bd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + ggtitle(expression(paste("Black drum"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(-1.2, 0.9) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.65, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.65, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.83, label= "") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))
+```
 
 ### Fig B.3
+```{r}
+prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
+df <- prediction_boxplot %>% filter(!Model %in% c("Environment", "Blue crab", "Prey"))
+df$Model < - factor(df$Model, levels=c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+```
 
-### Fig B.4 
+```{r}
+rd2 <- ggplot(subset(df, Species %in% "Red drum")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Red drum") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") + expand_limits(y= c(0.0015, 0.0083)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0072, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.0072, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0080, label= "") +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey")))
 
+sk2 <- ggplot(subset(df, Species %in% "Southern kingfish")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Southern kingfish") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") + expand_limits(y= c(0.00050, 0.00105)) +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00097, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.00097, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.00102, label= "") 
+
+bd2 <- ggplot(subset(df, Species %in% "Black drum")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Black drum") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(0.000, 0.0113) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0095, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.0095, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0106, label= "") 
+```
+
+### Fig B.4
+```{r}
+prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
+df <- prediction_boxplot2
+df$Prediction < - factor(df$Prediction, levels=c("Traditional", "Conditional"))
+```
+
+```{r}
+rd_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0135, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0145, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0135, label= "") + ggtitle("Red drum")
+
+sk_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.00155)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00145, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.00152, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.00145, label= "") + ggtitle("Southern kingfish")
+
+bd_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.0115)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0098, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.011, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0098, label= "") + ggtitle("Black drum")
+
+fig <- ggarrange(rd_p3 + rremove("xlab") + rremove("ylab"), sk_p3 + rremove("xlab") + rremove("ylab"), bd_p3 + rremove("xlab") + rremove("ylab"), ncol= 3)
+library(grid)
+annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("RMSE")), rot= 90))
+```

@@ -165,3 +165,14 @@ P120_os_prop <- P120_other_species_edt %>% group_by(Control1, Length, Colnum, Sp
 
 P120_os_prop_edt <- P120_os_prop %>% mutate(Number= Colnum*Proportion) %>% group_by(Control1, Length, Speciescommonname) %>% mutate(Number_new = sum(Number)) %>% distinct(Number_new) %>% rename("Colnum"= "Number_new")
 P120_os_prop_edt$Survey <- "P120"
+
+######### FIGURE B.1 #########
+library(ggpubr)
+library(grid)
+plot <- function(smooth_df, smooth2, predictor, df, predictor2, predictor3, predator, xlabel){
+  smooth_df %>%
+    filter(smooth == smooth2) %>%
+    ggplot() + geom_rug(aes(x= {{predictor}}), data= df) + geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = {{predictor}}), alpha = 0.2) + geom_point(aes(x = {{predictor}}, y = {{predictor2}}), data = df, cex = 1.5, colour = "steelblue3")+ geom_line(aes(x = {{predictor}}, y = est), lwd = 1.2) + labs(y = "Partial effect", title = predictor3) + standard_theme + xlab(xlabel) + labs(title=NULL) + theme(axis.title.y=element_blank())
+}
+
+df <- df_CPUE_length_wide_both
