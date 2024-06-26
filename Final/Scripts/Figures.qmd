@@ -16,13 +16,27 @@ source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Loa
 ### Figure 1:
 
 ```{r}
-t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("D) 0.24° x 0.24°") + standard2
+standard2 <- standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))  + theme(plot.margin = margin(1, 1, 1, 1))
 
-t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) ggtitle("C) 0.12° x 0.12°")   + standard2
+#A) 
+plot_usmap() + standard_theme + theme(panel.background = element_rect(fill= "gray"), axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank())
+ggsave("/users/sallydowd/Desktop/us_map.png", width= 7, height=5, dpi= 500)
 
-t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + ggtitle("B) 0.06° x 0.06°")  + standard2
+ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + standard2 + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank())
+ggsave("/users/sallydowd/Desktop/nc_map.png", width= 3.5, height=2, dpi= 500)
 
-t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("A) Sampling points") + standard2
+#B) 
+t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("B) Sampling points") +scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
+
+#C) 
+t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + ggtitle("C) 0.06° x 0.06°") +scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
+
+#D)
+t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("D) 0.12° x 0.12°")+scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
+
+#E) 
+t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("E) 0.24° x 0.24°") +scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
+
 ```
 
 ### Figure 3:
@@ -247,13 +261,16 @@ ggsave("~/Desktop/t32_legend.png", dpi=300, width=6, height=4)
 ```{r}
 #Combine length datasets for plotting 
 p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
+p915_gg[,4] <- "Gillnet"
 p120_gg <- P120_os_prop_edt %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
 p120_gg %>% group_by(Speciescommonname) %>% summarize(sum= sum(Colnum))
+p120_gg[,4] <- "Trawl"
 combo <- rbind(p915_gg, p120_gg)
 ```
 
 ```{r}
 combo %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_histogram(aes(x= Length, fill= Survey), bins= 15, alpha= 0.7) + facet_wrap(~Speciescommonname, scale= "free_y") + standard_theme + labs(x= "Length", y= "Count") + scale_fill_manual(values= c("steelblue", "#E69F00"), name= "Survey") + xlim(0,750)
+ggsave("/users/sallydowd/Desktop/length.fig.png", width= 8, height=6, dpi= 500)
 ```
 
 ### Fig A.6
@@ -287,6 +304,7 @@ plot \<- list(SMALLPLOTS = T, GRIDPLOTS=T, SAVEPLOTS = T, PLOTALLY = T, outFolde
 ## Appendix B: Results
 
 ### Fig B.1
+
 ```{r}
 #Best GAMs
 reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logsmallbluecrabP120), family= tw(), data=df_CPUE_length_wide_both)
@@ -296,7 +314,8 @@ southernkingfish_env_forage <- gam(southernkingfishP915~s(avgdepth)+s(avgssal)+s
 blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logblackdrumP915forageP120), family= tw(), data=df_CPUE_length_wide_both)
 ```
 
-#### A) 
+#### A)
+
 ```{r}
 sm <- smooth_estimates(reddrum_env_bc) %>% transform_fun(exp) %>%
 add_confint() 
@@ -321,6 +340,7 @@ annotate_figure(t1, left= textGrob("Partial effect", rot=90), fig.lab= "A)", top
 ```
 
 #### B)
+
 ```{r}
 sm2 <- smooth_estimates(southernkingfish_env_forage) %>% transform_fun(exp) %>%
 add_confint() 
@@ -345,7 +365,8 @@ t2 <- ggarrange(p1, p2, p3, p4, p5, p6, p7)
 annotate_figure(t2, left= textGrob("Partial effect", rot=90), fig.lab= "B)", top= "southernkingfishP915 ~ s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logsouthernkingfishP915forageP915)+s(logsouthernkingfishP915forageP120)")
 ```
 
-#### C) 
+#### C)
+
 ```{r}
 sm3 <- smooth_estimates(blackdrum_env_forage) %>% transform_fun(exp) %>%
 add_confint() 
@@ -369,6 +390,7 @@ annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top
 ```
 
 ### Fig B.2
+
 ```{r}
 prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
 df <- prediction_boxplot %>% filter(!Model %in% c("Environment", "Blue crab", "Prey"))
@@ -384,6 +406,7 @@ bd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, m
 ```
 
 ### Fig B.3
+
 ```{r}
 prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
 df <- prediction_boxplot %>% filter(!Model %in% c("Environment", "Blue crab", "Prey"))
@@ -399,6 +422,7 @@ bd2 <- ggplot(subset(df, Species %in% "Black drum")) + geom_boxplot(aes(lower= m
 ```
 
 ### Fig B.4
+
 ```{r}
 prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
 df <- prediction_boxplot2

@@ -9,8 +9,6 @@ invisible(lapply(packages, library, character.only= TRUE))
 standard_theme <- theme_bw() + theme(panel.border = element_rect(fill=NA, colour = "black")) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(legend.text.align= 0, legend.title= element_text(size = 12), legend.text = element_text(size= 10), axis.text=element_text(size=10), axis.title=element_text(size=12))
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-standard2 <-  scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") + standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + guides(color = guide_legend(override.aes = list(size = 2))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)  + theme(plot.margin = margin(1, 1, 1, 1))
-
 ##Load grids
 globe_bb <- matrix(c(-78.900147,33.802938,
                      -78.900147,36.672128,
@@ -140,9 +138,9 @@ globe_grid_30_edt <- globe_grid_30 %>% dplyr::rename("gridID"= "ID") %>% filter(
 
 ######### FIGURE A.5 #########
 #Length datasets
-p915_len_f <- read.csv("~/Desktop/Ch1Data/P915/p915_length_final.csv")
+p915_len_f <- read.csv("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/P915/p915_length_final.csv")
 p915_len_f <- p915_len_f %>% dplyr::select(-X) %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
-P120_bioledt <- read_csv("~/Desktop/Ch1Data/P120/p120_biol_new.csv")
+P120_bioledt <- read_csv("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/P120/p120_biol_new.csv")
 P120_bioledt <- P120_bioledt %>% filter(Core==1|Core==2) %>% filter(between(Year, 2001, 2022), Month %in% c(5,6))
 
 #P915
@@ -171,8 +169,7 @@ library(ggpubr)
 library(grid)
 plot <- function(smooth_df, smooth2, predictor, df, predictor2, predictor3, predator, xlabel){
   smooth_df %>%
-    filter(smooth == smooth2) %>%
-    ggplot() + geom_rug(aes(x= {{predictor}}), data= df) + geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = {{predictor}}), alpha = 0.2) + geom_point(aes(x = {{predictor}}, y = {{predictor2}}), data = df, cex = 1.5, colour = "steelblue3")+ geom_line(aes(x = {{predictor}}, y = est), lwd = 1.2) + labs(y = "Partial effect", title = predictor3) + standard_theme + xlab(xlabel) + labs(title=NULL) + theme(axis.title.y=element_blank())
+    filter(smooth == smooth2) %>% ggplot() + geom_rug(aes(x= {{predictor}}), data= df) + geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = {{predictor}}), alpha = 0.2) + geom_point(aes(x = {{predictor}}, y = {{predictor2}}), data = df, cex = 1.5, colour = "steelblue3")+ geom_line(aes(x = {{predictor}}, y = est), lwd = 1.2) + labs(y = "Partial effect", title = predictor3) + standard_theme + xlab(xlabel) + labs(title=NULL) + theme(axis.title.y=element_blank())
 }
 
 df <- df_CPUE_length_wide_both
