@@ -23,16 +23,35 @@ gtsave(data=tbl1, "/users/sallydowd/Desktop/Ch1Data/Tables/Species_foodweb.png")
 ##### Table 2:
 
 ```{r}
-GAM_gJam_inf <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_gJam_inf.xlsx")
+GAM_gJam_inf <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_gJam_inf.xlsx", sheet=1)
 GAM_gJam_inf <- GAM_gJam_inf %>% mutate_if(is.numeric, ~round(., 1))
 GAM_gJam_inf <- GAM_gJam_inf %>% mutate_if(is.numeric, as.character)
 GAM_gJam_inf[is.na(GAM_gJam_inf)] <- "X"
 colnames(GAM_gJam_inf) <- c("Model", "GAM ∆AIC 1", "gJam ∆DIC 1", "GAM ∆AIC 2", "gJam ∆DIC 2", "GAM ∆AIC 3", "gJam ∆DIC 3")
-
+library(gt)
 tbl2 <- GAM_gJam_inf %>% gt() %>% cols_width(everything() ~ px(100)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_spanner(label= "Red drum", columns= c("GAM ∆AIC 1", "gJam ∆DIC 1")) %>% tab_spanner(label= "Southern kingfish", columns= c("GAM ∆AIC 2", "gJam ∆DIC 2")) %>% tab_spanner(label= "Black drum", columns= c("GAM ∆AIC 3", "gJam ∆DIC 3")) %>%  cols_label("Model" = "Model", "GAM ∆AIC 1" = "GAM ∆AIC", "GAM ∆AIC 2" = "GAM ∆AIC", "GAM ∆AIC 3" = "GAM ∆AIC", "gJam ∆DIC 1" = "gJam ∆DIC", "gJam ∆DIC 2" = "gJam ∆DIC", "gJam ∆DIC 3" = "gJam ∆DIC")
 gtsave(data=tbl2, "~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_gJam_inf.png")
 
 # %>% cols_width("Model" ~ px(100), "GAM ∆AIC 1" ~ px(70), "gJam ∆DIC 1" ~ px(70), "GAM ∆AIC 2" ~ px(70), "gJam ∆DIC 2" ~ px(70), "GAM ∆AIC 3" ~ px(70), "gJam ∆DIC 3" ~ px(70))
+```
+
+```{r}
+GAM_gJam_inf_rd <- read_excel("~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_gJam_inf.xlsx", sheet=2)
+GAM_gJam_inf_rd <- GAM_gJam_inf_rd %>% mutate_if(is.numeric, ~round(., 1))
+GAM_gJam_inf_rd <- GAM_gJam_inf_rd %>% mutate_if(is.numeric, as.character)
+GAM_gJam_inf_rd[is.na(GAM_gJam_inf_rd)] <- "X"
+colnames(GAM_gJam_inf_rd) <- c("Model", "GAM ∆AIC", "gJam ∆DIC", "GAM R²", "gJam R² traditional", "R² gJam conditional", "GAM RMSE", "gJam RMSE traditional", "gJam RMSE conditional")
+library(gt)
+
+#roudn to 3
+tbl_rd <- GAM_gJam_inf_rd %>% gt() %>% cols_width(everything() ~ px(150)) %>% cols_align(align= "center") %>% tab_style(style = cell_text(weight = "bold"), locations = cells_column_labels()) %>% tab_spanner(label= "Red drum", columns= c("Model", "GAM ∆AIC", "gJam ∆DIC", "GAM R²", "gJam R² traditional", "R² gJam conditional", "GAM RMSE", "gJam RMSE traditional", "gJam RMSE conditional")) %>% tab_spanner_delim(delim="_")
+gtsave(data=tbl_rd, "~/Google Drive/My Drive/Research/Ch1Data/Tables/GAM_gJam_inf_rd.png")
+gtsave(tbl_rd, "/users/sallydowd/Desktop/hotspot_3pct.png", vwidth = 1500, vheight = 1000)
+
+Model ~ px(200), "GAM ∆AIC" ~ px(70), "gJam ∆DIC" ~ px(70), "GAM R²" ~ px(100), "gJam R² traditional" ~ px(125), "R² gJam conditional" ~ px(125), "GAM RMSE" ~ px(100), "gJam RMSE traditional" ~ px(125), "gJam RMSE conditional" ~ px(125))
+
+Number ~ px(70), Species ~ px(100), "Consumed by" ~ px(150), Survey ~ px(70
+
 ```
 
 #### Appendix A:

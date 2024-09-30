@@ -440,3 +440,8 @@ fig <- ggarrange(rd_p3 + rremove("xlab") + rremove("ylab"), sk_p3 + rremove("xla
 library(grid)
 annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("RMSE")), rot= 90))
 ```
+
+```{r}
+load('Models/dolphin_modi_NC.Rdata')
+```
+

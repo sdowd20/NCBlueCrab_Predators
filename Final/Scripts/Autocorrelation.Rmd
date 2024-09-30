@@ -1,0 +1,90 @@
+---
+title: "Autocorrelation"
+output: html_document
+date: "2024-09-30"
+---
+
+```{r}
+source("~/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.SDM.Final.R")
+setwd("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation")
+df <- df_CPUE_length_wide_both
+```
+
+### Red drum 
+
+#### gJam 
+```{r}
+setwd("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation")
+load('red_drum_full_modo.RData') #load in gJam model 6 for red drum, called rd_modo_env_bc_forage
+
+library(sp)
+library(nlme)
+library(gstat)
+
+##Load grids
+world <- ne_countries(scale = "medium", returnclass = "sf")
+globe_bb <- matrix(c(-78.900147,33.802938,
+                     -78.900147,36.672128,
+                     -75.263672,36.672128,
+                     -75.263672, 33.802938,
+                     -78.900147,33.802938), byrow = TRUE, ncol = 2) %>% list() %>% st_polygon() %>% st_sfc(., crs = 4326)
+globe_grid_30 <- st_make_grid(x= globe_bb, n = c(30,30), crs = 4326, what = 'polygons') %>% st_sf('geometry' = ., data.frame('ID' = 1:length(.))) #grid is 0.13° by 0.13° (14.4 km)
+coords_df <- globe_grid_30 %>% mutate(centroid= st_centroid(geometry)) 
+coords <- as.data.frame(st_coordinates(coords_df$centroid))
+coords_df <- cbind(coords_df, coords)
+coords_df <- coords_df %>% rename("lon"= "X", "lat"= "Y", "gridID"= "ID") %>% st_drop_geometry() %>% dplyr::select(-centroid)
+```
+
+```{r}
+#Organize original dataset 
+spat <- df %>% left_join(coords_df, by= "gridID") %>% dplyr::select(lat, lon)
+dates <- df %>% mutate(date = with(., sprintf("%d-%02d-01", Year, Month))) %>% dplyr::select(date) #create new column named date, formats as a string representing first day of each month based on year_month 
+```
+
+```{r}
+out <- rd_modo_env_bc_forage
+obs <- out[["inputs"]][["y"]]
+pred <- out[["prediction"]][["ypredMu"]]
+
+resid <- obs-pred
+resid <- as.data.frame(resid)
+resid$lat <- spat$lat
+resid$lon <- spat$lon
+resid$date <- dates$date
+resid$date <- as.Date(resid$date)
+resid$gridID <- df$gridID
+resid$Year <- df$Year
+resid_spat <- resid
+```
+
+```{r}
+#subset it to just fall 2015
+resid_spat <- resid_spat %>% dplyr::filter(date %in% "2019-05-01") #keep this marked out? 
+coordinates(resid_spat) <- ~lat + lon   #effectively convert the data into a spatial data frame
+
+#Magnitude of residuals 
+bubble(resid_spat, "reddrumP915")
+
+#Calculate variogram for residuals as function of lat and lon
+plot(gstat::variogram(reddrumP915 ~ lon + lat, "normalized", data = resid_spat))
+plot(gstat::variogram(reddrumP915 ~ lon + lat, "normalized", data = resid_spat,alpha = c(0, 45, 90, 135))) #account for direction in degrees, North, North-east, East, South-east  
+
+#calculate Morans 1 
+dists <- as.matrix(dist(cbind(resid_spat$lon, resid_spat$lat)))
+
+duplicated(cbind(resid_spat$lon, resid_spat$lat))
+dists.inv <- 1/dists
+diag(dists.inv) <- 0
+
+library(ape)
+library(ncf)
+Moran.I(resid_spat$reddrumP915, dists.inv)
+
+#temporal correlation 
+#ACF 
+
+resid_sel <- resid %>% dplyr::select(reddrumP915, date)
+resid_time <- ts(resid_sel)
+
+acf(resid_time, type = "correlation")
+```
