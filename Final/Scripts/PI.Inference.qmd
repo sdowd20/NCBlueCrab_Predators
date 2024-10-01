@@ -299,6 +299,11 @@ formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 
 sk_modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
 sk_modo_env_bc_forage$fit$DIC
+
+save(sk_modo_env_bc_forage, file= "/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation/sk_full_modo.RData")
+
+library(beepr)
+beep(sound= 8)
 ```
 
 #### Black drum
@@ -343,4 +348,9 @@ formula_str <- paste("~", paste(colnames(xdata), collapse = " + "))
 
 bd_modo_env_bc_forage <- gjam(formula= as.formula(formula_str), xdata = xdata, ydata = ydata, modelList = ml)
 bd_modo_env_bc_forage$fit$DIC
+
+save(bd_modo_env_bc_forage, file= "/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation/bd_full_modo.RData")
+
+library(beepr)
+beep(sound=8)
 ```

@@ -4,24 +4,20 @@ output: html_document
 date: "2024-09-30"
 ---
 
+### Load data 
 ```{r}
-source("~/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.SDM.Final.R")
-setwd("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation")
-df <- df_CPUE_length_wide_both
-```
-
-### Red drum 
-
-#### gJam 
-```{r}
-setwd("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation")
-load('red_drum_full_modo.RData') #load in gJam model 6 for red drum, called rd_modo_env_bc_forage
-
+library(ape)
+library(ncf)
 library(sp)
 library(nlme)
 library(gstat)
 
-##Load grids
+source("~/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.SDM.Final.R")
+df <- df_CPUE_length_wide_both
+```
+
+```{r}
+#Load grids
 world <- ne_countries(scale = "medium", returnclass = "sf")
 globe_bb <- matrix(c(-78.900147,33.802938,
                      -78.900147,36.672128,
@@ -33,14 +29,20 @@ coords_df <- globe_grid_30 %>% mutate(centroid= st_centroid(geometry))
 coords <- as.data.frame(st_coordinates(coords_df$centroid))
 coords_df <- cbind(coords_df, coords)
 coords_df <- coords_df %>% rename("lon"= "X", "lat"= "Y", "gridID"= "ID") %>% st_drop_geometry() %>% dplyr::select(-centroid)
-```
 
-```{r}
 #Organize original dataset 
 spat <- df %>% left_join(coords_df, by= "gridID") %>% dplyr::select(lat, lon)
 dates <- df %>% mutate(date = with(., sprintf("%d-%02d-01", Year, Month))) %>% dplyr::select(date) #create new column named date, formats as a string representing first day of each month based on year_month 
 ```
 
+```{r}
+setwd("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Autocorrelation")
+load('red_drum_full_modo.RData') #load in gJam model 6 for red drum, called rd_modo_env_bc_forage
+load("sk_full_modo.RData")
+load("bd_full_modo.RData")
+```
+
+### Red drum 
 ```{r}
 out <- rd_modo_env_bc_forage
 obs <- out[["inputs"]][["y"]]
@@ -65,26 +67,121 @@ coordinates(resid_spat) <- ~lat + lon   #effectively convert the data into a spa
 #Magnitude of residuals 
 bubble(resid_spat, "reddrumP915")
 
-#Calculate variogram for residuals as function of lat and lon
+#Spatial auto-correlation: calculate variogram for residuals as function of lat and lon
 plot(gstat::variogram(reddrumP915 ~ lon + lat, "normalized", data = resid_spat))
+jpeg('/users/sallydowd/Desktop/reddrumc_sv.jpg', width = 1200, height = 950, units = 'px', res = 300)
 plot(gstat::variogram(reddrumP915 ~ lon + lat, "normalized", data = resid_spat,alpha = c(0, 45, 90, 135))) #account for direction in degrees, North, North-east, East, South-east  
+dev.off()
 
-#calculate Morans 1 
+##Calculate Morans 1 
 dists <- as.matrix(dist(cbind(resid_spat$lon, resid_spat$lat)))
 
 duplicated(cbind(resid_spat$lon, resid_spat$lat))
 dists.inv <- 1/dists
 diag(dists.inv) <- 0
 
-library(ape)
-library(ncf)
 Moran.I(resid_spat$reddrumP915, dists.inv)
 
-#temporal correlation 
-#ACF 
+#Temporal auto-correlation
 
+#ACF 
 resid_sel <- resid %>% dplyr::select(reddrumP915, date)
 resid_time <- ts(resid_sel)
+acf(resid_time, type = "correlation")
+```
 
+### Southern kingfish
+```{r}
+out <- sk_modo_env_bc_forage
+obs <- out[["inputs"]][["y"]]
+pred <- out[["prediction"]][["ypredMu"]]
+
+resid <- obs-pred
+resid <- as.data.frame(resid)
+resid$lat <- spat$lat
+resid$lon <- spat$lon
+resid$date <- dates$date
+resid$date <- as.Date(resid$date)
+resid$gridID <- df$gridID
+resid$Year <- df$Year
+resid_spat <- resid
+```
+
+```{r}
+#subset it to just fall 2015
+resid_spat <- resid_spat %>% dplyr::filter(date %in% "2019-05-01") #keep this marked out? 
+coordinates(resid_spat) <- ~lat + lon   #effectively convert the data into a spatial data frame
+
+#Magnitude of residuals 
+bubble(resid_spat, "southernkingfishP915")
+
+#Spatial auto-correlation: calculate variogram for residuals as function of lat and lon
+plot(gstat::variogram(southernkingfishP915 ~ lon + lat, "normalized", data = resid_spat))
+jpeg('/users/sallydowd/Desktop/southernkingfish_sv.jpg', width = 1200, height = 950, units = 'px', res = 300)
+plot(gstat::variogram(southernkingfishP915 ~ lon + lat, "normalized", data = resid_spat,alpha = c(0, 45, 90, 135))) #account for direction in degrees, North, North-east, East, South-east  
+dev.off()
+
+##Calculate Morans 1 
+dists <- as.matrix(dist(cbind(resid_spat$lon, resid_spat$lat)))
+
+duplicated(cbind(resid_spat$lon, resid_spat$lat))
+dists.inv <- 1/dists
+diag(dists.inv) <- 0
+
+Moran.I(resid_spat$southernkingfishP915, dists.inv)
+
+#Temporal auto-correlation
+
+#ACF 
+resid_sel <- resid %>% dplyr::select(southernkingfishP915, date)
+resid_time <- ts(resid_sel)
+acf(resid_time, type = "correlation")
+```
+
+### Black drum
+```{r}
+out <- bd_modo_env_bc_forage
+obs <- out[["inputs"]][["y"]]
+pred <- out[["prediction"]][["ypredMu"]]
+
+resid <- obs-pred
+resid <- as.data.frame(resid)
+resid$lat <- spat$lat
+resid$lon <- spat$lon
+resid$date <- dates$date
+resid$date <- as.Date(resid$date)
+resid$gridID <- df$gridID
+resid$Year <- df$Year
+resid_spat <- resid
+```
+
+```{r}
+#subset it to just fall 2015
+resid_spat <- resid_spat %>% dplyr::filter(date %in% "2019-05-01") #keep this marked out? 
+coordinates(resid_spat) <- ~lat + lon   #effectively convert the data into a spatial data frame
+
+#Magnitude of residuals 
+bubble(resid_spat, "blackdrumP915")
+
+#Spatial auto-correlation: calculate variogram for residuals as function of lat and lon
+plot(gstat::variogram(blackdrumP915 ~ lon + lat, "normalized", data = resid_spat))
+jpeg('/users/sallydowd/Desktop/blackdrum_sv.jpg', width = 1200, height = 950, units = 'px', res = 300)
+plot(gstat::variogram(blackdrumP915 ~ lon + lat, "normalized", data = resid_spat,alpha = c(0, 45, 90, 135))) #account for direction in degrees, North, North-east, East, South-east  
+dev.off()
+
+##Calculate Morans 1 
+dists <- as.matrix(dist(cbind(resid_spat$lon, resid_spat$lat)))
+
+duplicated(cbind(resid_spat$lon, resid_spat$lat))
+dists.inv <- 1/dists
+diag(dists.inv) <- 0
+
+Moran.I(resid_spat$blackdrumP915, dists.inv)
+
+#Temporal auto-correlation
+
+#ACF 
+resid_sel <- resid %>% dplyr::select(blackdrumP915, date)
+resid_time <- ts(resid_sel)
 acf(resid_time, type = "correlation")
 ```
