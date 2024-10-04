@@ -444,4 +444,3 @@ annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(p
 ```{r}
 load('Models/dolphin_modi_NC.Rdata')
 ```
-
