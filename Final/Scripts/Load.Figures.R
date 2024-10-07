@@ -173,3 +173,56 @@ plot <- function(smooth_df, smooth2, predictor, df, predictor2, predictor3, pred
 }
 
 df <- df_CPUE_length_wide_both
+
+
+######## Figure B.4-B.5 ##########
+
+### Red Drum ###
+#Env_bc 
+reddrum_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/reddrum_env_bc_cv_unsumm.csv")
+reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_bc <- read.csv("/users/sallydowd/Desktop/reddrum_env_bc.csv")
+
+#Env_forage
+reddrum_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/reddrum_env_forage_cv_unsumm.csv")
+reddrum_gam_env_forage <- reddrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_forage <- read.csv("/Users/sallydowd/Desktop/reddrum_env_forage.csv")
+
+#Env_bc_forage
+reddrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/reddrum_env_bc_forage_cv_unsumm.csv")
+reddrum_gam_env_bc_forage <- reddrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+reddrum_gJam_env_bc_forage <- read.csv("/users/sallydowd/Desktop/reddrum_env_bc_forage.csv")
+
+
+### Southern kingfish ###
+#Env_bc 
+southernkingfish_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/southernkingfish_env_bc_cv_unsumm.csv")
+southernkingfish_gam_env_bc <- southernkingfish_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_bc <- read.csv("/Users/sallydowd/Desktop/southernkingfish_env_bc.csv")
+
+#Env_forage
+southernkingfish_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/southernkingfish_env_forage_cv_unsumm.csv")
+southernkingfish_gam_env_forage <- southernkingfish_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_forage <- read.csv("/Users/sallydowd/Desktop/southernkingfish_env_forage.csv")
+
+#Env_bc_forage
+southernkingfish_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/southernkingfish_env_bc_forage_cv_unsumm.csv")
+southernkingfish_gam_env_bc_forage <- southernkingfish_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+southernkingfish_gJam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/southernkingfish_env_bc_forage.csv")
+
+### Black drum ###
+#Env_bc 
+blackdrum_gam_env_bc <- read.csv("/Users/sallydowd/Desktop/blackdrum_env_bc_cv_unsumm.csv")
+blackdrum_gam_env_bc <- blackdrum_gam_env_bc %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_bc <- read.csv("/Users/sallydowd/Desktop/blackdrum_env_bc.csv")
+
+#Env_forage
+blackdrum_gam_env_forage <- read.csv("/Users/sallydowd/Desktop/blackdrum_env_forage_cv_unsumm.csv")
+blackdrum_gam_env_forage <- blackdrum_gam_env_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_forage <- read.csv("/Users/sallydowd/Desktop/blackdrum_env_forage.csv")
+
+#Env_bc_forage
+blackdrum_gam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/blackdrum_env_bc_forage_cv_unsumm.csv")
+blackdrum_gam_env_bc_forage <- blackdrum_gam_env_bc_forage %>% dplyr::select(-X) %>% pivot_wider(names_from= .metric, values_from= .estimate) %>% group_by(id) %>% summarize(mean_rsq= mean(rsq), mean_rmse= mean(rmse))
+blackdrum_gJam_env_bc_forage <- read.csv("/Users/sallydowd/Desktop/blackdrum_env_bc_forage.csv")
+

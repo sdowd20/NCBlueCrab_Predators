@@ -6,7 +6,7 @@ editor: visual
 
 This script is used to run cross-validation for both GAMs and gJam for part 1 of the study (grouped prey item models).
 
-The workflow is as follows: 1) Load in script with datasets and necessary functions 2) Run GAMs separately for each predator for model types 1-6) in part 1 of the study (see Fig. 2 in manuscript) with 5-fold cross-validation repeating 100 times. 3) Run gJam separately for each predator for model type 3-6) in part 1 of the study (Fig. 2) based on burn-in time found through P1P2_burnin.qmd. 4) Load in data from both GAM and gJam CV. 5) Compute pairwise comparisons. 6) Collect summary metrics. 
+The workflow is as follows: 1) Load in script with datasets and necessary functions 2) Run GAMs separately for each predator for model types 1-6) in part 1 of the study (see Fig. 2 in manuscript) with 5-fold cross-validation repeating 100 times. 3) Run gJam separately for each predator for model type 3-6) in part 1 of the study (Fig. 2) based on burn-in time found through P1P2_burnin.qmd. 4) Load in data from both GAM and gJam CV. 5) Compute pairwise comparisons. 6) Collect summary metrics.
 
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
@@ -185,6 +185,7 @@ blackdrum_env_bc_forage_cv_unsumm <- collect_metrics(blackdrum_env_bc_forage_cv,
 ##### Red drum
 
 ###### Environment + blue crab
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both))
@@ -232,6 +233,7 @@ print(i)
 ```
 
 ###### Environment + forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -278,6 +280,7 @@ print(i)
 ```
 
 ###### Environment + blue crab + total forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -420,6 +423,7 @@ print(i)
 ```
 
 ##### Environment + blue crab + total forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -515,6 +519,7 @@ print(i)
 ```
 
 ###### Environment + total forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -561,6 +566,7 @@ print(i)
 ```
 
 ###### Environment + blue crab + total forage
+
 ```{r}
 Bootstrap_times <- 100
 smp_size <- floor(0.80* nrow(df_CPUE_length_wide_both)) #just determines sample size
@@ -606,7 +612,8 @@ print(i)
 }
 ```
 
-#### Load-in data 
+#### Load-in data
+
 ```{r}
 ### Red Drum ###
 #Env_bc 
@@ -662,6 +669,7 @@ blackdrum_gJam_env_bc_forage <- read.csv("~/Google Drive/My Drive/Research/Ch1Da
 ```
 
 #### Pairwise test
+
 ```{r}
 ### Red drum ###
 #Env_bc 
@@ -744,6 +752,7 @@ wilcox.test(blackdrum_gJam_env_bc_forage$rmse_uncon, blackdrum_gJam_env_bc_forag
 ```
 
 #### Summary metrics
+
 ```{r}
 ### Red drum ###
 #Env + BC

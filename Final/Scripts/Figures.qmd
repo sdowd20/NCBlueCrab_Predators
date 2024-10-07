@@ -19,7 +19,8 @@ source("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Loa
 standard2 <- standard_theme + theme(legend.title= element_text(size = 14), legend.text = element_text(size= 12), axis.text=element_text(size=12),axis.title=element_text(size=14)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))  + theme(plot.margin = margin(1, 1, 1, 1))
 
 #A) 
-plot_usmap() + standard_theme + theme(panel.background = element_rect(fill= "gray"), axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank())
+plot_usmap(fill= "lightgray") + standard_theme +
+  scale_fill_manual(values = c("gray")) + theme(panel.background = element_rect(fill= "white"), axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank()) 
 ggsave("/users/sallydowd/Desktop/us_map.png", width= 7, height=5, dpi= 500)
 
 ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + standard2 + theme(axis.text.x = element_blank(), axis.text.y = element_blank(), axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.title.x = element_blank(), axis.title.y = element_blank())
@@ -42,13 +43,15 @@ t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill 
 ### Figure 3:
 
 ```{r}
-prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
+setwd("/Users/sallydowd/Desktop")
+prediction_boxplot2 <- read_excel("prediction_new.xlsx", sheet=2) 
 df <- prediction_boxplot2
 df$Prediction < - factor(df$Prediction, levels=c("Traditional", "Conditional"))
 ```
 
 ```{r}
-rd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + 
+library(ggpubr)
+rd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + geom_point(aes(x= Model_type, y = meanR2), data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1a", "2a", "3a"))  + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + 
 geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.80, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.95, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.80, label= "") + ylim(-1.2, 1.0) + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Red drum")
 
 sk_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + expand_limits(y= c(0.0015, 0.23)) + 
@@ -59,6 +62,78 @@ bd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2,
 fig <- ggarrange(rd_p2 + rremove("xlab") + rremove("ylab"), sk_p2 + rremove("xlab") + rremove("ylab"), bd_p2 + rremove("xlab") + rremove("ylab"), ncol= 3)
 library(grid)
 annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
+```
+
+### Figure 3- new: 
+```{r}
+#Red drum 
+reddrum_model1 <- read.csv("/users/sallydowd/Desktop/reddrum_model1.csv")
+reddrum_model2 <- read.csv("/users/sallydowd/Desktop/reddrum_model2.csv")
+reddrum_model3 <- read.csv("/users/sallydowd/Desktop/reddrum_model3.csv")
+
+reddrum_model1 <- reddrum_model1 %>% dplyr::select(-X) %>% mutate(Model_type = "Low")
+reddrum_model2 <- reddrum_model2 %>% dplyr::select(-X) %>% mutate(Model_type = "Medium")
+reddrum_model3 <- reddrum_model3 %>% dplyr::select(-X) %>% mutate(Model_type = "High")
+
+reddrum_r2 <- rbind(reddrum_model1, reddrum_model2, reddrum_model3) %>% dplyr::select(-rmse_con, -rmse_uncon)
+reddrum_r2 <- reddrum_r2 %>% pivot_longer(cols= c(r2_con, r2_uncon), names_to = "prediction_type", values_to = "value") 
+reddrum_r2$prediction_type <- factor(reddrum_r2$prediction_type, levels = c("r2_uncon", "r2_con")) 
+reddrum_r2$Model_type <- factor(reddrum_r2$Model_type, levels = c("Low", "Medium", "High"))
+new_labels <- c("r2_uncon" = "Traditional", "r2_con" = "Conditional")
+mean_reddrum_r2 <- reddrum_r2 %>% group_by(Model_type, prediction_type) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+fig3_rd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= reddrum_r2) +  geom_point(data = mean_reddrum_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") +  
+geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.60, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.75, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.60, label= "") + ylim(-1.2, 1.0) + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Red drum")
+```
+
+```{r}
+#Southern kingfish 
+sk_model1 <- read.csv("/users/sallydowd/Desktop/southernkingfish_model1.csv")
+sk_model2 <- read.csv("/users/sallydowd/Desktop/southernkingfish_model2.csv")
+sk_model3 <- read.csv("/users/sallydowd/Desktop/southernkingfish_model3.csv")
+
+sk_model1 <- sk_model1 %>% dplyr::select(-X) %>% mutate(Model_type = "Low")
+sk_model2 <- sk_model2 %>% dplyr::select(-X) %>% mutate(Model_type = "Medium")
+sk_model3 <- sk_model3 %>% dplyr::select(-X) %>% mutate(Model_type = "High")
+
+sk_r2 <- rbind(sk_model1, sk_model2, sk_model3) %>% dplyr::select(-rmse_con, -rmse_uncon)
+sk_r2 <- sk_r2 %>% pivot_longer(cols= c(r2_con, r2_uncon), names_to = "prediction_type", values_to = "value") 
+sk_r2$prediction_type <- factor(sk_r2$prediction_type, levels = c("r2_uncon", "r2_con")) 
+sk_r2$Model_type <- factor(sk_r2$Model_type, levels = c("Low", "Medium", "High"))
+new_labels <- c("r2_uncon" = "Traditional", "r2_con" = "Conditional")
+mean_sk_r2 <- sk_r2 %>% group_by(Model_type, prediction_type) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+fig3_sk <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= sk_r2) +  geom_point(data = mean_sk_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)")+ expand_limits(y= c(0.0015, 0.23)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.21, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.23, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.21, label= "") + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Southern kingfish")
+```
+
+```{r}
+#Black drum 
+bd_model1 <- read.csv("/users/sallydowd/Desktop/blackdrum_model1.csv")
+bd_model2 <- read.csv("/users/sallydowd/Desktop/blackdrum_model2.csv")
+bd_model3 <- read.csv("/users/sallydowd/Desktop/blackdrum_model3.csv")
+
+bd_model1 <- bd_model1 %>% dplyr::select(-X) %>% mutate(Model_type = "Low")
+bd_model2 <- bd_model2 %>% dplyr::select(-X) %>% mutate(Model_type = "Medium")
+bd_model3 <- bd_model3 %>% dplyr::select(-X) %>% mutate(Model_type = "High")
+
+bd_r2 <- rbind(bd_model1, bd_model2, bd_model3) %>% dplyr::select(-rmse_con, -rmse_uncon)
+bd_r2 <- bd_r2 %>% pivot_longer(cols= c(r2_con, r2_uncon), names_to = "prediction_type", values_to = "value") 
+bd_r2$prediction_type <- factor(bd_r2$prediction_type, levels = c("r2_uncon", "r2_con")) 
+bd_r2$Model_type <- factor(bd_r2$Model_type, levels = c("Low", "Medium", "High"))
+new_labels <- c("r2_uncon" = "Traditional", "r2_con" = "Conditional")
+mean_bd_r2 <- bd_r2 %>% group_by(Model_type, prediction_type) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+fig3_bd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= bd_r2) +  geom_point(data = mean_bd_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "C)") + expand_limits(y= c(-1, 2.5)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 1.3, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 2.1, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 1.3, label= "")  + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Black drum")
+```
+
+```{r}
+fig <- ggarrange(fig3_rd + rremove("xlab") + rremove("ylab"), fig3_sk + rremove("xlab") + rremove("ylab"), fig3_bd + rremove("xlab") + rremove("ylab"), ncol= 3)
+library(grid)
+annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
+ggsave("/users/sallydowd/Desktop/figure3.tiff", width= 14, height= 6)
 ```
 
 ### Figure 4:
@@ -317,6 +392,13 @@ blackdrum_env_forage <- gam(blackdrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(a
 #### A)
 
 ```{r}
+plot <- function(smooth_df, smooth2, predictor, df, predictor2, predictor3, predator, xlabel){
+  smooth_df %>%
+    filter(smooth == smooth2) %>% ggplot() + geom_rug(aes(x= {{predictor}}), data= df) + geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, x = {{predictor}}), alpha = 0.2) + geom_point(aes(x = {{predictor}}, y = {{predictor2}}), data = df, cex = 1.5, colour = "steelblue3")+ geom_line(aes(x = {{predictor}}, y = est), lwd = 1.2) + labs(y = "Partial effect", title = predictor3) + standard_theme + xlab(xlabel) + labs(title=NULL) + theme(axis.title.y=element_blank())
+}
+```
+
+```{r}
 sm <- smooth_estimates(reddrum_env_bc) %>% transform_fun(exp) %>%
 add_confint() 
 
@@ -389,12 +471,19 @@ t3 <- ggarrange(p1, p2, p3, p4, p5, p6)
 annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top= "blackdrumP915 ~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logblackdrumP915forageP120)")
 ```
 
-### Fig B.2
+### Fig B.4
 
 ```{r}
-prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
-df <- prediction_boxplot %>% filter(!Model %in% c("Environment", "Blue crab", "Prey"))
-df$Model < - factor(df$Model, levels=c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+#Red drum 
+reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Env + BC") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+reddrum_gJam_env_bc <- reddrum_gJam_env_bc %>% mutate("Model_type" = "Env + BC") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
+
+test <- rbind(reddrum_gam_env_bc, reddrum_gJam_env_bc)
+
+ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= test) +  geom_point(data = mean_reddrum_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type")
+
+reddrum_rmse <- rbind(reddrum_model1, reddrum_model2, reddrum_model3) %>% dplyr::select(-r2_con, -r2_uncon)
+reddrum_rmse <- reddrum_rmse %>% pivot_longer(cols= c(rmse_con, rmse_uncon), names_to = "prediction_type", values_to = "value") 
 ```
 
 ```{r}
@@ -405,7 +494,7 @@ sk1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, m
 bd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + ggtitle(expression(paste("Black drum"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(-1.2, 0.9) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.65, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.65, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.83, label= "") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))
 ```
 
-### Fig B.3
+### Fig B.5
 
 ```{r}
 prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
@@ -421,7 +510,7 @@ sk2 <- ggplot(subset(df, Species %in% "Southern kingfish")) + geom_boxplot(aes(l
 bd2 <- ggplot(subset(df, Species %in% "Black drum")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Black drum") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(0.000, 0.0113) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0095, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.0095, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0106, label= "") 
 ```
 
-### Fig B.4
+### Fig B.6
 
 ```{r}
 prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
@@ -443,4 +532,75 @@ annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(p
 
 ```{r}
 load('Models/dolphin_modi_NC.Rdata')
+```
+
+### Fig. B.6- new
+```{r}
+#Red drum 
+reddrum_model1 <- read.csv("/users/sallydowd/Desktop/reddrum_model1.csv")
+reddrum_model2 <- read.csv("/users/sallydowd/Desktop/reddrum_model2.csv")
+reddrum_model3 <- read.csv("/users/sallydowd/Desktop/reddrum_model3.csv")
+
+reddrum_model1 <- reddrum_model1 %>% dplyr::select(-X) %>% mutate(Model_type = "Low")
+reddrum_model2 <- reddrum_model2 %>% dplyr::select(-X) %>% mutate(Model_type = "Medium")
+reddrum_model3 <- reddrum_model3 %>% dplyr::select(-X) %>% mutate(Model_type = "High")
+
+reddrum_rmse <- rbind(reddrum_model1, reddrum_model2, reddrum_model3) %>% dplyr::select(-r2_con, -r2_uncon)
+reddrum_rmse <- reddrum_rmse %>% pivot_longer(cols= c(rmse_con, rmse_uncon), names_to = "prediction_type", values_to = "value") 
+reddrum_rmse$prediction_type <- factor(reddrum_rmse$prediction_type, levels = c("rmse_uncon", "rmse_con")) 
+reddrum_rmse$Model_type <- factor(reddrum_rmse$Model_type, levels = c("Low", "Medium", "High"))
+new_labels <- c("rmse_uncon" = "Traditional", "rmse_con" = "Conditional")
+mean_reddrum_rmse <- reddrum_rmse %>% group_by(Model_type, prediction_type) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+fig3_rd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= reddrum_rmse) +  geom_point(data = mean_reddrum_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0135, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0147, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0135, label= "") + ggtitle("Red drum")
+```
+
+```{r}
+#Southern kingfish 
+sk_model1 <- read.csv("/users/sallydowd/Desktop/southernkingfish_model1.csv")
+sk_model2 <- read.csv("/users/sallydowd/Desktop/southernkingfish_model2.csv")
+sk_model3 <- read.csv("/users/sallydowd/Desktop/southernkingfish_model3.csv")
+
+sk_model1 <- sk_model1 %>% dplyr::select(-X) %>% mutate(Model_type = "Low")
+sk_model2 <- sk_model2 %>% dplyr::select(-X) %>% mutate(Model_type = "Medium")
+sk_model3 <- sk_model3 %>% dplyr::select(-X) %>% mutate(Model_type = "High")
+
+sk_rmse <- rbind(sk_model1, sk_model2, sk_model3) %>% dplyr::select(-r2_con, -r2_uncon)
+sk_rmse <- sk_rmse %>% pivot_longer(cols= c(rmse_con, rmse_uncon), names_to = "prediction_type", values_to = "value") 
+sk_rmse$prediction_type <- factor(sk_rmse$prediction_type, levels = c("rmse_uncon", "rmse_con")) 
+sk_rmse$Model_type <- factor(sk_rmse$Model_type, levels = c("Low", "Medium", "High"))
+new_labels <- c("rmse_uncon" = "Traditional", "rmse_con" = "Conditional")
+mean_sk_rmse <- sk_rmse %>% group_by(Model_type, prediction_type) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+fig3_sk <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= sk_rmse) +geom_point(data = mean_sk_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) + facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.00155)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00145, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.00152, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.00145, label= "") + ggtitle("Southern kingfish")
+```
+
+```{r}
+#Black drum 
+bd_model1 <- read.csv("/users/sallydowd/Desktop/blackdrum_model1.csv")
+bd_model2 <- read.csv("/users/sallydowd/Desktop/blackdrum_model2.csv")
+bd_model3 <- read.csv("/users/sallydowd/Desktop/blackdrum_model3.csv")
+
+bd_model1 <- bd_model1 %>% dplyr::select(-X) %>% mutate(Model_type = "Low")
+bd_model2 <- bd_model2 %>% dplyr::select(-X) %>% mutate(Model_type = "Medium")
+bd_model3 <- bd_model3 %>% dplyr::select(-X) %>% mutate(Model_type = "High")
+
+bd_rmse <- rbind(bd_model1, bd_model2, bd_model3) %>% dplyr::select(-r2_con, -r2_uncon)
+bd_rmse <- bd_rmse %>% pivot_longer(cols= c(rmse_con, rmse_uncon), names_to = "prediction_type", values_to = "value") 
+bd_rmse$prediction_type <- factor(bd_rmse$prediction_type, levels = c("rmse_uncon", "rmse_con")) 
+bd_rmse$Model_type <- factor(bd_rmse$Model_type, levels = c("Low", "Medium", "High"))
+new_labels <- c("rmse_uncon" = "Traditional", "rmse_con" = "Conditional")
+mean_bd_rmse <- bd_rmse %>% group_by(Model_type, prediction_type) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+fig3_bd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= bd_rmse) +  geom_point(data = mean_bd_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.0115)) + geom_bracket(xmin= 1.1, xmax= 1.9, y.position= 0.0098, label= "") + geom_bracket(xmin= 1.1, xmax=3, y.position=0.011, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0098, label= "") + ggtitle("Black drum")
+```
+
+```{r}
+fig <- ggarrange(fig3_rd + rremove("xlab") + rremove("ylab"), fig3_sk + rremove("xlab") + rremove("ylab"), fig3_bd + rremove("xlab") + rremove("ylab"), ncol= 3)
+library(grid)
+annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
+ggsave("/users/sallydowd/Desktop/figureB.6.tiff", width= 12, height= 5)
 ```
