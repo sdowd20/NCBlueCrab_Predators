@@ -30,41 +30,10 @@ ggsave("/users/sallydowd/Desktop/nc_map.png", width= 3.5, height=2, dpi= 500)
 t4 <- ggplot(data = world) + geom_sf() + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = filter(p915_CPUEedt, !Latitude== 33.72389, !Latitude == 35.95528, !Latitude == 36.04694, !(Latitude > 34.5 & Longitude < -77.5), Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE) + ggtitle("B) Sampling points") +scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
 
 #C) 
-t3 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_60_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig06, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5)  + ggtitle("C) 0.06° x 0.06°") +scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
-
-#D)
 t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig12, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("D) 0.12° x 0.12°")+scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
-
-#E) 
-t1 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_15_edt, fill = NA) + coord_sf(xlim=c(-85, -70), ylim=c(25,40), expand = TRUE) + theme(panel.background = element_rect(fill = "white", colour = "black")) + geom_point(data = subset(p915_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + geom_point(data = subset(p120_CPUEedt_fig24, Month %in% c(5,6)), aes(x = Longitude, y = Latitude, colour= Survey), size = .5) + ggtitle("E) 0.24° x 0.24°") +scale_color_manual(values= c("steelblue", "#E69F00"), name= "Survey") +  guides(color = guide_legend(override.aes = list(size = 2))) + standard2 + coord_sf(xlim=c(-78.5, -75.4), ylim=c(33.802938,36.672128), expand = TRUE)
-
 ```
 
 ### Figure 3:
-
-```{r}
-setwd("/Users/sallydowd/Desktop")
-prediction_boxplot2 <- read_excel("prediction_new.xlsx", sheet=2) 
-df <- prediction_boxplot2
-df$Prediction < - factor(df$Prediction, levels=c("Traditional", "Conditional"))
-```
-
-```{r}
-library(ggpubr)
-rd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + geom_point(aes(x= Model_type, y = meanR2), data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1a", "2a", "3a"))  + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + 
-geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.80, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.95, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.80, label= "") + ylim(-1.2, 1.0) + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Red drum")
-
-sk_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + expand_limits(y= c(0.0015, 0.23)) + 
-geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.20, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.22, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.20, label= "") + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Southern kingfish")
-
-bd_p2 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + scale_x_discrete(labels= c("1a", "2a", "3a")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "C)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + expand_limits(y= c(-1, 2.5)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 2, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 2.4, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 2, label= "")  + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Black drum")
-
-fig <- ggarrange(rd_p2 + rremove("xlab") + rremove("ylab"), sk_p2 + rremove("xlab") + rremove("ylab"), bd_p2 + rremove("xlab") + rremove("ylab"), ncol= 3)
-library(grid)
-annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
-```
-
-### Figure 3- new: 
 ```{r}
 #Red drum 
 reddrum_model1 <- read.csv("/users/sallydowd/Desktop/reddrum_model1.csv")
@@ -84,7 +53,7 @@ mean_reddrum_r2 <- reddrum_r2 %>% group_by(Model_type, prediction_type) %>%
 summarize(mean_value = mean(value), .groups = 'drop')
 
 fig3_rd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= reddrum_r2) +  geom_point(data = mean_reddrum_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") +  
-geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.60, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.75, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.60, label= "") + ylim(-1.2, 1.0) + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Red drum")
+geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.60, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.75, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.60, label= "") + ylim(-1.2, 1.0) + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Red drum") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ```{r}
@@ -105,7 +74,7 @@ new_labels <- c("r2_uncon" = "Traditional", "r2_con" = "Conditional")
 mean_sk_r2 <- sk_r2 %>% group_by(Model_type, prediction_type) %>%
 summarize(mean_value = mean(value), .groups = 'drop')
 
-fig3_sk <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= sk_r2) +  geom_point(data = mean_sk_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)")+ expand_limits(y= c(0.0015, 0.23)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.21, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.23, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.21, label= "") + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Southern kingfish")
+fig3_sk <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= sk_r2) +  geom_point(data = mean_sk_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "B)") + expand_limits(y= c(0.0015, 0.23)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.21, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.23, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.21, label= "") + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Southern kingfish") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ```{r}
@@ -126,146 +95,19 @@ new_labels <- c("r2_uncon" = "Traditional", "r2_con" = "Conditional")
 mean_bd_r2 <- bd_r2 %>% group_by(Model_type, prediction_type) %>%
 summarize(mean_value = mean(value), .groups = 'drop')
 
-fig3_bd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= bd_r2) +  geom_point(data = mean_bd_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "C)") + expand_limits(y= c(-1, 2.5)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 1.3, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 2.1, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 1.3, label= "")  + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Black drum")
+fig3_bd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= bd_r2) +  geom_point(data = mean_bd_r2, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "C)")  + theme(axis.text.x = element_text(angle = 360)) + ggtitle("Black drum") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + expand_limits(y= c(0, 1.5)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 1, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 1.6, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 1, label= "")
 ```
 
 ```{r}
 fig <- ggarrange(fig3_rd + rremove("xlab") + rremove("ylab"), fig3_sk + rremove("xlab") + rremove("ylab"), fig3_bd + rremove("xlab") + rremove("ylab"), ncol= 3)
 library(grid)
 annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
-ggsave("/users/sallydowd/Desktop/figure3.tiff", width= 14, height= 6)
-```
-
-### Figure 4:
-
-The code for this figure is adapted from Dr. Sarah Roberts (sarah.roberts\@duke.edu)
-
-```{r}
-load("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Final_results/gJam/Inference2/Models/non_avg_full.RData")
-```
-
-##### Extract parameters
-
-```{r}
-#posterior summaries 
-out <- non_avg_full
-
-betas <- out$parameters$betaStandXTable #SM by stats posterior summary
-sens <- out[["parameters"]][["sensTable"]] #sensitivity to predictor variables
-rmsetot <- out[["fit"]][["rmspeAll"]] #root mean squared prediction error all
-DIC <- out[["fit"]][["DIC"]]
-rmse_byspec <- out[["fit"]][["rmspeBySpec"]]
-cor <- out[["parameters"]][["corMu"]] #residual, correlation 
-colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
-s_mat <- out[["parameters"]][["sigMu"]] #WsWs', Species x Species, covariance matrix
-#add cor from ydata for panel A
-ycor <- out[["inputs"]][["y"]] #response matrix 
-cor2 <- out[["parameters"]][["ematrix"]]
-```
-
-#### Organize parameters
-
-```{r}
-library(lessR)
-#residual covariance
-colnames(cor) <- colnames(out[["parameters"]][["corSe"]])
-cor <- corReorder(cor, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
-cor <-  as.data.frame(cor)
-rownames(cor) <- colnames(cor)
-cor$specs <- rownames(cor)
-
-#ematrix
-cor2 <- out[["parameters"]][["ematrix"]] #responses in matrix E 
-cor2<- corReorder(cor2, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
-cor2 <-  as.data.frame(cor2)
-rownames(cor2) <- colnames(cor2)
-cor2$specs <- rownames(cor2)
-
-#S x S 
-s_mat <- corReorder(s_mat, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
-s_mat <-  as.data.frame(s_mat)
-rownames(s_mat) <- colnames(s_mat)
-
-#co-occurence
-ycor <- cor(ycor, method = "spearman")
-ycor<- corReorder(ycor, order = "manual", vars=c(smallatlanticcroakerP915, smallatlanticmenhadenP915, pinfishP915, smallsouthernflounderP915, smallspotP915, reddrumP915, southernkingfishP915, blackdrumP915))
-```
-
-#### Plots
-
-```{r}
-#co-occurence in ydata
-cooccur <- ggcorrplot::ggcorrplot(ycor, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
-cooccur
-#issue with coocur was b/c re-ran ycor 2x
-
-cor_again <- cor[,-9]
-#co-occurrence modeled, residual correlation 
-comodel <- ggcorrplot::ggcorrplot(cor_again, type = "lower", tl.cex=14)+ scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit=c(-1, 1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
-comodel
-
-#ematrix, covariance 
-cor2_again <- cor2[,-9]
-emat <- ggcorrplot::ggcorrplot(cor2_again, type = "lower", tl.cex= 14) + scale_fill_gradient2(low = "blue", mid = "white", high = "red", breaks=c(0), limit= c(-1,1))+ theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1), panel.grid.major.x = element_blank())
-emat 
-
-#beta
-betas_tidy <- betas
-betas_tidy$variable <- rownames(betas_tidy)
-betas_tidy <- betas_tidy %>% separate(variable, c("species","variable"), sep = "([_])")
-
-betas_tidy <- betas_tidy %>% filter(variable != "intercept")
-
-# betas_tidy$variable <- factor(betas_tidy$variable, levels=c("SST","SSAL"))
-
-min(betas_tidy$Estimate)
-max(betas_tidy$Estimate)
-#
-betas_tidy$Estimate <- ifelse(betas_tidy$Estimate > 2, 2, betas_tidy$Estimate)
-betas_tidy$Estimate <- ifelse(betas_tidy$Estimate < -2,-2, betas_tidy$Estimate)
-
-betaplot <- ggplot(data = betas_tidy, aes(x=variable, y=species, fill=Estimate)) +
-  geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white",
-                                     midpoint = 0, space = "Lab",
-                                     name="Betas") + theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 1, hjust = 1), axis.text.y = element_text(size = 14))
-cooccur <- cooccur + theme(legend.position= "none") + 
-  ggtitle("c) Co-occurence in Data")+
-  theme( plot.title = element_text(hjust = 0.5)) +
-  theme( plot.title = element_text(size = 20, face = "bold"))
-comodel <- comodel + theme(legend.position= "none") + 
-  ggtitle("d) Residual Correlation") +
-  theme( plot.title = element_text(hjust = 0.5)) +
-  theme( plot.title = element_text(size = 20, face = "bold"))
-emat <- emat + theme(legend.position= "none") + 
-  theme(legend.position="none")+
-  ggtitle("b) Covariance or E-matrix") +
-  theme( plot.title = element_text(hjust = 0.5)) +
-  theme( plot.title = element_text(size = 20, face = "bold"))
-betaplot <- betaplot + theme(legend.position= "none") + 
-  theme(axis.title.x = element_blank()) +
-  theme(axis.title.y = element_blank())+
-  ggtitle("a) Environmental Response") +
-  theme( plot.title = element_text(hjust = 0.5)) +
-  theme( plot.title = element_text(size = 20, face = "bold"))
-```
-
-#### Organize plots
-
-```{r}
-library(cowplot)
-# extract the legend from one of the plots
-legend <- get_legend(cooccur + theme(legend.position="bottom") + theme(legend.title = element_blank(), legend.text = element_blank()) +
-                         theme(legend.key.height= unit(2, 'cm'),
-                               legend.key.width= unit(4, 'cm')))
-library(ggpubr)
-d <- ggarrange(betaplot, emat, cooccur, comodel)
-annotate_figure(d, bottom= legend)
+ggsave("/users/sallydowd/Desktop/Graphs_edit/figure3.pdf", width= 13, height= 6)
 ```
 
 ## Appendix A: Introduction & Methods
 
-### Fig A.1:
-
+### Fig A.2:
 ```{r}
 #0.06: find number of presence/abscence
 df_count_wide_both06 %>% filter(reddrumP915 > 0) 
@@ -291,8 +133,7 @@ data_t$grid <- factor(data_t$grid, levels = c(0.06, 0.12, 0.24))
 ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standard_theme + labs(x= "Grid cell size", y= "Number of data records", fill= "Species") + scale_fill_manual(values= c("#0072B2", "#009E73", "#CC6666"), name= "Species") + geom_bar(stat= "identity") + guides(alpha = guide_legend(title = "Type of observation")) + scale_alpha_manual(values = c("pos" = 0.6, "neg" = 1), labels= "Positive encounter") + scale_x_discrete(labels= c("0.06° x 0.06°", "0.12° x 0.12°", "0.24° x 0.24°"))
 ```
 
-### Fig A.3
-
+### Fig A.4
 ```{r}
 df_CPUE_length <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Data/CPUE_grid_avg_lengthedt.03.04.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
@@ -310,6 +151,9 @@ corrplot(cor, mar= c(3,3,3,3))
 
 ### Fig A.4
 
+Fig. A.4 was generated through the Autocorrelation.Rmd under Scripts. 
+
+### Fig A.6
 ```{r}
 source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
 ```
@@ -331,8 +175,7 @@ as_ggplot(leg)
 ggsave("~/Desktop/t32_legend.png", dpi=300, width=6, height=4)
 ```
 
-### Fig A.5
-
+### Fig A.7
 ```{r}
 #Combine length datasets for plotting 
 p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
@@ -348,8 +191,7 @@ combo %>% drop_na(Length) %>% group_by(Speciescommonname) %>% ggplot() + geom_hi
 ggsave("/users/sallydowd/Desktop/length.fig.png", width= 8, height=6, dpi= 500)
 ```
 
-### Fig A.6
-
+### Fig A.8
 ```{r}
 t1 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
 ggplot() + geom_histogram(aes(x= logreddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
@@ -370,11 +212,9 @@ t6 <- ggplot() + geom_histogram(aes(x= smallbluecrabP120), data= df_CPUE_length_
 ggplot() + geom_histogram(aes(x= logsmallbluecrabP120), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log blue crab P120 CPUE") + ylab("Count") + labs(tag= "D)")
 ```
 
-### Fig A.7 - Fig A.12
+### Fig A.9-11 and Fig. A.13-15
 
 This figures were generated in PIPIIburnin.qmd from gJam objects with a variation of this line of code:
-
-plot \<- list(SMALLPLOTS = T, GRIDPLOTS=T, SAVEPLOTS = T, PLOTALLY = T, outFolder = '/users/sallydowd/Desktop/Ch1Data/Final_results/gJam/Burnin/Red_drum/Env_bc_forage/modo3')
 
 ## Appendix B: Results
 
@@ -471,70 +311,119 @@ t3 <- ggarrange(p1, p2, p3, p4, p5, p6)
 annotate_figure(t3, left= textGrob("Partial effect", rot=90), fig.lab= "C)", top= "blackdrumP915 ~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)\n+factor(Yearfactor)+s(logblackdrumP915forageP120)")
 ```
 
-### Fig B.4
+### Fig B.4- B.5
+
+#### Red drum
 
 ```{r}
-#Red drum 
-reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Env + BC") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
-reddrum_gJam_env_bc <- reddrum_gJam_env_bc %>% mutate("Model_type" = "Env + BC") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
+reddrum_gam_env_bc <- reddrum_gam_env_bc %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + BC") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+reddrum_gJam_env_bc <- reddrum_gJam_env_bc %>% mutate("Model_type" = "Environment + BC") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
 
-test <- rbind(reddrum_gam_env_bc, reddrum_gJam_env_bc)
+reddrum_gam_env_forage <- reddrum_gam_env_forage %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + prey") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+reddrum_gJam_env_forage <- reddrum_gJam_env_forage %>% mutate("Model_type" = "Environment + prey") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
 
-ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= test) +  geom_point(data = mean_reddrum_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type")
+reddrum_gam_env_bc_forage <- reddrum_gam_env_bc_forage %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + BC + prey") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+reddrum_gJam_env_bc_forage <- reddrum_gJam_env_bc_forage %>% mutate("Model_type" = "Environment + BC + prey") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
 
-reddrum_rmse <- rbind(reddrum_model1, reddrum_model2, reddrum_model3) %>% dplyr::select(-r2_con, -r2_uncon)
-reddrum_rmse <- reddrum_rmse %>% pivot_longer(cols= c(rmse_con, rmse_uncon), names_to = "prediction_type", values_to = "value") 
+reddrum_B4_df <- rbind(reddrum_gam_env_bc, reddrum_gam_env_bc_forage, reddrum_gam_env_forage, reddrum_gJam_env_bc, reddrum_gJam_env_bc_forage, reddrum_gJam_env_forage)
+reddrum_B4_df_r2 <- reddrum_B4_df %>% filter(Model_approach %in% c("GAM_r2", "r2_con", "r2_uncon"))
+reddrum_B4_df_rmse <- reddrum_B4_df %>% filter(Model_approach %in% c("GAM_rmse", "rmse_con", "rmse_uncon"))
 ```
 
 ```{r}
-rd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + ggtitle(expression(paste("Red drum"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))+ geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.16, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.16, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.21, label= "") + ylim(-0.30, 0.23)
+reddrum_B4_df_r2$Model_approach <- factor(reddrum_B4_df_r2$Model_approach, levels = c("GAM_r2", "r2_uncon", "r2_con")) 
+reddrum_B4_df_r2$Model_type <- factor(reddrum_B4_df_r2$Model_type, levels = c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+mean_reddrum_r2 <- reddrum_B4_df_r2 %>% group_by(Model_type, Model_approach) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
 
-sk1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + ggtitle(expression(paste("Southern kingfish"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.18, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.18, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.20, label= "") + ylim(-0.02, 0.22) + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))
+library(ggpubr)
+reddrum_r2_graph <- ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= reddrum_B4_df_r2) +  geom_point(data = mean_reddrum_r2, aes(x = Model_approach, y = mean_value), color = "red", size = 2)  +  facet_wrap(~Model_type, scales= "free") + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + theme(axis.text.x = element_text(angle = 90)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.16, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.16, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.21, label= "") + ylim(-0.30, 0.23) + ggtitle("Red drum") 
+ggsave("/Users/sallydowd/Desktop/Graphs_edit/reddrum_r2_graph.pdf", width= 10, height= 5)
 
-bd1 <- ggplot() + geom_boxplot(aes(lower= meanR2 - sdR2, upper= meanR2 + sdR2, middle= meanR2, ymin= meanR2- 1.5*sdR2, ymax= meanR2+1.5*sdR2, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + ggtitle(expression(paste("Black drum"))) + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + labs(tag= "A)") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(-1.2, 0.9) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.65, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.65, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.83, label= "") + facet_wrap(~factor(Model, c("Environment + BC", "Environment + prey", "Environment + BC + prey")))
+reddrum_B4_df_rmse$Model_approach <- factor(reddrum_B4_df_rmse$Model_approach, levels = c("GAM_rmse", "rmse_uncon", "rmse_con")) 
+reddrum_B4_df_rmse$Model_type <- factor(reddrum_B4_df_rmse$Model_type, levels = c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+mean_reddrum_rmse <- reddrum_B4_df_rmse %>% group_by(Model_type, Model_approach) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+reddrum_rmse_graph <-ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= reddrum_B4_df_rmse) +  geom_point(data = mean_reddrum_rmse, aes(x = Model_approach, y = mean_value), color = "red", size = 2)  +  facet_wrap(~Model_type, scales= "free") + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + expand_limits(y= c(0.0015, 0.0083)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0072, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.0072, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0080, label= "") + ggtitle("Red drum")
+ggsave("/Users/sallydowd/Desktop/Graphs_edit/reddrum_rmse_graph.pdf", width= 10, height= 5)
 ```
 
-### Fig B.5
+#### Southern kingfish
 
 ```{r}
-prediction_boxplot <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=1) 
-df <- prediction_boxplot %>% filter(!Model %in% c("Environment", "Blue crab", "Prey"))
-df$Model < - factor(df$Model, levels=c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
-```
+southernkingfish_gam_env_bc <- southernkingfish_gam_env_bc %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + BC") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+southernkingfish_gJam_env_bc <- southernkingfish_gJam_env_bc %>% mutate("Model_type" = "Environment + BC") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
 
-```{r}
-rd2 <- ggplot(subset(df, Species %in% "Red drum")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Red drum") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") + expand_limits(y= c(0.0015, 0.0083)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0072, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.0072, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0080, label= "") +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey")))
+southernkingfish_gam_env_forage <- southernkingfish_gam_env_forage %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + prey") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+southernkingfish_gJam_env_forage <- southernkingfish_gJam_env_forage %>% mutate("Model_type" = "Environment + prey") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
 
-sk2 <- ggplot(subset(df, Species %in% "Southern kingfish")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Southern kingfish") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") + expand_limits(y= c(0.00050, 0.00105)) +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00097, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.00097, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.00102, label= "") 
+southernkingfish_gam_env_bc_forage <- southernkingfish_gam_env_bc_forage %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + BC + prey") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+southernkingfish_gJam_env_bc_forage <- southernkingfish_gJam_env_bc_forage %>% mutate("Model_type" = "Environment + BC + prey") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
 
-bd2 <- ggplot(subset(df, Species %in% "Black drum")) + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity") + ggtitle("Black drum") + scale_x_discrete(labels= c("GAM", "gJam traditional", "gJam conditional")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab("RMSE") + labs(tag= "B)") +  facet_wrap(~factor(Model, c( "Environment + BC", "Environment + prey", "Environment + BC + prey"))) + ylim(0.000, 0.0113) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0095, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.0095, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0106, label= "") 
-```
-
-### Fig B.6
-
-```{r}
-prediction_boxplot2 <- read_excel("/users/sallydowd/Google Drive/My Drive/Research/Ch1Data/Tables/prediction_new.xlsx", sheet=2) 
-df <- prediction_boxplot2
-df$Prediction < - factor(df$Prediction, levels=c("Traditional", "Conditional"))
-```
-
-```{r}
-rd_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Red drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0135, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0145, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0135, label= "") + ggtitle("Red drum")
-
-sk_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Southern kingfish")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.00155)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00145, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.00152, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.00145, label= "") + ggtitle("Southern kingfish")
-
-bd_p3 <- ggplot() + geom_boxplot(aes(lower= meanRMSE - sdRMSE, upper= meanRMSE + sdRMSE, middle= meanRMSE, ymin= meanRMSE- 1.5*sdRMSE, ymax= meanRMSE+1.5*sdRMSE, x= Model_type), stat= "identity", data= subset(df, Species %in% "Black drum")) + scale_x_discrete(labels= c("1", "2", "3")) + standard_theme+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + facet_wrap(~factor(Prediction, c("Traditional", "Conditional"))) + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.0115)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0098, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.011, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0098, label= "") + ggtitle("Black drum")
-
-fig <- ggarrange(rd_p3 + rremove("xlab") + rremove("ylab"), sk_p3 + rremove("xlab") + rremove("ylab"), bd_p3 + rremove("xlab") + rremove("ylab"), ncol= 3)
-library(grid)
-annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("RMSE")), rot= 90))
+southernkingfish_B4_df <- rbind(southernkingfish_gam_env_bc, southernkingfish_gam_env_bc_forage, southernkingfish_gam_env_forage, southernkingfish_gJam_env_bc, southernkingfish_gJam_env_bc_forage, southernkingfish_gJam_env_forage)
+southernkingfish_B4_df_r2 <- southernkingfish_B4_df %>% filter(Model_approach %in% c("GAM_r2", "r2_con", "r2_uncon"))
+southernkingfish_B4_df_rmse <- southernkingfish_B4_df %>% filter(Model_approach %in% c("GAM_rmse", "rmse_con", "rmse_uncon"))
 ```
 
 ```{r}
-load('Models/dolphin_modi_NC.Rdata')
+southernkingfish_B4_df_r2$Model_approach <- factor(southernkingfish_B4_df_r2$Model_approach, levels = c("GAM_r2", "r2_uncon", "r2_con")) 
+southernkingfish_B4_df_r2$Model_type <- factor(southernkingfish_B4_df_r2$Model_type, levels = c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+mean_southernkingfish_r2 <- southernkingfish_B4_df_r2 %>% group_by(Model_type, Model_approach) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+library(ggpubr)
+southernkingfish_r2_graph <- ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= southernkingfish_B4_df_r2) +  geom_point(data = mean_southernkingfish_r2, aes(x = Model_approach, y = mean_value), color = "red", size = 2)  +  facet_wrap(~Model_type, scales= "free") + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + ggtitle("Southern kingfish") + labs(tag= "B)") + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.19, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.19, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.21, label= "") + ylim(-0.02, 0.22) + theme(axis.text.x = element_text(angle = 90))
+ggsave("/Users/sallydowd/Desktop/Graphs_edit/sk_r2_graph.pdf", width= 10, height= 5)
+
+southernkingfish_B4_df_rmse$Model_approach <- factor(southernkingfish_B4_df_rmse$Model_approach, levels = c("GAM_rmse", "rmse_uncon", "rmse_con")) 
+southernkingfish_B4_df_rmse$Model_type <- factor(southernkingfish_B4_df_rmse$Model_type, levels = c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+mean_southernkingfish_rmse <- southernkingfish_B4_df_rmse %>% group_by(Model_type, Model_approach) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+southernkingfish_rmse_graph <-ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= southernkingfish_B4_df_rmse) +  geom_point(data = mean_southernkingfish_rmse, aes(x = Model_approach, y = mean_value), color = "red", size = 2)  +  facet_wrap(~Model_type, scales= "free") + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + ggtitle("Southern kingfish") + expand_limits(y= c(0.00050, 0.00105)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00098, label= "") + geom_bracket(xmin= 2.1, xmax=2.93, y.position= 0.00098, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.001065, label= "") 
+ggsave("/Users/sallydowd/Desktop/Graphs_edit/sk_rmse_graph.pdf", width= 10, height= 5)
 ```
 
-### Fig. B.6- new
+#### Black drum
+
+```{r}
+blackdrum_gam_env_bc <- blackdrum_gam_env_bc %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + BC") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+blackdrum_gJam_env_bc <- blackdrum_gJam_env_bc %>% mutate("Model_type" = "Environment + BC") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
+
+blackdrum_gam_env_forage <- blackdrum_gam_env_forage %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + prey") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+blackdrum_gJam_env_forage <- blackdrum_gJam_env_forage %>% mutate("Model_type" = "Environment + prey") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
+
+blackdrum_gam_env_bc_forage <- blackdrum_gam_env_bc_forage %>% dplyr::select(mean_rsq, mean_rmse) %>% mutate("Model_type"= "Environment + BC + prey") %>% dplyr::rename("GAM_r2"= "mean_rsq", "GAM_rmse"= "mean_rmse") %>% pivot_longer(cols= c(GAM_r2, GAM_rmse), names_to = "Model_approach", values_to = "value")
+blackdrum_gJam_env_bc_forage <- blackdrum_gJam_env_bc_forage %>% mutate("Model_type" = "Environment + BC + prey") %>% pivot_longer(cols= c(r2_con, r2_uncon, rmse_con, rmse_uncon), names_to = "Model_approach", values_to = "value") %>% dplyr::select(-X)
+
+blackdrum_B4_df <- rbind(blackdrum_gam_env_bc, blackdrum_gam_env_bc_forage, blackdrum_gam_env_forage, blackdrum_gJam_env_bc, blackdrum_gJam_env_bc_forage, blackdrum_gJam_env_forage)
+blackdrum_B4_df_r2 <- blackdrum_B4_df %>% filter(Model_approach %in% c("GAM_r2", "r2_con", "r2_uncon"))
+blackdrum_B4_df_rmse <- blackdrum_B4_df %>% filter(Model_approach %in% c("GAM_rmse", "rmse_con", "rmse_uncon"))
+```
+
+```{r}
+blackdrum_B4_df_r2$Model_approach <- factor(blackdrum_B4_df_r2$Model_approach, levels = c("GAM_r2", "r2_uncon", "r2_con")) 
+blackdrum_B4_df_r2$Model_type <- factor(blackdrum_B4_df_r2$Model_type, levels = c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+mean_blackdrum_r2 <- blackdrum_B4_df_r2 %>% group_by(Model_type, Model_approach) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+library(ggpubr)
+blackdrum_r2_graph <-ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= blackdrum_B4_df_r2) +  geom_point(data = mean_blackdrum_r2, aes(x = Model_approach, y = mean_value), color = "red", size = 2)  +  facet_wrap(~Model_type, scales= "free") + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("R"^"2"))) + ggtitle("Black drum") + labs(tag= "C)") + theme(axis.text.x = element_text(angle = 90)) + ylim(-1.2, 0.9) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.65, label= "") + geom_bracket(xmin= 2.1, xmax=3, y.position= 0.65, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.83, label= "") 
+ggsave("/Users/sallydowd/Desktop/Graphs_edit/bd_r2_graph.pdf", width= 10, height= 5)
+
+
+blackdrum_B4_df_rmse$Model_approach <- factor(blackdrum_B4_df_rmse$Model_approach, levels = c("GAM_rmse", "rmse_uncon", "rmse_con")) 
+blackdrum_B4_df_rmse$Model_type <- factor(blackdrum_B4_df_rmse$Model_type, levels = c("Environment + BC", "Environment + prey", "Environment + BC + prey"))
+mean_blackdrum_rmse <- blackdrum_B4_df_rmse %>% group_by(Model_type, Model_approach) %>%
+summarize(mean_value = mean(value), .groups = 'drop')
+
+blackdrum_rmse_graph <- ggplot() + geom_boxplot(aes(x= Model_approach, y = value), data= blackdrum_B4_df_rmse) +  geom_point(data = mean_blackdrum_rmse, aes(x = Model_approach, y = mean_value), color = "red", size = 2)  +  facet_wrap(~Model_type, scales= "free") + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + ggtitle("Black drum") + ylim(0.000, 0.0113) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0095, label= "") + geom_bracket(xmin= 2.1, xmax=2.9, y.position= 0.0095, label= "") + geom_bracket(xmin= 1, xmax=2.9, y.position= 0.011, label= "") 
+ggsave("/Users/sallydowd/Desktop/Graphs_edit/bd_rmse_graph.pdf", width= 10, height= 5)
+```
+
+### Fig. B.6
+
 ```{r}
 #Red drum 
 reddrum_model1 <- read.csv("/users/sallydowd/Desktop/reddrum_model1.csv")
@@ -553,7 +442,7 @@ new_labels <- c("rmse_uncon" = "Traditional", "rmse_con" = "Conditional")
 mean_reddrum_rmse <- reddrum_rmse %>% group_by(Model_type, prediction_type) %>%
 summarize(mean_value = mean(value), .groups = 'drop')
 
-fig3_rd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= reddrum_rmse) +  geom_point(data = mean_reddrum_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0135, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0147, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0135, label= "") + ggtitle("Red drum")
+fig3_rd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= reddrum_rmse) +  geom_point(data = mean_reddrum_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "A)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0, 0.015)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.0135, label= "") + geom_bracket(xmin= 1, xmax=3, y.position= 0.0147, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0135, label= "") + ggtitle("Red drum")  + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ```{r}
@@ -574,7 +463,7 @@ new_labels <- c("rmse_uncon" = "Traditional", "rmse_con" = "Conditional")
 mean_sk_rmse <- sk_rmse %>% group_by(Model_type, prediction_type) %>%
 summarize(mean_value = mean(value), .groups = 'drop')
 
-fig3_sk <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= sk_rmse) +geom_point(data = mean_sk_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) + facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.00155)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00145, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.00152, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.00145, label= "") + ggtitle("Southern kingfish")
+fig3_sk <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= sk_rmse) +geom_point(data = mean_sk_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) + facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "B)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.00155)) + geom_bracket(xmin= 1, xmax= 1.9, y.position= 0.00145, label= "") + geom_bracket(xmin= 1, xmax=3, y.position=0.00152, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.00145, label= "") + ggtitle("Southern kingfish")  + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ```{r}
@@ -595,12 +484,12 @@ new_labels <- c("rmse_uncon" = "Traditional", "rmse_con" = "Conditional")
 mean_bd_rmse <- bd_rmse %>% group_by(Model_type, prediction_type) %>%
 summarize(mean_value = mean(value), .groups = 'drop')
 
-fig3_bd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= bd_rmse) +  geom_point(data = mean_bd_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.0115)) + geom_bracket(xmin= 1.1, xmax= 1.9, y.position= 0.0098, label= "") + geom_bracket(xmin= 1.1, xmax=3, y.position=0.011, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0098, label= "") + ggtitle("Black drum")
+fig3_bd <- ggplot() + geom_boxplot(aes(x= Model_type, y = value), data= bd_rmse) +  geom_point(data = mean_bd_rmse, aes(x = Model_type, y = mean_value), color = "red", size = 2) +  facet_wrap(~prediction_type, scales= "free", labeller= as_labeller(new_labels)) + standard_theme + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("Model type") + ylab(expression(paste("RMSE"))) + labs(tag= "C)") + theme(axis.text.x = element_text(angle = 360)) + expand_limits(y= c(0.0004, 0.0115)) + geom_bracket(xmin= 1.1, xmax= 1.9, y.position= 0.0098, label= "") + geom_bracket(xmin= 1.1, xmax=3, y.position=0.011, label= "") + geom_bracket(xmin= 2.1, xmax= 2.9, y.position= 0.0098, label= "") + ggtitle("Black drum")  + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ```{r}
 fig <- ggarrange(fig3_rd + rremove("xlab") + rremove("ylab"), fig3_sk + rremove("xlab") + rremove("ylab"), fig3_bd + rremove("xlab") + rremove("ylab"), ncol= 3)
 library(grid)
 annotate_figure(fig, bottom= textGrob("Model type"), left= textGrob(expression(paste("R"^"2")), rot= 90))
-ggsave("/users/sallydowd/Desktop/figureB.6.tiff", width= 12, height= 5)
+ggsave("/users/sallydowd/Desktop/Graphs_edit/figureB.6.pdf", width= 12, height= 5)
 ```
