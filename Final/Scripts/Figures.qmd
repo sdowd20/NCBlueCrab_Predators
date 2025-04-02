@@ -34,6 +34,7 @@ t2 <- ggplot(data = world) + geom_sf() + geom_sf(data = globe_grid_30_edt, fill 
 ```
 
 ### Figure 3:
+
 ```{r}
 #Red drum 
 reddrum_model1 <- read.csv("/users/sallydowd/Desktop/reddrum_model1.csv")
@@ -108,6 +109,7 @@ ggsave("/users/sallydowd/Desktop/Graphs_edit/figure3.pdf", width= 13, height= 6)
 ## Appendix A: Introduction & Methods
 
 ### Fig A.2:
+
 ```{r}
 #0.06: find number of presence/abscence
 df_count_wide_both06 %>% filter(reddrumP915 > 0) 
@@ -134,6 +136,7 @@ ggplot(data_t, aes(x= grid, y = count, fill = species, alpha= pattern)) + standa
 ```
 
 ### Fig A.4
+
 ```{r}
 df_CPUE_length <- read.csv("/users/sallydowd/Documents/GitHub/NCBlueCrab_Predators/Final/Data/CPUE_grid_avg_lengthedt.03.04.24.csv")
 df_CPUE_length <- df_CPUE_length[,-1]
@@ -151,11 +154,12 @@ corrplot(cor, mar= c(3,3,3,3))
 
 ### Fig A.4
 
-Fig. A.4 was generated through the Autocorrelation.Rmd under Scripts. 
+Fig. A.4 was generated through the Autocorrelation.Rmd under Scripts.
 
 ### Fig A.6
+
 ```{r}
-source("~/Documents/GitHub/NCBlueCrab_Predators/Scripts/Load.SDM.Final.R")
+source("~/Documents/GitHub/NCBlueCrab_Predators/Final/Scripts/Load.SDM.Final.R")
 ```
 
 ```{r}
@@ -176,6 +180,7 @@ ggsave("~/Desktop/t32_legend.png", dpi=300, width=6, height=4)
 ```
 
 ### Fig A.7
+
 ```{r}
 #Combine length datasets for plotting 
 p915_gg <- p915_length_toplot %>% ungroup() %>% dplyr::select(Length, Speciescommonname, Colnum, Survey)
@@ -192,6 +197,7 @@ ggsave("/users/sallydowd/Desktop/length.fig.png", width= 8, height=6, dpi= 500)
 ```
 
 ### Fig A.8
+
 ```{r}
 t1 <- ggplot() + geom_histogram(aes(x= reddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
 ggplot() + geom_histogram(aes(x= logreddrumP915forageP915), data= df_CPUE_length_wide_both) + standard_theme + xlab("Log Red drum P915 total prey CPUE P915") + ylab("Count") + labs(tag= "A)")
@@ -221,6 +227,7 @@ This figures were generated in PIPIIburnin.qmd from gJam objects with a variatio
 ### Fig B.1
 
 ```{r}
+library(mgcv)
 #Best GAMs
 reddrum_env_bc <- gam(reddrumP915~s(avgdepth)+s(avgssal)+s(avgstemp)+s(avgsdo)+s(NoFishRest)+factor(Yearfactor) + s(logsmallbluecrabP120), family= tw(), data=df_CPUE_length_wide_both)
 
